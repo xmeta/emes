@@ -2,7 +2,7 @@
 
 == Purpose
 
-This catalog slice replaces a purely synthetic cell record with an attributable manufacturer cell snapshot without yet claiming that EMES can safely size or approve a physical battery pack from that rating alone.
+This catalog slice connects an attributable manufacturer cell snapshot to EMES power sizing while preserving a strict boundary between executable rating checks and physical battery safety approval.
 
 The snapshot authority is Molicel Product Data Sheet v1.4 for `INR-21700-P45B`:
 
@@ -34,16 +34,44 @@ The manufacturer snapshot records, among other values:
 
 == Conditional-rating invariant
 
-A value and the conditions under which the manufacturer states that value are one engineering fact.
+A rating and the conditions under which the manufacturer states that rating are one engineering fact.
 
-Therefore `continuous_discharge_current = 45 A` is stored together with `cutoff_temperature == 80 degC`. Likewise the 13.5 A maximum charge current and the impedance values retain their stated cut-off or SOC conditions.
+The reviewed source snapshot therefore keeps the literal manufacturer facts such as `cutoff_temperature == 80 degC` for continuous discharge and `cutoff_temperature == 70 degC` for maximum charge.
 
-The generic catalog schema now supports explicit `conditions` on a property value. Normal CI asserts that the Molicel catalog can be deterministically regenerated from the reviewed source snapshot and that these conditions survive normalization.
+The Molicel provider converts those literal cut-off facts into conservative consumer contracts that can be checked against a selected protection component:
 
-== Execution boundary
+[source,text]
+----
+continuous_discharge_current = 45 A
+requires cell_discharge_cutoff_temperature <= 80 degC
 
-The existing Phase-1 battery-pack evaluator still uses the synthetic reference cell. It does not yet consume the P45B 45 A rating because it has no thermal/SOC condition-evaluation semantics.
+maximum_charge_current = 13.5 A
+requires cell_charge_cutoff_temperature <= 70 degC
+----
 
-This is deliberate. Importing a real value is not permission to flatten a conditional manufacturer rating into an unconditional design limit.
+The SOC conditions on impedance values remain exact measurement conditions rather than protection-control contracts.
 
-A later slice may bind this real cell to a power design only after the applicable operating conditions and derating logic are executable.
+Normal CI asserts deterministic regeneration of the catalog and exact preservation of these normalized conditions.
+
+== Executable discharge-rating control
+
+`examples/power-pack-molicel-p45b/mechanism.json` binds the authoritative P45B cell to synthetic BMS and DC/DC fixtures. The synthetic BMS declares a `cell_discharge_cutoff_temperature` of 75 degC.
+
+When `tools/power.py` consumes the P45B `continuous_discharge_current` property it must resolve every attached rating condition to exactly one selected control component. The evaluator records the rated property, condition, controlling component, control value, and pass status in `rating_condition_results`.
+
+The 75 degC synthetic BMS control satisfies the normalized `<= 80 degC` discharge-rating contract. The cell-side raw 10S2P current capability is still clamped by the 30 A BMS limit before pack capability is reported.
+
+CI also creates two negative variants:
+
+* a synthetic BMS whose discharge cut-off is changed to 85 degC must be rejected;
+* a synthetic BMS with the discharge cut-off property removed must be rejected because the manufacturer rating condition has no executable control.
+
+The maximum-charge rating is preserved with its own 70 degC control condition but is not consumed by the current discharge-only power path because no charger analysis is implemented yet.
+
+== Safety and fidelity boundary
+
+Passing this analytic check means only that the selected data and explicit protection-control condition are internally consistent for the implemented sizing model.
+
+It does not establish cell temperature prediction, ambient-temperature suitability, voltage sag, state-of-charge behavior, cell balance, interconnect heating, fuse coordination, fault propagation, aging, enclosure safety, charger safety, regulatory compliance, or permission to fabricate, charge, or energize a pack.
+
+Those require separate evidence and later validated slices. Physical battery work remains outside automatic approval.
