@@ -106,6 +106,11 @@ def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     extension = document.get("extensions", {}).get("org.emes.power")
     if not isinstance(extension, dict):
         raise ValueError("missing extensions.org.emes.power")
+    power_schema = load_json(repo_root / "spec/emes-power-v0.schema.json")
+    validator_cls = jsonschema.validators.validator_for(power_schema)
+    validator_cls.check_schema(power_schema)
+    validator_cls(power_schema).validate(extension)
+
     packs = extension.get("battery_packs", [])
     paths = extension.get("power_paths", [])
     if len(packs) != 1 or len(paths) != 1:
@@ -113,8 +118,8 @@ def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
 
     pack = packs[0]
     path = paths[0]
-    if path["source_pack"] != pack["id"]:
-        raise ValueError("power path references an unknown battery pack")
+    if path.get("source_pack") != pack["id"]:
+        raise ValueError("Phase-1 power path must reference the declared battery pack")
 
     cell_component = pack["cell_component"]
     bms_component = pack["bms_component"]
@@ -122,6 +127,18 @@ def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
     for component_id in (cell_component, bms_component, converter_component):
         if component_id not in selected:
             raise ValueError(f"{component_id}: power component must be catalog-backed")
+
+    component_ids = {item["id"] for item in document["components"]}
+    parameter_ids = {item["id"] for item in document["parameters"]}
+    load_case_ids = {item["id"] for item in document["load_cases"]}
+    for component_id in (pack["component"], cell_component, bms_component, converter_component):
+        if component_id not in component_ids:
+            raise ValueError(f"{pack['id']}: unknown component {component_id}")
+    for parameter_id in (pack["series_parameter"], pack["parallel_parameter"]):
+        if parameter_id not in parameter_ids:
+            raise ValueError(f"{pack['id']}: unknown parameter {parameter_id}")
+    if path["load_case"] not in load_case_ids:
+        raise ValueError(f"{path['id']}: unknown load case {path['load_case']}")
 
     cell = selected[cell_component]
     bms = selected[bms_component]
