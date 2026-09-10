@@ -3,22 +3,49 @@
 
 EMES (Executable Mechanical Engineering Specification) is an AI-native architecture for describing, generating, verifying, and iterating mechanical mechanisms as structured, version-controlled engineering data.
 
-== Project goal
+== Core idea
 
-The project treats a mechanism as executable engineering specification rather than a manually edited CAD artifact.
+CAD is a derived artifact, not the source of truth.
 
 [source,text]
 ----
-requirements
-    -> semantic mechanism model
-    -> generated engineering artifacts
-    -> simulation / verification
-    -> objective evaluation
-    -> AI design iteration
+requirements + design intent
+          |
+          v
+ semantic mechanism IR
+          |
+    +-----+------+----------------+
+    |            |                |
+    v            v                v
+  CAD         simulation       BOM / DFM
+    \            |                /
+     +-----------+---------------+
+                 v
+       deterministic evidence
+                 |
+                 v
+        AI / optimizer patch
+                 |
+                 +------> repeat
 ----
 
-The canonical source is text-based, reviewable, diffable, and suitable for GitHub-based development. CAD, simulation models, meshes, reports, and BOMs are derived artifacts.
+The canonical source records requirements, topology, parameters, interfaces, load cases, objectives, constraints, and analysis intent.
+Generated CAD, simulation models, solver decks, reports, and BOMs remain reproducible projections.
 
-== Development status
+A key architectural boundary is the separation between the semantic design graph and the evidence graph: AI may propose changes to the design, while registered tools and measurements produce the evidence used to accept or reject those changes.
 
-Architecture definition is the first implementation phase. The initial target is a minimal end-to-end path from a structured mechanism description to deterministic validation and derived outputs.
+== Current status
+
+Phase 1 architecture is being established under Issue #1.
+
+The initial executable slice uses a JSON canonical IR with schema and semantic validation.
+A custom EMES language is intentionally deferred until concrete examples prove it is necessary.
+
+== Documents
+
+* `docs/architecture.adoc` -- normative architecture direction.
+* `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
+* `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
+* `docs/decisions/` -- architecture decisions.
+* `spec/emes-ir-v0.schema.json` -- initial executable structural contract.
+* `examples/two-link-arm/mechanism.json` -- minimal example.

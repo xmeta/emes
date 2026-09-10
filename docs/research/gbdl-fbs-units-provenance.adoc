@@ -1,0 +1,193 @@
+= Graph-Based Design Languages, FBS, Units, and Provenance
+:toc:
+:toclevels: 2
+
+Research date: 2026-09-10.
+
+== 1. Executive finding
+
+Graph-Based Design Languages (GBDL), particularly the University of Stuttgart / IILS Design Compiler 43 lineage, are the closest prior-art family found for the core idea behind EMES.
+
+The 2026 Formula Student suspension case study describes an ontology-based vocabulary plus executable model transformations that compile engineering knowledge into a central design graph. From that graph, CAD, simulations, kinematic analyses, design metrics, collision checks, and variants are generated consistently.
+
+An earlier Airbus A320 landing-gear piping study goes further in scope description: graph nodes may represent requirements, product functions, solution principles, components, assemblies, or other lifecycle engineering concepts, while a design compiler executes the encoded design knowledge and process.
+
+This means EMES must not claim novelty for the generic idea of "compile a semantic engineering graph into CAD and analysis models." That idea has a substantial research lineage.
+
+Sources:
+
+* https://doi.org/10.3390/vehicles8010024
+* https://doi.org/10.3390/aerospace9030140
+
+== 2. GBDL information architecture
+
+The GBDL literature decomposes an executable design language into three main elements:
+
+Vocabulary::
+An ontology of typed domain entities and their attributes/relations.
+
+Rules::
+Executable transformations that instantiate, connect, or modify model elements.
+
+Production system::
+The ordering/control logic that determines which rules execute and when.
+
+A compiler applies these elements to construct and evolve a design graph.
+The design graph becomes the common information model from which downstream domain artifacts can be derived.
+
+This is directly useful to EMES.
+
+[source,text]
+----
+GBDL                         EMES analogue
+--------------------------   ---------------------------------
+vocabulary                   typed canonical mechanism IR
+rules                        compiler passes / synthesis rules
+production system            analysis + synthesis orchestration
+design graph                 normalized semantic design graph
+CAD/CAE generation           backend adapters
+validation                   deterministic verification/evidence
+----
+
+The mapping is intentionally conceptual rather than a compatibility claim.
+EMES should reuse the architectural lesson without copying a proprietary compiler/tool workflow.
+
+== 3. What EMES should differentiate
+
+The strongest defensible EMES differentiation is the combination of properties below, rather than the graph/compiler concept alone:
+
+* open, inspectable source formats and toolchain;
+* Git-native change history, branches, diffs, review, and CI;
+* LLM-native editing through small source patches;
+* deterministic verification separated from probabilistic proposal generation;
+* evidence/provenance as a first-class output of every analysis;
+* content-addressed invalidation of stale derived evidence;
+* backend-neutral adapters to existing CAD, simulation, optimization, and manufacturing tools;
+* explicit optimization/search interface for continuous, discrete, and topology variables;
+* cost-aware verification ladders before expensive analyses;
+* human-controlled fabrication/actuation boundary.
+
+This combination is the architectural target that should be tested in implementation.
+
+== 4. Function-Behaviour-Structure as a semantic check
+
+Gero's Function-Behaviour-Structure (FBS) family is useful as a conceptual test for whether an engineering representation collapses distinct concepts.
+
+For EMES, the relevant separation is:
+
+Function::
+What the mechanism is intended to accomplish.
+
+Behaviour::
+What physical or logical behavior realizes or predicts the function, including expected and evaluated behavior.
+
+Structure::
+The concrete components, connections, parameters, and geometry that produce the behavior.
+
+The current EMES v0 model already separates requirements/design intent from physical topology and analyses, but behavior is not yet a dedicated top-level entity.
+This is an IMPORTANT schema-design question, not a Phase 1 blocker.
+It should be tested against additional mechanisms before adding permanent FBS-specific syntax.
+
+Source:
+
+* https://doi.org/10.1016/j.destud.2009.02.002
+
+== 5. Units: reuse QUDT concepts, do not rebuild an ontology
+
+QUDT provides mature semantics for quantities, units, quantity kinds, and dimensions, including dimensional-analysis relationships.
+
+EMES Phase 1 should keep its compact `{value, unit}` authoring representation, but the unit subsystem should be designed so identifiers can later map to QUDT concepts and dimension vectors.
+
+This supports:
+
+* dimensional consistency checking;
+* safe unit conversion;
+* semantic distinction between quantities with the same dimensional exponents;
+* interoperability with knowledge graphs and external engineering data.
+
+EMES should not embed the full OWL/QUDT ontology into the core runtime unless an actual interoperability requirement appears.
+
+Source:
+
+* https://qudt.org/doc/2026/08/DOC_SCHEMA-SHACL-QUDT.html
+
+== 6. Provenance: align with W3C PROV concepts
+
+W3C PROV defines a standard family for provenance representation, including the PROV data model and PROV-O ontology.
+
+EMES evidence naturally maps onto the core provenance concepts:
+
+[source,text]
+----
+Entity    <- source IR, generated CAD, solver deck, result artifact
+Activity  <- normalization, compilation, simulation, measurement
+Agent     <- tool, AI agent, human reviewer, laboratory/operator identity
+----
+
+EMES should initially keep a compact engineering-specific evidence schema, but stable IDs and provenance relations should permit later export to W3C PROV.
+
+Source:
+
+* https://www.w3.org/TR/prov-overview/
+
+== 7. Architectural consequence
+
+The prior-art survey changes one aspect of the initial framing.
+
+Instead of treating EMES primarily as a new "mechanism IR compiler," treat it as an *open AI-native executable engineering system built around a semantic design graph and evidence graph*.
+
+[source,text]
+----
+                   protected problem definition
+                            |
+                            v
+ requirements -- function / intent -- expected behavior
+                            |
+                            v
+                   semantic design graph
+                            |
+          +-----------------+------------------+
+          |                 |                  |
+          v                 v                  v
+      geometry          dynamics / CAE       BOM / DFM
+          |                 |                  |
+          +-----------------+------------------+
+                            |
+                            v
+                       evidence graph
+                            |
+                            v
+                    objective evaluation
+                            |
+                            v
+                 AI / optimizer proposes patch
+                            |
+                            +-----------> source
+----
+
+The design graph represents what the design *is and is intended to do*.
+The evidence graph represents *why current claims about that design should be believed*.
+Keeping these separate is a useful EMES-specific architectural boundary.
+
+== 8. Immediate adoption versus deferral
+
+Adopt now:
+
+* typed graph identities and relationships;
+* deterministic compiler/adapters;
+* requirement-to-verification traceability;
+* explicit evidence lineage;
+* unit-aware quantities;
+* source-controlled rules and tool configuration.
+
+Defer until concrete examples justify them:
+
+* a full ontology editor;
+* UML-based authoring;
+* a custom graph-transformation language;
+* a dedicated production-system DSL;
+* mandatory FBS classes in every mechanism;
+* RDF/OWL as the canonical storage format;
+* full W3C PROV or QUDT serialization.
+
+This preserves the useful lessons of GBDL/FBS/QUDT/PROV without letting the first implementation become an ontology project instead of a working engineering system.

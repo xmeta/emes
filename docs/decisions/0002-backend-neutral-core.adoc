@@ -1,0 +1,43 @@
+= ADR-0002: Backend-neutral core
+
+== Status
+
+Accepted.
+
+== Context
+
+Existing tools already provide high-quality geometry kernels, multibody simulation, multi-domain equations, optimization, and CAD interchange.
+
+Binding EMES semantics directly to one backend would make the canonical model inherit that backend's limitations.
+
+== Decision
+
+The EMES core defines semantic entities and adapter contracts.
+CAD and solver formats are generated projections.
+
+Initial backend candidates:
+
+* geometry: build123d or CadQuery;
+* robot dynamics: MJCF / MuJoCo;
+* multi-domain dynamics: Modelica;
+* broader multibody/multiphysics: Project Chrono;
+* optimization: OpenMDAO or GEMSEO integration;
+* exchange: STEP, URDF, SDF, MJCF, FMI as appropriate.
+
+No backend-specific construct becomes canonical unless it has a backend-independent engineering meaning.
+
+== Consequences
+
+Positive:
+
+* avoids rebuilding mature engines;
+* permits independent backend replacement;
+* keeps mechanisms beyond robotics in scope;
+* enables cross-checking with multiple solvers.
+
+Negative:
+
+* adapters require semantic mapping;
+* not every backend can preserve every EMES concept.
+
+Lossy projections must therefore emit diagnostics describing information that was omitted.

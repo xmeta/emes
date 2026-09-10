@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/xmeta/emes/spec/emes-ir-v0.schema.json",
+  "title": "EMES IR v0",
+  "type": "object",
+  "required": [
+    "emes_version",
+    "design",
+    "requirements",
+    "parameters",
+    "components",
+    "connections",
+    "load_cases",
+    "constraints",
+    "objectives",
+    "analyses",
+    "traceability"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "emes_version": {
+      "const": "0.1"
+    },
+    "design": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "name": {"type": "string", "minLength": 1},
+        "description": {"type": "string"},
+        "extensions": {"type": "object", "additionalProperties": true}
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/requirement"}
+    },
+    "design_intent": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/design_intent"},
+      "default": []
+    },
+    "parameters": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/parameter"}
+    },
+    "components": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/component"}
+    },
+    "connections": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/connection"}
+    },
+    "functional_edges": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/functional_edge"},
+      "default": []
+    },
+    "load_cases": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/load_case"}
+    },
+    "constraints": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/constraint"}
+    },
+    "objectives": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/objective"}
+    },
+    "analyses": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/analysis"}
+    },
+    "traceability": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["requirement", "verified_by"],
+        "properties": {
+          "requirement": {"$ref": "#/$defs/id"},
+          "verified_by": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"$ref": "#/$defs/id"}
+          }
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+    },
+    "quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1}
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "statement"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {
+          "enum": ["functional", "performance", "safety", "manufacturing", "cost", "interface"]
+        },
+        "statement": {"type": "string", "minLength": 1}
+      }
+    },
+    "design_intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "statement"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "statement": {"type": "string", "minLength": 1},
+        "protects": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/id"}
+        }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "value"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "role": {"enum": ["fixed", "design_variable", "catalog_choice"]},
+        "value": {"$ref": "#/$defs/quantity"},
+        "lower": {"$ref": "#/$defs/quantity"},
+        "upper": {"$ref": "#/$defs/quantity"},
+        "choices": {
+          "type": "array",
+          "items": {"type": ["string", "number"]}
+        }
+      }
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {
+          "enum": ["body", "link", "joint", "actuator", "transmission", "spring", "damper", "bearing", "fastener", "sensor", "cable", "hose", "structural_member", "purchased_part", "other"]
+        },
+        "material": {"type": "string"},
+        "mass": {"$ref": "#/$defs/quantity"},
+        "parameters": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/id"}
+        },
+        "geometry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generator"],
+          "properties": {
+            "generator": {"type": "string", "minLength": 1},
+            "source": {"type": "string"},
+            "frame": {"$ref": "#/$defs/id"}
+          }
+        },
+        "metadata": {"type": "object", "additionalProperties": true}
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component"],
+      "properties": {
+        "component": {"$ref": "#/$defs/id"},
+        "port": {"type": "string"}
+      }
+    },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "a", "b"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {
+          "enum": ["fixed", "revolute", "prismatic", "spherical", "planar", "gear", "belt", "chain", "cable", "spring", "damper", "electrical", "hydraulic", "pneumatic", "other"]
+        },
+        "a": {"$ref": "#/$defs/endpoint"},
+        "b": {"$ref": "#/$defs/endpoint"},
+        "axis": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "number"}
+        },
+        "frame": {"$ref": "#/$defs/id"},
+        "lower": {"$ref": "#/$defs/quantity"},
+        "upper": {"$ref": "#/$defs/quantity"},
+        "ratio": {"type": "number"}
+      }
+    },
+    "functional_edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "relation", "to"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "from": {"$ref": "#/$defs/id"},
+        "relation": {"type": "string", "minLength": 1},
+        "to": {"$ref": "#/$defs/id"}
+      }
+    },
+    "load": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target", "kind", "value"],
+      "properties": {
+        "target": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["force", "torque", "mass", "pressure", "temperature", "acceleration", "other"]},
+        "value": {"$ref": "#/$defs/quantity"},
+        "direction": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {"type": "number"}
+        },
+        "frame": {"$ref": "#/$defs/id"}
+      }
+    },
+    "load_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "loads"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "description": {"type": "string"},
+        "loads": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/load"}
+        }
+      }
+    },
+    "constraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "metric", "op", "target"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "metric": {"$ref": "#/$defs/id"},
+        "op": {"enum": ["<", "<=", ">", ">=", "=="]},
+        "target": {"$ref": "#/$defs/quantity"},
+        "load_case": {"$ref": "#/$defs/id"}
+      }
+    },
+    "objective": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "metric", "direction"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "metric": {"$ref": "#/$defs/id"},
+        "direction": {"enum": ["minimize", "maximize"]},
+        "weight": {"type": "number", "minimum": 0}
+      }
+    },
+    "analysis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "adapter", "produces"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["analytic", "geometry", "kinematics", "collision", "multibody", "fea", "thermal", "cost", "manufacturing", "measurement", "other"]},
+        "adapter": {"type": "string", "minLength": 1},
+        "fidelity": {"enum": ["analytic", "low", "medium", "high", "physical"]},
+        "load_cases": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/id"}
+        },
+        "produces": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/metric_def"}
+        }
+      }
+    },
+    "metric_def": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "unit"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "unit": {"type": "string", "minLength": 1},
+        "description": {"type": "string"}
+      }
+    }
+  }
+}

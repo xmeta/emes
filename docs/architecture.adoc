@@ -1,0 +1,629 @@
+= EMES Architecture
+:toc:
+:toclevels: 3
+
+== 1. Purpose
+
+EMES (Executable Mechanical Engineering Specification) is an AI-native engineering architecture for developing physical mechanisms from version-controlled, machine-readable specifications.
+
+The central design choice is that CAD is *not* the source of truth.
+The source of truth is a semantic engineering model that records requirements, design intent, mechanism topology, physical parameters, interfaces, load cases, objectives, constraints, analysis plans, and traceability.
+CAD, simulation models, meshes, BOMs, drawings, and verification reports are compiled or measured artifacts.
+
+The Phase 1 target is the smallest useful closed loop:
+
+[source,text]
+----
+human goal
+   |
+   v
+EMES source
+   |
+   v
+parse + normalize + semantic checks
+   |
+   v
+Canonical Mechanism IR
+   |
+   +--> geometry adapter --> CAD / STEP
+   +--> dynamics adapter --> MJCF / SDF / Modelica
+   +--> analysis adapter --> FEA / kinematics / collision
+   +--> manufacturing adapter --> BOM / process checks
+   |
+   v
+deterministic verification + metrics
+   |
+   v
+evidence bundle
+   |
+   v
+AI proposes a source patch
+   |
+   +----------------------------> repeat
+----
+
+== 2. Design principles
+
+=== 2.1 Semantic source before geometry
+
+A solid model answers "what shape is it?" but usually does not fully answer:
+
+* why a component exists;
+* which function it performs;
+* what it connects to;
+* which requirement it satisfies;
+* which loads it must survive;
+* which variables may change;
+* which trade-offs are intentional;
+* what evidence justifies a performance claim.
+
+EMES therefore keeps geometry as one projection of a richer design model.
+
+=== 2.2 Deterministic engineering core, probabilistic proposal layer
+
+LLMs may generate hypotheses and patches.
+They must not be the authority that decides whether a design passes.
+
+The compiler, dimensional checks, geometric checks, simulation adapters, verification rules, and evidence aggregation are deterministic or explicitly stochastic with fixed seeds and recorded uncertainty.
+
+This separation prevents an AI from "arguing" a failed design into acceptance.
+
+=== 2.3 Explicit units and coordinate frames
+
+Every dimensional quantity must carry a unit at authoring boundaries.
+Canonical normalization uses SI units internally.
+Every pose, vector, joint axis, load, and inertia tensor must identify its reference frame.
+
+Implicit unit conventions are forbidden at the canonical IR boundary.
+
+=== 2.4 Stable identity
+
+Requirements, parameters, components, connections, load cases, metrics, and verification rules receive stable IDs.
+
+Stable IDs allow:
+
+* precise diffs;
+* requirement-to-evidence traceability;
+* cross-backend mapping;
+* AI patch targeting;
+* experiment comparison;
+* stale-evidence invalidation.
+
+=== 2.5 Source and derived artifacts are separated
+
+AI agents modify source specifications and generator code.
+They do not edit generated STEP, meshes, solver decks, or verification summaries by hand.
+
+Generated artifacts are reproducible products associated with a source digest and a toolchain digest.
+
+=== 2.6 Fidelity is explicit
+
+A result is never just "verified".
+Each claim records the method and fidelity used to support it, for example:
+
+* analytic;
+* kinematic simulation;
+* rigid-body dynamics;
+* low-fidelity FEA;
+* high-fidelity FEA;
+* prototype measurement.
+
+Higher-fidelity evidence may supersede lower-fidelity evidence, but the history remains attributable.
+
+=== 2.7 Backend neutrality
+
+EMES is not a new geometry kernel, physics engine, optimizer, or CAD application.
+It is a semantic IR, compiler/orchestrator, evidence model, and AI design loop that can target existing tools.
+
+== 3. Layered model
+
+EMES uses six logical layers.
+
+=== L0 -- Mission and requirements
+
+Defines what the mechanism must accomplish.
+
+Examples:
+
+* payload >= 5 kg;
+* reach >= 700 mm;
+* total mass <= 8 kg;
+* backlash <= 0.2 deg;
+* parts cost <= JPY 100,000;
+* no collision throughout a specified trajectory.
+
+Requirements are immutable statements during an optimization run unless a human explicitly changes the problem definition.
+
+=== L1 -- Design intent and functional graph
+
+Represents why the design has its structure.
+
+The functional graph may express relations such as:
+
+[source,text]
+----
+motor_j2
+  --transmits_rotational_power-->
+timing_belt_j2
+  --drives-->
+joint_j2
+
+motor_j2
+  --located_on-->
+base
+  --because-->
+reduce_moving_inertia
+----
+
+Design intent is advisory unless protected by a hard requirement.
+An AI may challenge design intent, but the change is explicit and reviewable.
+
+=== L2 -- Mechanism topology
+
+Represents physical entities and their relationships independently of detailed geometry.
+
+Core entity classes:
+
+* body / link;
+* joint;
+* actuator;
+* transmission;
+* spring / damper;
+* bearing;
+* fastener;
+* sensor;
+* cable / hose;
+* structural member;
+* interface;
+* material assignment;
+* purchased part.
+
+Connections form a typed graph.
+A serial robot, four-bar linkage, belt transmission, differential, compliant mechanism, or vehicle suspension can therefore be represented before exact CAD exists.
+
+=== L3 -- Parametric realization
+
+Binds topology to concrete design variables and geometry generators.
+
+Examples:
+
+* link length;
+* tube outer diameter and wall thickness;
+* bearing series;
+* pulley tooth count;
+* motor SKU;
+* joint offset;
+* plate thickness;
+* hole pattern.
+
+Geometry may be generated by adapters such as build123d, CadQuery, KCL, FeatureScript, FreeCAD Python, or OpenSCAD.
+The geometry program is a backend artifact or referenced source module, not the universal EMES semantics.
+
+=== L4 -- Analysis and manufacturing models
+
+Defines analysis projections and load cases.
+
+Potential adapters include:
+
+* analytic equations;
+* kinematics;
+* collision checking;
+* multibody dynamics;
+* Modelica multi-domain simulation;
+* MJCF / MuJoCo;
+* SDF / Gazebo;
+* FEA;
+* tolerance stack-up;
+* thermal analysis;
+* cost and BOM;
+* manufacturability checks.
+
+The same design can have several analysis models at different fidelities.
+
+=== L5 -- Evidence and decision record
+
+Every evaluated metric is stored with provenance:
+
+[source,text]
+----
+metric
+  value
+  unit
+  requirement/objective IDs
+  source design digest
+  adapter + version
+  solver settings
+  input artifact digests
+  stochastic seed (if any)
+  uncertainty / tolerance
+  timestamp
+----
+
+The result of an AI design iteration is therefore not only a CAD model; it is a design plus a machine-verifiable evidence bundle.
+
+== 4. Canonical representation
+
+=== 4.1 Authoring form versus canonical IR
+
+Phase 1 intentionally avoids inventing a custom programming language.
+
+The first canonical interchange representation is JSON validated by JSON Schema.
+Future authoring frontends may include YAML, TOML, a dedicated DSL, GUI editing, or natural language, but all frontends lower into the same typed canonical IR.
+
+Reasons:
+
+* JSON has mature parsers in nearly every language;
+* JSON Schema provides an executable structural contract;
+* canonical JSON is straightforward to hash;
+* the project can validate semantics before committing to language syntax.
+
+A dedicated DSL should only be introduced if actual usage demonstrates that JSON/YAML plus code modules is insufficient.
+
+=== 4.2 Canonicalization
+
+Before compilation, an EMES implementation performs:
+
+. schema validation;
+. unique-ID validation;
+. reference resolution;
+. dimensional normalization to SI;
+. coordinate-frame resolution;
+. topology consistency checks;
+. design-variable bound checks;
+. requirement and metric linkage checks;
+. deterministic ordering for hashing.
+
+The normalized document receives a `design_digest`.
+
+=== 4.3 Extension mechanism
+
+Unknown ad-hoc fields in the core namespace should be rejected.
+Experimental semantics live under namespaced extensions:
+
+[source,json]
+----
+{
+  "extensions": {
+    "org.example.flexure": {
+      "model": "pseudo-rigid-body",
+      "parameter": 0.85
+    }
+  }
+}
+----
+
+An extension cannot silently alter the meaning of a core field.
+
+== 5. Compiler and execution architecture
+
+[source,text]
+----
++-----------------------------+
+| EMES source + code modules  |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+| Parser / Schema Validator   |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+| Semantic Checker            |
+| units, refs, graph, frames   |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+| Normalizer + Design Digest  |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+| Canonical Mechanism IR      |
++----+-----------+------------+
+     |           |
+     |           +-------------------+
+     v                               v
+Geometry Adapter                Analysis Planner
+     |                               |
+     v                        +------+------+ 
+CAD/STEP                      |      |      |
+                              v      v      v
+                           MBD/FEA  Cost  DFM
+                              \      |      /
+                               \     |     /
+                                v    v    v
+                             Metric Records
+                                  |
+                                  v
+                           Verification Engine
+                                  |
+                                  v
+                             Evidence Bundle
+                                  |
+                                  v
+                           Objective Evaluator
+                                  |
+                                  v
+                         AI / optimizer proposer
+                                  |
+                                  +---- source patch
+----
+
+=== 5.1 Adapter contract
+
+Every adapter receives:
+
+* canonical IR subset;
+* explicit adapter configuration;
+* dependency/tool versions;
+* deterministic seed when relevant.
+
+Every adapter returns:
+
+* generated artifact references;
+* metric records;
+* diagnostics;
+* provenance;
+* success/failure status.
+
+An adapter must not mutate canonical IR.
+
+=== 5.2 Artifact graph
+
+Derived files form a content-addressed dependency graph.
+
+For example:
+
+[source,text]
+----
+mechanism.json
+  -> normalized-ir.json
+      -> arm.step
+      -> arm.mjcf
+      -> static-load.inp
+          -> static-load.result
+              -> metric:max_stress
+              -> metric:tip_deflection
+----
+
+When an upstream digest changes, dependent evidence becomes stale automatically.
+
+== 6. Requirements, constraints, and objectives
+
+EMES distinguishes four concepts.
+
+`requirement`::
+Human-facing statement of required behavior or property.
+
+`constraint`::
+Executable pass/fail condition over a metric.
+
+`objective`::
+Quantity to minimize or maximize when more than one passing design is possible.
+
+`design variable`::
+A parameter the optimizer or AI is permitted to change.
+
+Example:
+
+[source,text]
+----
+REQ-PAYLOAD: "Carry at least 5 kg at full extension."
+
+load case LC-FULL:
+    payload = 5 kg
+
+constraint C-STRESS:
+    metric max_von_mises_stress
+    <= allowable_stress / safety_factor
+
+objective O-MASS:
+    minimize total_mass
+----
+
+This makes "goal" and "means" distinct.
+The optimizer may discover a different mechanism while preserving the requirement.
+
+== 7. AI design loop
+
+The AI layer operates as a proposal engine, not an oracle.
+
+=== 7.1 Iteration
+
+. Read requirements, current source, design intent, evidence, and diagnostics.
+. Identify the binding constraint or highest-value objective.
+. Propose the smallest coherent source patch.
+. Compile and validate.
+. Run the cheapest analysis capable of falsifying the proposal.
+. If it passes, run the next required verification level.
+. Compare evidence against the current baseline.
+. Keep or reject the candidate.
+. Record the decision and repeat until a stopping condition is met.
+
+=== 7.2 Search modes
+
+The proposer interface can support several strategies without changing EMES semantics:
+
+* LLM patch generation;
+* parameter sweep;
+* Bayesian optimization;
+* gradient-based optimization;
+* evolutionary search;
+* graph-grammar topology search;
+* mixed strategies.
+
+This is important because no single optimizer is appropriate for continuous dimensions, discrete catalog choices, and topology changes simultaneously.
+
+=== 7.3 Cost-aware verification ladder
+
+A candidate should encounter cheap falsifiers first:
+
+. schema and semantic checks;
+. analytic bounds;
+. geometry regeneration;
+. kinematics and collision;
+. rigid-body dynamics;
+. coarse structural analysis;
+. higher-fidelity multiphysics;
+. physical prototype measurement.
+
+This minimizes wasted simulation cost.
+
+=== 7.4 Anti-reward-hacking boundary
+
+The proposer cannot modify:
+
+* acceptance criteria for the active run;
+* verifier implementation;
+* reference datasets;
+* protected safety factors;
+* measurement data.
+
+Such changes require a separate human-reviewed change to the problem definition or toolchain.
+
+== 8. Interoperability strategy
+
+EMES should reuse existing ecosystems instead of replacing them.
+
+=== Geometry
+
+Preferred adapter candidates:
+
+* build123d;
+* CadQuery;
+* KCL/Zoo where cloud/API use is acceptable;
+* FreeCAD Python;
+* OpenSCAD for simple constructive geometry.
+
+STEP is an exchange artifact, not the authoring source.
+
+=== System dynamics
+
+* Modelica for multi-domain acausal physical models;
+* MJCF/MuJoCo for fast robot dynamics;
+* SDFormat for simulation interchange;
+* URDF for ROS ecosystem compatibility.
+
+URDF, SDF, and MJCF are outputs/projections because they do not encode the complete engineering intent of a general mechanism.
+
+=== Optimization
+
+EMES can expose its analyses and metrics to:
+
+* OpenMDAO;
+* GEMSEO;
+* specialized optimizers.
+
+Phase 1 does not embed one optimization framework into the core.
+
+=== Co-simulation
+
+FMI is a suitable interoperability boundary for exchanging dynamic models and co-simulation components.
+
+== 9. Repository architecture
+
+[source,text]
+----
+emes/
+├── README.adoc
+├── AGENTS.md
+├── docs/
+│   ├── architecture.adoc
+│   ├── research/
+│   │   └── prior-art.adoc
+│   └── decisions/
+│       ├── 0001-canonical-ir.adoc
+│       └── 0002-backend-neutral-core.adoc
+├── spec/
+│   └── emes-ir-v0.schema.json
+├── examples/
+│   └── two-link-arm/
+│       └── mechanism.json
+├── tools/
+│   └── validate.py
+└── .github/
+    └── workflows/
+        └── validate.yml
+----
+
+Future implementation can add a Rust workspace without changing the semantic contract:
+
+[source,text]
+----
+crates/
+├── emes-ir
+├── emes-validate
+├── emes-compiler
+├── emes-evidence
+├── emes-cli
+└── adapters/
+----
+
+Rust is a strong candidate for the typed core because exhaustive enums, explicit error handling, Serde, and reproducible CLI tooling fit an AI-maintained compiler.
+It is deliberately deferred until the IR boundary has survived the first examples.
+
+== 10. Minimal Phase 1 acceptance path
+
+The first executable vertical slice is intentionally narrow:
+
+[source,text]
+----
+two-link arm JSON
+    -> JSON Schema validation
+    -> semantic reference checks
+    -> canonical digest
+    -> pass/fail requirement linkage report
+----
+
+The next implementation slice should add exactly one geometry adapter and one dynamics adapter, rather than implementing all backends at once.
+
+Recommended order:
+
+. build123d or CadQuery geometry generation;
+. MJCF export and MuJoCo kinematic/dynamic smoke test;
+. BOM/cost adapter;
+. one structural analysis path;
+. AI patch/evaluate loop.
+
+== 11. What EMES is not
+
+EMES is not:
+
+* a replacement for a BREP geometry kernel;
+* a replacement for Modelica;
+* a replacement for SysML;
+* a universal solver;
+* an LLM-only design system;
+* a binary CAD file versioning scheme;
+* a promise that simulation equals manufacturability.
+
+Its role is to connect engineering semantics, executable toolchains, verification evidence, and AI-driven iteration through a stable source model.
+
+== 12. Safety boundary
+
+Any transition from digital design to physical fabrication or actuation must be an explicit gate.
+
+For safety-critical or high-energy mechanisms, simulation success is not sufficient authorization for fabrication or operation.
+Required human review, standards compliance, material certification, safety factors, and physical validation belong in project-specific verification policy.
+
+== 13. Phase 2 candidates
+
+The following are deliberately outside the first-complete architecture:
+
+* custom EMES DSL;
+* graph-grammar topology synthesis;
+* differentiable co-design;
+* uncertainty propagation;
+* tolerance and reliability optimization;
+* supplier catalog integration;
+* automated DFM/DFA;
+* electrical/hydraulic/control co-design;
+* formal SysML v2 import/export;
+* FMI co-simulation orchestration;
+* physical test ingestion;
+* learned surrogate models;
+* distributed simulation scheduling.
+
+They should be added only after a concrete end-to-end design exposes the need.

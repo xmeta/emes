@@ -1,0 +1,48 @@
+= ADR-0003: Separate semantic design graph from evidence graph
+
+== Status
+
+Accepted.
+
+== Context
+
+Graph-Based Design Languages demonstrate that ontology-backed engineering knowledge can be compiled into a central design graph and projected into CAD and analysis models.
+Function-Behaviour-Structure research also cautions against collapsing intended function, predicted behavior, and physical structure into one undifferentiated representation.
+
+EMES additionally needs autonomous AI iteration without allowing the proposing model to become the authority for its own claims.
+
+== Decision
+
+EMES will distinguish two related graph views.
+
+Semantic design graph::
+The authoritative model of requirements, intent/function, mechanism topology, parameters, interfaces, load cases, analysis declarations, constraints, and objectives.
+
+Evidence graph::
+The attributable results used to evaluate claims about a particular design digest: generated artifacts, analysis executions, metrics, uncertainty, tool versions, input digests, measurements, and verifier decisions.
+
+AI and optimization agents may propose patches to permitted parts of the semantic design source.
+They do not directly author passing evidence.
+Evidence is produced by registered deterministic or explicitly controlled analysis/measurement adapters.
+
+Phase 1 does not adopt a full GBDL ontology/rule language, FBS schema, QUDT ontology, or W3C PROV serialization.
+The core data model should remain compatible with later mappings to those concepts where useful.
+
+== Consequences
+
+Positive:
+
+* prior design-automation work is reused conceptually rather than reinvented;
+* stale evidence can be invalidated when the source/toolchain changes;
+* an LLM cannot satisfy a requirement merely by editing its claimed result;
+* multiple solver fidelities can support or contradict the same design claim;
+* Git diffs remain centered on design intent rather than generated results.
+
+Negative:
+
+* implementations must maintain explicit linkage between design and evidence IDs/digests;
+* some external systems combine model and result state and will require adapters.
+
+== Follow-up
+
+Before stabilizing a later IR version, test whether explicit Function and Behaviour entities materially improve at least two distinct mechanism examples. If they do, add them deliberately rather than introducing a broad ontology preemptively.
