@@ -1,0 +1,24 @@
+= EMES
+:toc:
+
+EMES (Executable Mechanical Engineering Specification) is an AI-native architecture for describing, generating, verifying, and iterating mechanical mechanisms as structured, version-controlled engineering data.
+
+== Project goal
+
+The project treats a mechanism as executable engineering specification rather than a manually edited CAD artifact.
+
+[source,text]
+----
+requirements
+    -> semantic mechanism model
+    -> generated engineering artifacts
+    -> simulation / verification
+    -> objective evaluation
+    -> AI design iteration
+----
+
+The canonical source is text-based, reviewable, diffable, and suitable for GitHub-based development. CAD, simulation models, meshes, reports, and BOMs are derived artifacts.
+
+== Development status
+
+Architecture definition is the first implementation phase. The initial target is a minimal end-to-end path from a structured mechanism description to deterministic validation and derived outputs.
