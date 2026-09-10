@@ -31,7 +31,10 @@ def index_by_id(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 
 
 def positive_integer_parameter(document: dict[str, Any], parameter_id: str) -> int:
-    parameter = index_by_id(document["parameters"])[parameter_id]
+    parameters = index_by_id(document["parameters"])
+    if parameter_id not in parameters:
+        raise ValueError(f"unknown power parameter {parameter_id}")
+    parameter = parameters[parameter_id]
     value = quantity_value(parameter["value"], "1", parameter_id)
     integer = int(value)
     if value != integer or integer < 1:
@@ -46,12 +49,15 @@ def require_part_kind(part: dict[str, Any], expected: str, component_id: str) ->
         )
 
 
-def load_power_watts(document: dict[str, Any], load_case_id: str, voltage: float) -> tuple[float, float]:
+def load_power_watts(
+    document: dict[str, Any], load_case_id: str, voltage: float
+) -> tuple[float, float]:
     cases = index_by_id(document["load_cases"])
-    case = cases[load_case_id]
+    if load_case_id not in cases:
+        raise ValueError(f"unknown power load case {load_case_id}")
     watts = 0.0
     direct_amps = 0.0
-    for load in case.get("loads", []):
+    for load in cases[load_case_id].get("loads", []):
         unit = load["value"]["unit"]
         if unit == "W":
             watts += quantity_value(load["value"], "W", f"{load_case_id}.load")
@@ -97,48 +103,107 @@ def evaluate_constraints(
     return results
 
 
-def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
-    selected = resolve_catalog_parts(
+def selected_part_record(component_id: str, part: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "component": component_id,
+        "part_id": part["id"],
+        "kind": part["kind"],
+        "manufacturer": part["identity"]["manufacturer"],
+        "part_number": part["identity"]["part_number"],
+        "part_digest": catalog_digest(part),
+    }
+
+
+def evidence(
+    document: dict[str, Any],
+    topology: dict[str, Any],
+    selected: dict[str, dict[str, Any]],
+    selected_ids: list[str],
+    metrics: dict[str, tuple[float, str]],
+) -> dict[str, Any]:
+    return {
+        "emes_evidence_version": "0.1",
+        "design_id": document["design"]["id"],
+        "design_digest": canonical_digest(document),
+        "power_topology": topology,
+        "selected_parts": [
+            selected_part_record(component_id, selected[component_id])
+            for component_id in sorted(selected_ids)
+        ],
+        "metrics": [
+            {"id": metric_id, "value": value, "unit": unit, "method": "analytic"}
+            for metric_id, (value, unit) in metrics.items()
+        ],
+        "constraint_results": evaluate_constraints(document, metrics),
+    }
+
+
+def evaluate_fixed_supply(
+    document: dict[str, Any],
+    selected: dict[str, dict[str, Any]],
+    path: dict[str, Any],
+) -> dict[str, Any]:
+    source_component = path["source_component"]
+    if "converter_component" in path:
+        raise ValueError("Phase-1 fixed power-supply path does not yet support a converter")
+    if source_component not in selected:
+        raise ValueError(f"{source_component}: power source must be catalog-backed")
+    source = selected[source_component]
+    require_part_kind(source, "power_supply", source_component)
+
+    voltage = property_number(source, "output_voltage", "V")
+    current_limit = property_number(source, "continuous_output_current", "A")
+    declared_power = property_number(source, "continuous_output_power", "W")
+    current_power = voltage * current_limit
+    power_limit = min(declared_power, current_power)
+    load_power, load_current = load_power_watts(document, path["load_case"], voltage)
+
+    metrics: dict[str, tuple[float, str]] = {
+        "M_BUS_VOLTAGE": (voltage, "V"),
+        "M_LOAD_POWER": (load_power, "W"),
+        "M_LOAD_OUTPUT_CURRENT": (load_current, "A"),
+        "M_SOURCE_CONTINUOUS_CURRENT": (current_limit, "A"),
+        "M_SOURCE_CONTINUOUS_POWER": (power_limit, "W"),
+        "M_SOURCE_CURRENT_MARGIN": (current_limit - load_current, "A"),
+        "M_SOURCE_POWER_MARGIN": (power_limit - load_power, "W"),
+    }
+    return evidence(
         document,
-        repo_root=repo_root,
-        catalog_schema_path=repo_root / "spec/emes-catalog-v0.schema.json",
+        {
+            "path_id": path["id"],
+            "source_kind": "power_supply",
+            "source_component": source_component,
+            "load_case": path["load_case"],
+        },
+        selected,
+        [source_component],
+        metrics,
     )
-    extension = document.get("extensions", {}).get("org.emes.power")
-    if not isinstance(extension, dict):
-        raise ValueError("missing extensions.org.emes.power")
-    power_schema = load_json(repo_root / "spec/emes-power-v0.schema.json")
-    validator_cls = jsonschema.validators.validator_for(power_schema)
-    validator_cls.check_schema(power_schema)
-    validator_cls(power_schema).validate(extension)
 
-    packs = extension.get("battery_packs", [])
-    paths = extension.get("power_paths", [])
-    if len(packs) != 1 or len(paths) != 1:
-        raise ValueError("Phase-1 power adapter requires exactly one battery pack and one power path")
 
-    pack = packs[0]
-    path = paths[0]
-    if path.get("source_pack") != pack["id"]:
-        raise ValueError("Phase-1 power path must reference the declared battery pack")
+def evaluate_battery_pack(
+    document: dict[str, Any],
+    selected: dict[str, dict[str, Any]],
+    pack: dict[str, Any],
+    path: dict[str, Any],
+) -> dict[str, Any]:
+    if path["source_pack"] != pack["id"]:
+        raise ValueError("power path references an unknown battery pack")
+    if "bms_component" not in pack:
+        raise ValueError("Phase-1 battery pack requires an explicit BMS component")
+    if "converter_component" not in path:
+        raise ValueError("Phase-1 battery pack path requires an explicit power converter")
 
     cell_component = pack["cell_component"]
     bms_component = pack["bms_component"]
     converter_component = path["converter_component"]
-    for component_id in (cell_component, bms_component, converter_component):
-        if component_id not in selected:
-            raise ValueError(f"{component_id}: power component must be catalog-backed")
-
     component_ids = {item["id"] for item in document["components"]}
-    parameter_ids = {item["id"] for item in document["parameters"]}
-    load_case_ids = {item["id"] for item in document["load_cases"]}
     for component_id in (pack["component"], cell_component, bms_component, converter_component):
         if component_id not in component_ids:
             raise ValueError(f"{pack['id']}: unknown component {component_id}")
-    for parameter_id in (pack["series_parameter"], pack["parallel_parameter"]):
-        if parameter_id not in parameter_ids:
-            raise ValueError(f"{pack['id']}: unknown parameter {parameter_id}")
-    if path["load_case"] not in load_case_ids:
-        raise ValueError(f"{path['id']}: unknown load case {path['load_case']}")
+    for component_id in (cell_component, bms_component, converter_component):
+        if component_id not in selected:
+            raise ValueError(f"{component_id}: power component must be catalog-backed")
 
     cell = selected[cell_component]
     bms = selected[bms_component]
@@ -187,9 +252,7 @@ def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
             f"pack=[{pack_min_v:g},{pack_max_v:g}]V converter=[{converter_min_v:g},{converter_max_v:g}]V"
         )
 
-    load_power_w, load_output_a = load_power_watts(
-        document, path["load_case"], converter_output_v
-    )
+    load_power_w, load_output_a = load_power_watts(document, path["load_case"], converter_output_v)
     converter_output_limit_w = converter_output_v * converter_output_a
     converter_power_margin_w = converter_output_limit_w - load_power_w
     input_power_w = load_power_w / efficiency
@@ -221,12 +284,11 @@ def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
         "M_CONVERTER_OUTPUT_CURRENT": (load_output_a, "A"),
         "M_CONVERTER_POWER_MARGIN": (converter_power_margin_w, "W"),
     }
-    constraints = evaluate_constraints(document, metrics)
-    return {
-        "emes_evidence_version": "0.1",
-        "design_id": document["design"]["id"],
-        "design_digest": canonical_digest(document),
-        "power_topology": {
+    return evidence(
+        document,
+        {
+            "path_id": path["id"],
+            "source_kind": "battery_pack",
             "pack_id": pack["id"],
             "series": series,
             "parallel": parallel,
@@ -234,24 +296,39 @@ def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
             "cell_component": cell_component,
             "bms_component": bms_component,
             "converter_component": converter_component,
+            "load_case": path["load_case"],
         },
-        "selected_parts": [
-            {
-                "component": component_id,
-                "part_id": selected[component_id]["id"],
-                "kind": selected[component_id]["kind"],
-                "manufacturer": selected[component_id]["identity"]["manufacturer"],
-                "part_number": selected[component_id]["identity"]["part_number"],
-                "part_digest": catalog_digest(selected[component_id]),
-            }
-            for component_id in sorted((cell_component, bms_component, converter_component))
-        ],
-        "metrics": [
-            {"id": metric_id, "value": value, "unit": unit, "method": "analytic"}
-            for metric_id, (value, unit) in metrics.items()
-        ],
-        "constraint_results": constraints,
-    }
+        selected,
+        [cell_component, bms_component, converter_component],
+        metrics,
+    )
+
+
+def evaluate(document: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    selected = resolve_catalog_parts(
+        document,
+        repo_root=repo_root,
+        catalog_schema_path=repo_root / "spec/emes-catalog-v0.schema.json",
+    )
+    extension = document.get("extensions", {}).get("org.emes.power")
+    if not isinstance(extension, dict):
+        raise ValueError("missing extensions.org.emes.power")
+    power_schema = load_json(repo_root / "spec/emes-power-v0.schema.json")
+    validator_cls = jsonschema.validators.validator_for(power_schema)
+    validator_cls.check_schema(power_schema)
+    validator_cls(power_schema).validate(extension)
+
+    paths = extension["power_paths"]
+    if len(paths) != 1:
+        raise ValueError("Phase-1 power adapter requires exactly one power path")
+    path = paths[0]
+    if "source_component" in path:
+        return evaluate_fixed_supply(document, selected, path)
+
+    packs = extension["battery_packs"]
+    if len(packs) != 1:
+        raise ValueError("Phase-1 battery analysis requires exactly one battery pack")
+    return evaluate_battery_pack(document, selected, packs[0], path)
 
 
 def run(source: Path, out: Path, repo_root: Path) -> dict[str, Any]:
@@ -261,19 +338,19 @@ def run(source: Path, out: Path, repo_root: Path) -> dict[str, Any]:
     validator_cls.check_schema(schema)
     validator_cls(schema).validate(document)
     validate_semantics(document)
-    evidence = evaluate(document, repo_root)
-    failures = [item["id"] for item in evidence["constraint_results"] if item["status"] == "fail"]
+    result = evaluate(document, repo_root)
+    failures = [item["id"] for item in result["constraint_results"] if item["status"] == "fail"]
     if failures:
         raise RuntimeError("power constraints failed: " + ", ".join(failures))
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    return evidence
+    out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("source", nargs="?", type=Path, default=Path("examples/power-pack/mechanism.json"))
-    parser.add_argument("--out", type=Path, default=Path("generated/power-pack/evidence.json"))
+    parser.add_argument("--out", type=Path, default=Path("generated/power/evidence.json"))
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--check-determinism", action="store_true")
     args = parser.parse_args()
