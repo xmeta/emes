@@ -1,0 +1,29 @@
+name: maxon-provider
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools/providers/maxon.py"
+      - "catalogs/sources/maxon-496661.source.json"
+      - "catalogs/maxon-496661.catalog.json"
+      - ".github/workflows/maxon-provider.yml"
+  pull_request:
+    paths:
+      - "tools/providers/maxon.py"
+      - "catalogs/sources/maxon-496661.source.json"
+      - "catalogs/maxon-496661.catalog.json"
+      - ".github/workflows/maxon-provider.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/providers/maxon.py probe
