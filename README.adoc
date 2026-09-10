@@ -54,6 +54,8 @@ The power-system layer adds composable electrical components. A catalog-backed 2
 
 The first design-iteration loop is also executable on the synthetic power-pack example. `tools/power_pack_iteration.py` makes one allowlisted proposal (`P_PACK_PARALLEL: 2 -> 1`), validates and evaluates baseline and candidate through the same power evidence path, compares the declared pack-mass objective, and records a deterministic keep/reject decision. The lighter 10S1P candidate is rejected because it violates energy and current-margin constraints, demonstrating that objective improvement cannot override engineering acceptance.
 
+All current evidence producers now share `spec/emes-evidence-v0.schema.json`: producer/runtime identity, role-labelled input digests, metrics, constraint results, and verification state use one validated envelope while geometry, battery, and other domain payloads remain domain-specific. Consumers validate the envelope and parent evidence digest before using upstream results.
+
 `catalogs/molicel-p45b.catalog.json` is the first authoritative manufacturer battery-cell snapshot. It is normalized from the hash-pinned Molicel INR-21700-P45B Product Data Sheet v1.4, with an independently hash-pinned official performance page for discrete short-duration performance points. Manufacturer conditions remain attached to the engineering facts they qualify rather than being flattened into unconditional limits.
 
 `examples/power-pack-molicel-p45b/mechanism.json` binds that real cell record to a hash-pinned JKBMS `JK-BD6A20S-6P` BMS and a synthetic converter fixture. The power evaluator accepts the P45B continuous-discharge rating only when the mechanism explicitly selects the source-backed 70 degC JKBMS factory-default discharge over-temperature setting. It also checks the BMS 7--20S and 20--100 V operating envelope against the full modeled pack range. This is executable sizing/traceability evidence, not a thermal model, certification, or permission to fabricate or energize a battery pack.
@@ -76,6 +78,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 
 * `docs/architecture.adoc` -- normative architecture direction.
 * `docs/executable-loop.adoc` -- first CAD/MuJoCo end-to-end slice.
+* `docs/evidence-envelope.adoc` -- shared evidence/provenance envelope and lineage validation.
 * `docs/catalogs.adoc` -- purchased-component snapshot and binding model.
 * `docs/real-catalog-maxon.adoc` -- first authoritative manufacturer motor catalog and evidence policy.
 * `docs/real-catalog-molicel.adoc` -- authoritative P45B battery-cell snapshot and executable conditional-rating policy.

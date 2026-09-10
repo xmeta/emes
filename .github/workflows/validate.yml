@@ -21,6 +21,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: python tools/validate.py
       - run: python tools/check_acceptance.py
+      - run: python tools/check_evidence.py
       - run: python tools/catalog.py validate catalogs/reference-motors.catalog.json
       - run: python tools/catalog.py import-motor-csv catalogs/raw/reference-motors.csv /tmp/reference-motors.catalog.json
       - run: |

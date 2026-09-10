@@ -14,6 +14,7 @@ import jsonschema
 
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
+from evidence import envelope_fields, validate_evidence
 from validate import canonical_digest, load_json, summarize_verification, validate_semantics
 
 
@@ -254,27 +255,31 @@ def evidence(
     rating_condition_results: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     constraint_results = evaluate_constraints(document, metrics)
+    metric_records = [
+        {
+            "id": metric_id,
+            "value": value,
+            "unit": unit,
+            "method": "analytic",
+        }
+        for metric_id, (value, unit) in metrics.items()
+    ]
     return {
-        "emes_evidence_version": "0.1",
-        "design_id": document["design"]["id"],
-        "design_digest": canonical_digest(document),
+        **envelope_fields(
+            producer_id="power",
+            design_id=document["design"]["id"],
+            design_digest=canonical_digest(document),
+            inputs=[],
+            metrics=metric_records,
+            constraint_results=constraint_results,
+            verification=summarize_verification(constraint_results),
+        ),
         "power_topology": topology,
         "selected_parts": [
             selected_part_record(component_id, selected[component_id])
             for component_id in sorted(selected_ids)
         ],
         "rating_condition_results": rating_condition_results or [],
-        "metrics": [
-            {
-                "id": metric_id,
-                "value": value,
-                "unit": unit,
-                "method": "analytic",
-            }
-            for metric_id, (value, unit) in metrics.items()
-        ],
-        "verification": summarize_verification(constraint_results),
-        "constraint_results": constraint_results,
     }
 
 
@@ -538,6 +543,7 @@ def run(source: Path, out: Path, repo_root: Path) -> dict[str, Any]:
     validator_cls(schema).validate(document)
     validate_semantics(document)
     result = evaluate(document, repo_root)
+    validate_evidence(result, repo_root, expected_producer="power")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"

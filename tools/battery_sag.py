@@ -14,8 +14,9 @@ import jsonschema
 
 from catalog import canonical_digest as catalog_digest
 from catalog import resolve_catalog_parts
+from evidence import envelope_fields, input_record, no_design_decision, validate_evidence
 from power import OPERATORS, evaluate_constraints, index_by_id, quantity_value
-from validate import canonical_digest, load_json, validate_semantics
+from validate import canonical_digest, load_json, summarize_verification, validate_semantics
 
 
 def evidence_metric(
@@ -100,6 +101,7 @@ def evaluate(
     repo_root: Path,
 ) -> dict[str, Any]:
     design_digest = canonical_digest(document)
+    validate_evidence(power_evidence, repo_root, expected_producer="power")
     if power_evidence.get("design_digest") != design_digest:
         raise ValueError("power evidence design digest does not match mechanism")
 
@@ -163,11 +165,24 @@ def evaluate(
     ]
     constraint_results = evaluate_constraints(local_document, metrics)
 
+    metric_records = [
+        {"id": metric_id, "value": value, "unit": unit, "method": "analytic"}
+        for metric_id, (value, unit) in metrics.items()
+    ]
     return {
-        "emes_battery_sag_evidence_version": "0.1",
-        "design_id": document["design"]["id"],
-        "design_digest": design_digest,
-        "input_power_evidence_digest": canonical_digest(power_evidence),
+        **envelope_fields(
+            producer_id="battery_sag",
+            design_id=document["design"]["id"],
+            design_digest=design_digest,
+            inputs=[input_record("power", canonical_digest(power_evidence))],
+            metrics=metric_records,
+            constraint_results=constraint_results,
+            verification=(
+                summarize_verification(constraint_results)
+                if constraint_results
+                else no_design_decision()
+            ),
+        ),
         "method": "first_order_resistive_drop_at_nominal_point",
         "limitations": [
             "Uses a source-conditioned typical DC impedance as a first-order resistance.",
@@ -183,11 +198,6 @@ def evaluate(
             "cell_part_digest": catalog_digest(cell),
         },
         "condition_results": condition_results,
-        "metrics": [
-            {"id": metric_id, "value": value, "unit": unit, "method": "analytic"}
-            for metric_id, (value, unit) in metrics.items()
-        ],
-        "constraint_results": constraint_results,
     }
 
 
@@ -205,6 +215,7 @@ def run(
     validate_semantics(document)
     power_evidence = load_json(power_evidence_path)
     result = evaluate(document, power_evidence, repo_root)
+    validate_evidence(result, repo_root, expected_producer="battery_sag")
     failures = [
         item["id"] for item in result["constraint_results"] if item["status"] == "fail"
     ]

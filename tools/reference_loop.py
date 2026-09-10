@@ -21,6 +21,7 @@ import numpy as np
 
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
+from evidence import envelope_fields, validate_evidence
 from validate import canonical_digest, load_json, summarize_verification, validate_semantics
 
 FIXED_STEP_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
@@ -400,10 +401,28 @@ def run_bundle(
     toolchain_record = toolchain()
     toolchain_digest = digest_json(toolchain_record)
     constraint_results = evaluate_constraints(document, metrics)
+    metric_records = [
+        {
+            "id": metric_id,
+            "value": value,
+            "unit": unit,
+            "method": "analytic",
+            "source_design_digest": design_digest,
+        }
+        for metric_id, (value, unit) in metrics.items()
+    ]
+    verification = summarize_verification(constraint_results, required_constraints)
     evidence = {
-        "emes_evidence_version": "0.1",
-        "design_id": document["design"]["id"],
-        "design_digest": design_digest,
+        **envelope_fields(
+            producer_id="reference_loop",
+            design_id=document["design"]["id"],
+            design_digest=design_digest,
+            inputs=[],
+            metrics=metric_records,
+            constraint_results=constraint_results,
+            verification=verification,
+            packages=("build123d", "mujoco"),
+        ),
         "toolchain": toolchain_record,
         "toolchain_digest": toolchain_digest,
         "load_case": load_case,
@@ -429,23 +448,10 @@ def run_bundle(
                 "toolchain_digest": toolchain_digest,
             },
         ],
-        "metrics": [
-            {
-                "id": metric_id,
-                "value": value,
-                "unit": unit,
-                "method": "analytic",
-                "source_design_digest": design_digest,
-            }
-            for metric_id, (value, unit) in metrics.items()
-        ],
-        "verification": summarize_verification(
-            constraint_results, required_constraints
-        ),
-        "constraint_results": constraint_results,
         "geometry": step,
         "dynamics_smoke": smoke,
     }
+    validate_evidence(evidence, repo_root, expected_producer="reference_loop")
     (out_dir / "evidence.json").write_text(
         json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
