@@ -60,7 +60,9 @@ The same P45B example has a separate source-conditioned battery-sag analysis. `t
 
 `tools/battery_pulse.py` consumes exact manufacturer short-duration points through a structured analysis request. The current P45B catalog exposes 168 W/cell at 10 s and 50% SOC and 184 W/cell at 10 s and 90% SOC. An unsupported SOC or duration is rejected rather than interpolated or extrapolated.
 
-`tools/battery_known_envelope.py` then combines the cell pulse envelope with currently known downstream BMS and converter limits using dimensionless load-scale factors while preserving each rating's native unit. In the reference 10S2P/500 W case the synthetic converter is the current weakest known component at a 1.44 load-scale factor, corresponding to a 720 W output envelope. This is deliberately not described as a complete system pulse rating because fuse, interconnect, conductor, connector, contactor, thermal, imbalance, aging, and enclosure limits remain unmodeled.
+`tools/battery_known_envelope.py` combines the cell pulse envelope with known downstream component limits using dimensionless load-scale factors while preserving each rating's native unit. In the reference unfused 10S2P/500 W case the synthetic converter is the weakest known component at a 1.44 load-scale factor, corresponding to a 720 W output envelope.
+
+`examples/power-pack-molicel-p45b-fused/mechanism.json` adds a first-class series fuse using reviewed manufacturer data for Littelfuse `4998040.M-M6` (40 A, 70 V DC). The evaluator requires fuse DC voltage rating to cover maximum pack voltage and includes nominal fuse current as a conservative known-limit cap without calling it a 10-second pulse rating. A 15 A counterexample moves the weakest-link identity to the fuse; a 30 V counterexample is rejected against the 42 V maximum pack voltage. The upstream Littelfuse PDF remains explicitly `raw_bytes_not_pinned` because automated source acquisition is blocked, so this is not physical safety approval. Interconnect, conductor, connector, contactor, thermal, imbalance, aging, charger, enclosure, and certification limits remain incomplete.
 
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
@@ -71,6 +73,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/catalogs.adoc` -- purchased-component snapshot and binding model.
 * `docs/real-catalog-maxon.adoc` -- first authoritative manufacturer motor catalog and evidence policy.
 * `docs/real-catalog-molicel.adoc` -- authoritative P45B battery-cell snapshot and executable conditional-rating policy.
+* `docs/real-catalog-littelfuse-midi.adoc` -- reviewed real DC-fuse catalog, explicit power-path semantics, and source-integrity boundary.
 * `docs/power-systems.adoc` -- electrical power components and series/parallel battery-pack composition.
 * `docs/battery-sag.adoc` -- source-conditioned first-order battery resistance/voltage-drop analysis and its limits.
 * `docs/battery-pulse.adoc` -- exact source-conditioned short-duration cell-power analysis.
@@ -86,3 +89,4 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `examples/two-link-arm/mechanism.json` -- reference mechanical mechanism.
 * `examples/power-pack/mechanism.json` -- synthetic 21700 battery-powered subsystem.
 * `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls and source-conditioned analyses.
+* `examples/power-pack-molicel-p45b-fused/mechanism.json` -- P45B battery example with an explicit reviewed Littelfuse DC fuse participating in weakest-link evaluation.
