@@ -33,7 +33,7 @@ The canonical source records requirements, topology, parameters, interfaces, loa
 
 A key architectural boundary is the separation between the semantic design graph and the evidence graph: AI may propose changes to the design, while registered tools and measurements produce the evidence used to accept or reject those changes.
 
-Purchased components are also explicit engineering inputs. Motors, gearboxes, bearings, sensors, fasteners, and similar parts can be normalized into versioned catalog snapshots containing dimensions, interfaces, unit-bearing properties, performance curves, and attributed assets. A mechanism binds to a specific catalog/part digest rather than a live mutable vendor record.
+Purchased components are also explicit engineering inputs. Motors, gearboxes, bearings, sensors, fasteners, battery cells, BMS units, power supplies, and converters can be normalized into versioned catalog snapshots containing dimensions, interfaces, unit-bearing properties, performance data, and attributed assets. A mechanism binds to a specific catalog/part digest rather than a live mutable vendor record.
 
 == Current status
 
@@ -50,6 +50,8 @@ EMES JSON
 
 The catalog layer supports deterministic import and pinned part binding. A synthetic motor fixture exercises the generic import contract, while `catalogs/maxon-496661.catalog.json` exercises the same architecture with an attributable real manufacturer motor snapshot. The maxon record is regenerated offline from a reviewed source snapshot and independently checked against hash-pinned manufacturer PDF/CAD assets.
 
+The current power-system slice adds composable electrical components. A catalog-backed 21700-format cell can be combined by explicit series/parallel counts into a battery pack, constrained by a BMS, passed through a DC/DC converter, and evaluated against electrical load, energy, current, voltage, and mass constraints. The reference cell data are synthetic architecture fixtures, not a real-cell recommendation.
+
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
 == Documents
@@ -58,10 +60,12 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/executable-loop.adoc` -- first CAD/MuJoCo end-to-end slice.
 * `docs/catalogs.adoc` -- purchased-component snapshot and binding model.
 * `docs/real-catalog-maxon.adoc` -- first authoritative manufacturer catalog and evidence policy.
+* `docs/power-systems.adoc` -- electrical power components and series/parallel battery-pack composition.
 * `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
 * `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
 * `docs/research/product-data-standards.adoc` -- parts-library/product-data standards and provider strategy.
 * `docs/decisions/` -- architecture decisions.
 * `spec/emes-ir-v0.schema.json` -- initial mechanism structural contract.
 * `spec/emes-catalog-v0.schema.json` -- initial purchased-component catalog contract.
-* `examples/two-link-arm/mechanism.json` -- reference mechanism.
+* `examples/two-link-arm/mechanism.json` -- reference mechanical mechanism.
+* `examples/power-pack/mechanism.json` -- reference 21700 battery-powered subsystem.

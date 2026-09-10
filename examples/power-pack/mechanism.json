@@ -1,0 +1,184 @@
+{
+  "emes_version": "0.1",
+  "design": {
+    "id": "DESIGN_POWER_PACK",
+    "name": "Reference 21700 battery-powered DC subsystem",
+    "description": "Synthetic 21700 10S2P pack, BMS and DC converter fixture for EMES power composition."
+  },
+  "requirements": [
+    {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
+    {"id": "R_ENERGY", "kind": "performance", "statement": "Provide at least 300 Wh nominal stored energy."},
+    {"id": "R_CURRENT", "kind": "performance", "statement": "Supply the reference load within both pack-current and converter-power limits."},
+    {"id": "R_BMS", "kind": "safety", "statement": "Use a BMS compatible with pack series count and maximum pack voltage."}
+  ],
+  "design_intent": [
+    {
+      "id": "DI_COMPOSE_CELLS",
+      "statement": "Represent repeated cylindrical cells by series/parallel composition rather than duplicating cell records.",
+      "protects": ["R_ENERGY", "R_BMS"]
+    }
+  ],
+  "parameters": [
+    {
+      "id": "P_PACK_SERIES",
+      "role": "design_variable",
+      "value": {"value": 10.0, "unit": "1"},
+      "lower": {"value": 1.0, "unit": "1"},
+      "upper": {"value": 20.0, "unit": "1"}
+    },
+    {
+      "id": "P_PACK_PARALLEL",
+      "role": "design_variable",
+      "value": {"value": 2.0, "unit": "1"},
+      "lower": {"value": 1.0, "unit": "1"},
+      "upper": {"value": 10.0, "unit": "1"}
+    }
+  ],
+  "components": [
+    {
+      "id": "cell_model",
+      "kind": "purchased_part",
+      "metadata": {
+        "org.emes.catalog_ref": {
+          "catalog": "CAT_POWER",
+          "part": "CELL_REF_21700_A",
+          "digest": "sha256:876333a91c1955b0525c5cf79d861a0d3eb41f8e97e5ec356778433c2565b5ef"
+        }
+      }
+    },
+    {
+      "id": "bms",
+      "kind": "purchased_part",
+      "metadata": {
+        "org.emes.catalog_ref": {
+          "catalog": "CAT_POWER",
+          "part": "BMS_REF_12S_30A",
+          "digest": "sha256:f80c5bbdb817de76c19cfb3bcfe5e89756e3f551aef58378cec42406537ed253"
+        }
+      }
+    },
+    {
+      "id": "battery_pack",
+      "kind": "other",
+      "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL"],
+      "metadata": {"org.emes.role": "battery_pack_assembly"}
+    },
+    {
+      "id": "dc_converter",
+      "kind": "purchased_part",
+      "metadata": {
+        "org.emes.catalog_ref": {
+          "catalog": "CAT_POWER",
+          "part": "DCDC_REF_25_50V_TO_36V_20A",
+          "digest": "sha256:71785ddca5367b924235f7e1e9fbd8de313f0e97dc8e3e7fb03f5553929b695d"
+        }
+      }
+    },
+    {"id": "dc_bus_load", "kind": "other", "metadata": {"org.emes.role": "electrical_load"}}
+  ],
+  "connections": [
+    {
+      "id": "E_PACK_TO_CONVERTER",
+      "kind": "electrical",
+      "a": {"component": "battery_pack", "port": "dc_out"},
+      "b": {"component": "dc_converter", "port": "IF_DC_IN"}
+    },
+    {
+      "id": "E_CONVERTER_TO_LOAD",
+      "kind": "electrical",
+      "a": {"component": "dc_converter", "port": "IF_DC_OUT"},
+      "b": {"component": "dc_bus_load", "port": "dc_in"}
+    }
+  ],
+  "functional_edges": [
+    {"id": "F_CELL_COMPOSES_PACK", "from": "cell_model", "relation": "repeated-series-parallel-member-of", "to": "battery_pack"},
+    {"id": "F_BMS_PROTECTS_PACK", "from": "bms", "relation": "protects", "to": "battery_pack"},
+    {"id": "F_PACK_POWERS_CONVERTER", "from": "battery_pack", "relation": "supplies-electrical-power-to", "to": "dc_converter"},
+    {"id": "F_CONVERTER_POWERS_LOAD", "from": "dc_converter", "relation": "supplies-electrical-power-to", "to": "dc_bus_load"}
+  ],
+  "load_cases": [
+    {
+      "id": "LC_POWER",
+      "description": "Reference continuous electrical load",
+      "loads": [
+        {"target": "dc_bus_load", "kind": "other", "value": {"value": 500.0, "unit": "W"}}
+      ]
+    }
+  ],
+  "constraints": [
+    {"id": "C_BUS_VOLTAGE", "metric": "M_CONVERTER_OUTPUT_VOLTAGE", "op": "==", "target": {"value": 36.0, "unit": "V"}, "load_case": "LC_POWER"},
+    {"id": "C_ENERGY", "metric": "M_PACK_NOMINAL_ENERGY", "op": ">=", "target": {"value": 300.0, "unit": "W*h"}, "load_case": "LC_POWER"},
+    {"id": "C_CURRENT_MARGIN", "metric": "M_PACK_CURRENT_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "A"}, "load_case": "LC_POWER"},
+    {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"},
+    {"id": "C_BMS_SERIES", "metric": "M_BMS_SERIES_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "1"}, "load_case": "LC_POWER"},
+    {"id": "C_BMS_VOLTAGE", "metric": "M_BMS_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"}
+  ],
+  "objectives": [
+    {"id": "O_PACK_MASS", "metric": "M_PACK_TOTAL_MASS", "direction": "minimize", "weight": 1.0}
+  ],
+  "analyses": [
+    {
+      "id": "A_POWER",
+      "kind": "other",
+      "adapter": "tools/power.py",
+      "fidelity": "analytic",
+      "load_cases": ["LC_POWER"],
+      "produces": [
+        {"id": "M_PACK_CELL_COUNT", "unit": "1"},
+        {"id": "M_PACK_NOMINAL_VOLTAGE", "unit": "V"},
+        {"id": "M_PACK_MAX_VOLTAGE", "unit": "V"},
+        {"id": "M_PACK_MIN_VOLTAGE", "unit": "V"},
+        {"id": "M_PACK_CAPACITY", "unit": "A*h"},
+        {"id": "M_PACK_NOMINAL_ENERGY", "unit": "W*h"},
+        {"id": "M_PACK_CONTINUOUS_CURRENT", "unit": "A"},
+        {"id": "M_PACK_CONTINUOUS_POWER", "unit": "W"},
+        {"id": "M_PACK_CELL_MASS", "unit": "kg"},
+        {"id": "M_PACK_TOTAL_MASS", "unit": "kg"},
+        {"id": "M_LOAD_POWER", "unit": "W"},
+        {"id": "M_LOAD_EQUIV_PACK_CURRENT", "unit": "A"},
+        {"id": "M_PACK_CURRENT_MARGIN", "unit": "A"},
+        {"id": "M_BMS_SERIES_MARGIN", "unit": "1"},
+        {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"},
+        {"id": "M_CONVERTER_OUTPUT_VOLTAGE", "unit": "V"},
+        {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"},
+        {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}
+      ]
+    }
+  ],
+  "traceability": [
+    {"requirement": "R_BUS_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
+    {"requirement": "R_ENERGY", "verified_by": ["C_ENERGY"]},
+    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER"]},
+    {"requirement": "R_BMS", "verified_by": ["C_BMS_SERIES", "C_BMS_VOLTAGE"]}
+  ],
+  "extensions": {
+    "org.emes.catalogs": [
+      {
+        "id": "CAT_POWER",
+        "path": "catalogs/reference-power.catalog.json",
+        "digest": "sha256:ae2d9cd11b18fc0233f2b96d4ce65eb69f3c43a3cc92eccf5940b4c0096a6ade"
+      }
+    ],
+    "org.emes.power": {
+      "battery_packs": [
+        {
+          "id": "PACK_MAIN",
+          "component": "battery_pack",
+          "cell_component": "cell_model",
+          "bms_component": "bms",
+          "series_parameter": "P_PACK_SERIES",
+          "parallel_parameter": "P_PACK_PARALLEL",
+          "overhead_mass": {"value": 0.25, "unit": "kg"}
+        }
+      ],
+      "power_paths": [
+        {
+          "id": "PATH_MAIN",
+          "source_pack": "PACK_MAIN",
+          "converter_component": "dc_converter",
+          "load_case": "LC_POWER"
+        }
+      ]
+    }
+  }
+}
