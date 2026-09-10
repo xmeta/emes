@@ -8,6 +8,7 @@ on:
       - "catalogs/sources/jkbms-bd6a20s6p.source.json"
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - ".github/workflows/jkbms-provider.yml"
+      - "tools/ci/jkbms-provider.sh"
       - "tools/catalog.py"
       - "spec/emes-catalog-v0.schema.json"
   pull_request:
@@ -16,6 +17,7 @@ on:
       - "catalogs/sources/jkbms-bd6a20s6p.source.json"
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - ".github/workflows/jkbms-provider.yml"
+      - "tools/ci/jkbms-provider.sh"
       - "tools/catalog.py"
       - "spec/emes-catalog-v0.schema.json"
   workflow_dispatch:
@@ -32,14 +34,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install jsonschema==4.26.0
-      - run: python tools/providers/jkbms.py verify-snapshot catalogs/sources/jkbms-bd6a20s6p.source.json
-      - run: python tools/providers/jkbms.py normalize catalogs/sources/jkbms-bd6a20s6p.source.json /tmp/jkbms.catalog.json
-      - run: |
-          python - <<'PY'
-          import json
-          committed = json.load(open('catalogs/jkbms-bd6a20s6p.catalog.json'))
-          generated = json.load(open('/tmp/jkbms.catalog.json'))
-          assert committed == generated
-          print('VALID deterministic-jkbms-catalog-content')
-          PY
-      - run: python tools/catalog.py validate catalogs/jkbms-bd6a20s6p.catalog.json
+      - run: bash tools/ci/jkbms-provider.sh
