@@ -37,6 +37,7 @@
         "id",
         "component",
         "cell_component",
+        "bms_component",
         "series_parameter",
         "parallel_parameter",
         "overhead_mass"
@@ -63,8 +64,19 @@
         "load_case": {"$ref": "#/$defs/id"}
       },
       "oneOf": [
-        {"required": ["source_pack"], "not": {"required": ["source_component"]}},
-        {"required": ["source_component"], "not": {"required": ["source_pack"]}}
+        {
+          "required": ["source_pack", "converter_component"],
+          "not": {"required": ["source_component"]}
+        },
+        {
+          "required": ["source_component"],
+          "not": {
+            "anyOf": [
+              {"required": ["source_pack"]},
+              {"required": ["converter_component"]}
+            ]
+          }
+        }
       ]
     }
   }
