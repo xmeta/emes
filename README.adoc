@@ -64,6 +64,8 @@ The same P45B example has a separate source-conditioned battery-sag analysis. `t
 
 `examples/power-pack-molicel-p45b-fused/mechanism.json` adds a first-class series fuse using reviewed manufacturer data for Littelfuse `4998040.M-M6` (40 A, 70 V DC). The evaluator requires fuse DC voltage rating to cover maximum pack voltage and includes nominal fuse current as a conservative known-limit cap without calling it a 10-second pulse rating. A 15 A counterexample moves the weakest-link identity to the fuse; a 30 V counterexample is rejected against the 42 V maximum pack voltage. The upstream Littelfuse PDF remains explicitly `raw_bytes_not_pinned` because automated source acquisition is blocked, so this is not physical safety approval. Interconnect, conductor, connector, contactor, thermal, imbalance, aging, charger, enclosure, and certification limits remain incomplete.
 
+The same fuse snapshot keeps its manufacturer `38 A at 20 degC` maximum-allowed-current point separate from the 40 A nominal rating. `examples/power-pack-molicel-p45b-fused/known-envelope-20c.json` explicitly requests that source condition; only an exact 20 degC context adds the 38 A candidate. Unsupported temperatures are rejected rather than interpolated, extrapolated, or silently substituted with nominal current.
+
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
 == Documents
@@ -77,7 +79,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/power-systems.adoc` -- electrical power components and series/parallel battery-pack composition.
 * `docs/battery-sag.adoc` -- source-conditioned first-order battery resistance/voltage-drop analysis and its limits.
 * `docs/battery-pulse.adoc` -- exact source-conditioned short-duration cell-power analysis.
-* `docs/battery-known-envelope.adoc` -- weakest-known battery-path envelope using native-rating load-scale comparison.
+* `docs/battery-known-envelope.adoc` -- weakest-known battery-path envelope using native-rating load-scale comparison and exact fuse ambient conditions.
 * `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
 * `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
 * `docs/research/product-data-standards.adoc` -- parts-library/product-data standards and provider strategy.
@@ -86,6 +88,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `spec/emes-catalog-v0.schema.json` -- initial purchased-component catalog contract.
 * `spec/emes-battery-sag-v0.schema.json` -- battery-sag analysis extension contract.
 * `spec/emes-battery-pulse-v0.schema.json` -- structured exact-point battery-pulse analysis request contract.
+* `spec/emes-battery-known-envelope-v0.schema.json` -- structured exact source-conditioned known-envelope analysis request contract.
 * `examples/two-link-arm/mechanism.json` -- reference mechanical mechanism.
 * `examples/power-pack/mechanism.json` -- synthetic 21700 battery-powered subsystem.
 * `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls and source-conditioned analyses.
