@@ -1,0 +1,141 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_REFERENCE_POWER",
+    "name": "EMES reference electrical power fixture",
+    "description": "Synthetic battery/power components used only to exercise electrical composition semantics."
+  },
+  "sources": [
+    {
+      "id": "SRC_REFERENCE_POWER",
+      "authority": "synthetic",
+      "format": "json",
+      "license": "CC0-1.0"
+    }
+  ],
+  "parts": [
+    {
+      "id": "CELL_REF_21700_A",
+      "kind": "battery_cell",
+      "identity": {
+        "manufacturer": "EMES Fixture",
+        "part_number": "CELL-21700-A"
+      },
+      "properties": {
+        "form_factor": {"value": "21700", "unit": "1", "source": "SRC_REFERENCE_POWER"},
+        "chemistry": {"value": "Li-ion", "unit": "1", "source": "SRC_REFERENCE_POWER"},
+        "mass": {"value": 0.07, "unit": "kg", "source": "SRC_REFERENCE_POWER"},
+        "nominal_voltage": {"value": 3.6, "unit": "V", "source": "SRC_REFERENCE_POWER"},
+        "max_charge_voltage": {"value": 4.2, "unit": "V", "source": "SRC_REFERENCE_POWER"},
+        "min_discharge_voltage": {"value": 2.5, "unit": "V", "source": "SRC_REFERENCE_POWER"},
+        "nominal_capacity": {"value": 4.5, "unit": "A*h", "source": "SRC_REFERENCE_POWER"},
+        "continuous_discharge_current": {"value": 20.0, "unit": "A", "source": "SRC_REFERENCE_POWER"},
+        "standard_charge_current": {"value": 4.5, "unit": "A", "source": "SRC_REFERENCE_POWER"},
+        "diameter": {"value": 0.021, "unit": "m", "source": "SRC_REFERENCE_POWER"},
+        "height": {"value": 0.07, "unit": "m", "source": "SRC_REFERENCE_POWER"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_POS",
+          "kind": "electrical_terminal",
+          "properties": {
+            "polarity": {"value": "positive", "unit": "1", "source": "SRC_REFERENCE_POWER"}
+          }
+        },
+        {
+          "id": "IF_NEG",
+          "kind": "electrical_terminal",
+          "properties": {
+            "polarity": {"value": "negative", "unit": "1", "source": "SRC_REFERENCE_POWER"}
+          }
+        }
+      ]
+    },
+    {
+      "id": "BMS_REF_12S_30A",
+      "kind": "bms",
+      "identity": {
+        "manufacturer": "EMES Fixture",
+        "part_number": "BMS-12S-30A"
+      },
+      "properties": {
+        "mass": {"value": 0.08, "unit": "kg", "source": "SRC_REFERENCE_POWER"},
+        "max_series_cells": {"value": 12.0, "unit": "1", "source": "SRC_REFERENCE_POWER"},
+        "continuous_discharge_current": {"value": 30.0, "unit": "A", "source": "SRC_REFERENCE_POWER"},
+        "max_charge_current": {"value": 10.0, "unit": "A", "source": "SRC_REFERENCE_POWER"},
+        "max_pack_voltage": {"value": 50.4, "unit": "V", "source": "SRC_REFERENCE_POWER"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_BATTERY",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "battery", "unit": "1", "source": "SRC_REFERENCE_POWER"}
+          }
+        },
+        {
+          "id": "IF_LOAD",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "load", "unit": "1", "source": "SRC_REFERENCE_POWER"}
+          }
+        }
+      ]
+    },
+    {
+      "id": "PSU_REF_48V_10A",
+      "kind": "power_supply",
+      "identity": {
+        "manufacturer": "EMES Fixture",
+        "part_number": "PSU-48V-10A"
+      },
+      "properties": {
+        "mass": {"value": 1.2, "unit": "kg", "source": "SRC_REFERENCE_POWER"},
+        "output_voltage": {"value": 48.0, "unit": "V", "source": "SRC_REFERENCE_POWER"},
+        "continuous_output_current": {"value": 10.0, "unit": "A", "source": "SRC_REFERENCE_POWER"},
+        "continuous_output_power": {"value": 480.0, "unit": "W", "source": "SRC_REFERENCE_POWER"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_DC_OUT",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "output", "unit": "1", "source": "SRC_REFERENCE_POWER"}
+          }
+        }
+      ]
+    },
+    {
+      "id": "DCDC_REF_25_50V_TO_36V_20A",
+      "kind": "power_converter",
+      "identity": {
+        "manufacturer": "EMES Fixture",
+        "part_number": "DCDC-25-50V-36V-20A"
+      },
+      "properties": {
+        "mass": {"value": 0.25, "unit": "kg", "source": "SRC_REFERENCE_POWER"},
+        "input_voltage_min": {"value": 25.0, "unit": "V", "source": "SRC_REFERENCE_POWER"},
+        "input_voltage_max": {"value": 50.0, "unit": "V", "source": "SRC_REFERENCE_POWER"},
+        "output_voltage": {"value": 36.0, "unit": "V", "source": "SRC_REFERENCE_POWER"},
+        "continuous_output_current": {"value": 20.0, "unit": "A", "source": "SRC_REFERENCE_POWER"},
+        "efficiency": {"value": 0.95, "unit": "1", "source": "SRC_REFERENCE_POWER"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_DC_IN",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "input", "unit": "1", "source": "SRC_REFERENCE_POWER"}
+          }
+        },
+        {
+          "id": "IF_DC_OUT",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "output", "unit": "1", "source": "SRC_REFERENCE_POWER"}
+          }
+        }
+      ]
+    }
+  ]
+}
