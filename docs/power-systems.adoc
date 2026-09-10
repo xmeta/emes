@@ -1,0 +1,102 @@
+= Electrical Power and Battery Composition
+
+== Scope
+
+EMES treats electrical power hardware as engineering components that participate in the same catalog, provenance, connection, analysis, and evidence model as mechanical parts.
+
+Phase 1 adds catalog kinds for `battery_cell`, `battery_pack`, `bms`, `power_supply`, `power_converter`, `charger`, `fuse`, `contactor`, and `connector`.
+
+The first executable example uses a synthetic 21700-format Li-ion cell fixture. Its values validate the architecture only and must not be interpreted as a real cell recommendation.
+
+== Cell versus pack
+
+A repeated cell is stored once as a catalog-backed component. A battery pack refers to that cell plus integer series and parallel counts.
+
+For a cell with nominal voltage `V_cell`, capacity `C_cell`, continuous current `I_cell`, and mass `m_cell`:
+
+[stem]
+++++
+V_{pack} = N_s V_{cell}
+++++
+
+[stem]
+++++
+C_{pack} = N_p C_{cell}
+++++
+
+[stem]
+++++
+E_{pack} = V_{pack} C_{pack}
+++++
+
+[stem]
+++++
+I_{cells} = N_p I_{cell}
+++++
+
+[stem]
+++++
+m_{cells} = N_s N_p m_{cell}
+++++
+
+This representation lets an AI vary `N_s` and `N_p` as design variables without duplicating every physical cell in the semantic graph.
+
+== Protection limits
+
+Cell multiplication never bypasses downstream limits. For the Phase-1 BMS model:
+
+[stem]
+++++
+I_{pack,continuous} = min(N_p I_{cell}, I_{BMS})
+++++
+
+The evaluator also rejects a pack if its series count exceeds the BMS series rating or if its maximum charge voltage exceeds the BMS pack-voltage rating.
+
+A DC/DC converter is rejected if the complete pack voltage interval falls outside the converter input interval. Output-power and pack-current margins remain executable metrics and constraints.
+
+== Power path
+
+The reference topology is:
+
+[source,text]
+----
+catalog-backed 21700 cell model
+          |
+       Ns x Np
+          v
+     battery pack
+          |
+        BMS
+          |
+          v
+     DC/DC converter
+          |
+          v
+      DC load bus
+----
+
+`extensions.org.emes.power` records pack composition and the power path. Ordinary EMES `components`, `connections`, and `functional_edges` still describe the design graph.
+
+== Evidence
+
+`tools/power.py` produces deterministic machine-readable evidence containing:
+
+* source design digest;
+* selected catalog part identities and digests;
+* series/parallel topology and cell count;
+* pack nominal, maximum, and minimum voltage;
+* pack capacity and nominal energy;
+* BMS-clamped continuous current capability;
+* cell and total pack mass;
+* converter output demand and power margin;
+* equivalent pack current and current margin;
+* BMS compatibility margins;
+* executable constraint results.
+
+CI also mutates the valid fixture to 13S and requires rejection by the 12S BMS limit. This verifies that protection constraints are not merely documentation.
+
+== Safety and fidelity boundary
+
+The Phase-1 model is an architectural/electrical-sizing model, not a battery safety certification model. It does not yet model state of charge, voltage sag, cell imbalance, temperature, aging, internal short circuits, propagation, charging profiles, enclosure venting, fuse coordination, or regulatory compliance.
+
+Physical pack construction, charging, and actuation require later safety evidence and explicit human approval. A passing Phase-1 power analysis must never be interpreted as permission to fabricate or energize a battery pack.
