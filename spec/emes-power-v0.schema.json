@@ -60,6 +60,7 @@
         "id": {"$ref": "#/$defs/id"},
         "source_pack": {"$ref": "#/$defs/id"},
         "source_component": {"$ref": "#/$defs/id"},
+        "fuse_component": {"$ref": "#/$defs/id"},
         "converter_component": {"$ref": "#/$defs/id"},
         "load_case": {"$ref": "#/$defs/id"}
       },
@@ -73,7 +74,8 @@
           "not": {
             "anyOf": [
               {"required": ["source_pack"]},
-              {"required": ["converter_component"]}
+              {"required": ["converter_component"]},
+              {"required": ["fuse_component"]}
             ]
           }
         }

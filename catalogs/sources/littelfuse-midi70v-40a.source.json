@@ -1,0 +1,40 @@
+{
+  "provider": "littelfuse",
+  "manufacturer": "Littelfuse",
+  "part_number": "4998040.M-M6",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-11T00:00:00Z",
+  "capture_method": "reviewed transcription from Littelfuse MIDI High Performance Series 70V-SF36 manufacturer datasheet; raw PDF byte acquisition is currently blocked from GitHub Actions and the remote workstation connector",
+  "upstream": {
+    "datasheet_pdf": {
+      "uri": "https://www.littelfuse.cn/assetdocs/littelfuse-datasheet-4998-midihp70v?assetguid=b72fcd7a-c66d-4916-844c-ac55ebed196c",
+      "edition": "MIDI High Performance Series Bolt-down Fuses – Rated 70V-SF36, revised 11/07/2024",
+      "bytes": null,
+      "sha256": null,
+      "redistribution": "not_asserted",
+      "integrity_status": "raw_bytes_not_pinned"
+    },
+    "product_page": {
+      "uri": "https://www.littelfuse.com/products/fuses-overcurrent-protection/fuses/automotive-fuses/bolt-down-fuses/midi/midi-70v",
+      "role": "auxiliary-product-page"
+    }
+  },
+  "facts": {
+    "rated_current": {"source": "datasheet_pdf", "locator": "Ratings / 4998040.M_", "value": 40.0, "unit": "A"},
+    "rated_voltage_dc": {"source": "datasheet_pdf", "locator": "Specifications / Voltage Rating", "value": 70.0, "unit": "V"},
+    "interrupt_rating": {"source": "datasheet_pdf", "locator": "Specifications / Interrupting Rating", "value": 2500.0, "unit": "A"},
+    "typical_voltage_drop": {"source": "datasheet_pdf", "locator": "Ratings / 4998040.M_ / Typ. Voltage Drop", "value": 0.094, "unit": "V"},
+    "typical_cold_resistance": {"source": "datasheet_pdf", "locator": "Ratings / 4998040.M_ / Typ. Cold Resistance", "value": 0.00156, "unit": "ohm"},
+    "typical_i2t": {"source": "datasheet_pdf", "locator": "Ratings / 4998040.M_ / Typ. I2t", "value": 4700.0, "unit": "A^2*s"},
+    "max_allowed_current_20c": {"source": "datasheet_pdf", "locator": "Typical Derating / 40 A row / 20 C", "value": 38.0, "unit": "A", "conditions": [{"parameter": "ambient_temperature", "op": "==", "value": 20.0, "unit": "degC"}]},
+    "mounting_torque_m6": {"source": "datasheet_pdf", "locator": "Specifications / Mounting Torque M6", "value": 9.0, "unit": "N*m", "tolerance": 1.0},
+    "typical_mass": {"source": "datasheet_pdf", "locator": "Specifications / Typical Weight per Fuse", "value": 0.0035, "unit": "kg"}
+  },
+  "notes": [
+    "The Littelfuse manufacturer datasheet is the authoritative source for the transcribed facts.",
+    "The 4998040.M_ family row covers the 40 A variants; the selected 4998040.M-M6 ordering code is the two-M6-hole variant.",
+    "The 20 C 38 A derating value is preserved as a conditioned fact and must not be applied at other ambient temperatures without explicit source-conditioned evaluation.",
+    "The time-current curve and I2t value are not converted into an inferred 10-second pulse ampacity in this slice.",
+    "GitHub Actions returned HTTP 403 for the manufacturer PDF even with browser-compatible headers, and the authorized remote-workstation connector was unavailable; raw-byte hashing is therefore an explicit follow-up rather than a fabricated digest."
+  ]
+}

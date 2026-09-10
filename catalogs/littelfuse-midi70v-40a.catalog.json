@@ -1,0 +1,50 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_LITTELFUSE_MIDI70V",
+    "name": "Littelfuse MIDI HP 70V 40A fuse",
+    "description": "Manufacturer MIDI High Performance 70V-SF36 datasheet normalized for EMES; nominal ratings and the explicit 20 C derating point are kept distinct, and no pulse ampacity is inferred from I2t/time-current data."
+  },
+  "sources": [
+    {
+      "id": "SRC_LITTELFUSE_MIDI_HP_70V",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.littelfuse.cn/assetdocs/littelfuse-datasheet-4998-midihp70v?assetguid=b72fcd7a-c66d-4916-844c-ac55ebed196c",
+      "retrieved_at": "2026-09-11T00:00:00Z",
+      "license": "Littelfuse upstream terms; redistribution not asserted"
+    }
+  ],
+  "parts": [
+    {
+      "id": "LITTELFUSE_4998040_M_M6",
+      "kind": "fuse",
+      "identity": {
+        "manufacturer": "Littelfuse",
+        "part_number": "4998040.M-M6"
+      },
+      "properties": {
+        "rated_current": {"value": 40.0, "unit": "A", "source": "SRC_LITTELFUSE_MIDI_HP_70V"},
+        "rated_voltage_dc": {"value": 70.0, "unit": "V", "source": "SRC_LITTELFUSE_MIDI_HP_70V"},
+        "interrupt_rating": {"value": 2500.0, "unit": "A", "source": "SRC_LITTELFUSE_MIDI_HP_70V"},
+        "typical_voltage_drop": {"value": 0.094, "unit": "V", "source": "SRC_LITTELFUSE_MIDI_HP_70V"},
+        "typical_cold_resistance": {"value": 0.00156, "unit": "ohm", "source": "SRC_LITTELFUSE_MIDI_HP_70V"},
+        "typical_i2t": {"value": 4700.0, "unit": "A^2*s", "source": "SRC_LITTELFUSE_MIDI_HP_70V"},
+        "max_allowed_current_20c": {
+          "value": 38.0,
+          "unit": "A",
+          "source": "SRC_LITTELFUSE_MIDI_HP_70V",
+          "conditions": [
+            {"parameter": "ambient_temperature", "op": "==", "value": 20.0, "unit": "degC"}
+          ]
+        },
+        "mounting_torque_m6": {"value": 9.0, "unit": "N*m", "source": "SRC_LITTELFUSE_MIDI_HP_70V", "tolerance": 1.0},
+        "mass": {"value": 0.0035, "unit": "kg", "source": "SRC_LITTELFUSE_MIDI_HP_70V"}
+      },
+      "interfaces": [
+        {"id": "IF_IN", "kind": "electrical_dc", "properties": {}},
+        {"id": "IF_OUT", "kind": "electrical_dc", "properties": {}}
+      ]
+    }
+  ]
+}
