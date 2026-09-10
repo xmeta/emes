@@ -8,7 +8,7 @@
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
     {"id": "R_ENERGY", "kind": "performance", "statement": "Provide at least 300 Wh nominal stored energy."},
-    {"id": "R_CURRENT", "kind": "performance", "statement": "Supply the reference load with nonnegative continuous current margin."},
+    {"id": "R_CURRENT", "kind": "performance", "statement": "Supply the reference load within both pack-current and converter-power limits."},
     {"id": "R_BMS", "kind": "safety", "statement": "Use a BMS compatible with pack series count and maximum pack voltage."}
   ],
   "design_intent": [
@@ -109,6 +109,7 @@
     {"id": "C_BUS_VOLTAGE", "metric": "M_CONVERTER_OUTPUT_VOLTAGE", "op": "==", "target": {"value": 36.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_ENERGY", "metric": "M_PACK_NOMINAL_ENERGY", "op": ">=", "target": {"value": 300.0, "unit": "W*h"}, "load_case": "LC_POWER"},
     {"id": "C_CURRENT_MARGIN", "metric": "M_PACK_CURRENT_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "A"}, "load_case": "LC_POWER"},
+    {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_SERIES", "metric": "M_BMS_SERIES_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "1"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_VOLTAGE", "metric": "M_BMS_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"}
   ],
@@ -147,7 +148,7 @@
   "traceability": [
     {"requirement": "R_BUS_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
     {"requirement": "R_ENERGY", "verified_by": ["C_ENERGY"]},
-    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN"]},
+    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER"]},
     {"requirement": "R_BMS", "verified_by": ["C_BMS_SERIES", "C_BMS_VOLTAGE"]}
   ],
   "extensions": {
