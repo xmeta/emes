@@ -35,6 +35,8 @@ Classify discoveries:
 - AI-extracted catalog values are derived evidence until attributable source material supports them.
 - A catalog rating and its stated operating conditions are one engineering fact; consumers must not silently treat a conditional rating as unconditional.
 - A source-conditioned battery impedance value may be used only when the analysis context satisfies its stated conditions; do not infer OCV or loaded terminal voltage from impedance alone.
+- Source-conditioned pulse-power points require exact supported analysis conditions unless an explicit interpolation model with evidence exists.
+- Compare heterogeneous weakest-link ratings through dimensionless utilization/load-scale factors while preserving each native rating unit; do not invent a common power rating merely for comparison.
 - Battery-pack current capability is limited by the weakest applicable cell, BMS, protection, interconnect, and converter constraint; never multiply cell capability while ignoring downstream limits.
 - Passing analytic battery sizing is not fabrication, charging, or energization approval; physical battery work requires explicit safety evidence and human approval.
 - Do not create a custom DSL until examples show a concrete need.

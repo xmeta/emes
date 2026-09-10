@@ -1,0 +1,53 @@
+= Weakest-Known Battery-Path Envelope
+
+== Purpose
+
+`tools/battery_known_envelope.py` combines the source-conditioned cell pulse envelope with downstream limits that EMES can currently prove from selected catalog parts.
+
+The key rule is to preserve each rating in its native engineering domain. Cell pulse power is compared as power, BMS capability as current, and converter capability as output current. EMES does not manufacture a common power rating by multiplying every current limit by an arbitrary voltage.
+
+== Dimensionless load scaling
+
+For each known limit, the evaluator computes a dimensionless scale factor:
+
+[stem]
++++++
+s_i = \frac{limit_i}{reference\ demand_i}
++++++
+
+The known-component load-scale limit is:
+
+[stem]
++++++
+s_{known} = \min_i s_i
++++++
+
+This permits comparison of heterogeneous constraints without erasing their native units or rating semantics.
+
+== Current reference result
+
+For the P45B 10S2P example at 10 s and 50% SOC:
+
+* cell pulse envelope scale: 6.384;
+* BMS continuous-current scale: 2.052;
+* converter continuous-output-current scale: 1.44.
+
+The currently known limiting component is therefore the converter. Scaling the 500 W reference output load by 1.44 gives a 720 W known-component output envelope. The corresponding battery-side nominal-point input envelope is approximately 757.895 W at the modeled converter efficiency.
+
+The BMS and converter records in this example are synthetic fixtures. Their continuous ratings are used as conservative caps for the 10-second context; they are not relabeled as pulse ratings.
+
+== Executable counterexample
+
+Focused CI mutates the synthetic BMS continuous-discharge limit from 30 A to 16 A while keeping the reference load feasible.
+
+The load-scale minimum then moves from the converter to the BMS, with approximately 547.2 W output and 576 W battery-side input envelopes. This verifies that the limiting-element identity is computed from evidence rather than hard-coded.
+
+CI also rejects a pulse-evidence object whose recorded parent power-evidence digest has been altered.
+
+== Remaining boundary
+
+This is intentionally called the _weakest-known-component envelope_, not a complete system pulse rating.
+
+Fuse, cell interconnect, bus conductor, connector, contactor, temperature rise, cell imbalance, aging, enclosure, and other applicable limits are not yet represented in this calculation. Adding any of those may only maintain or reduce the known envelope.
+
+Physical fabrication, charging, and energization remain outside automatic approval.

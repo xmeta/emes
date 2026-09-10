@@ -52,11 +52,15 @@ The catalog layer supports deterministic import and pinned part binding. A synth
 
 The power-system layer adds composable electrical components. A catalog-backed 21700-format cell can be combined by explicit series/parallel counts into a battery pack, constrained by a BMS, passed through a DC/DC converter, and evaluated against electrical load, energy, current, voltage, and mass constraints. Fixed DC power supplies are also executable sources.
 
-`catalogs/molicel-p45b.catalog.json` is the first authoritative manufacturer battery-cell snapshot. It is normalized from the hash-pinned Molicel INR-21700-P45B Product Data Sheet v1.4. Manufacturer cut-off facts are transformed into explicit protection-control conditions rather than flattened into unconditional current limits.
+`catalogs/molicel-p45b.catalog.json` is the first authoritative manufacturer battery-cell snapshot. It is normalized from the hash-pinned Molicel INR-21700-P45B Product Data Sheet v1.4, with an independently hash-pinned official performance page for discrete short-duration performance points. Manufacturer conditions remain attached to the engineering facts they qualify rather than being flattened into unconditional limits.
 
 `examples/power-pack-molicel-p45b/mechanism.json` binds that real cell record to synthetic BMS/converter fixtures. The power evaluator accepts the continuous-discharge rating only when the selected BMS exposes a compatible cell cut-off control and records that check in deterministic evidence. This is an executable sizing/traceability check, not a thermal model, certification, or permission to fabricate or energize a battery pack.
 
-The same P45B example now has a separate source-conditioned battery-sag analysis. `tools/battery_sag.py` reuses the power evidence instead of recomputing the load path, applies the P45B typical DC-impedance value only at its stated 50% SOC condition, and derives first-order series/parallel pack resistance and resistive voltage drop. Unsupported SOC values are rejected rather than interpolated. The adapter deliberately does not infer loaded terminal voltage without an attributable OCV-vs-SOC model.
+The same P45B example has a separate source-conditioned battery-sag analysis. `tools/battery_sag.py` reuses the power evidence instead of recomputing the load path, applies the P45B typical DC-impedance value only at its stated 50% SOC condition, and derives first-order series/parallel pack resistance and resistive voltage drop. Unsupported SOC values are rejected rather than interpolated. The adapter deliberately does not infer loaded terminal voltage without an attributable OCV-vs-SOC model.
+
+`tools/battery_pulse.py` consumes exact manufacturer short-duration points through a structured analysis request. The current P45B catalog exposes 168 W/cell at 10 s and 50% SOC and 184 W/cell at 10 s and 90% SOC. An unsupported SOC or duration is rejected rather than interpolated or extrapolated.
+
+`tools/battery_known_envelope.py` then combines the cell pulse envelope with currently known downstream BMS and converter limits using dimensionless load-scale factors while preserving each rating's native unit. In the reference 10S2P/500 W case the synthetic converter is the current weakest known component at a 1.44 load-scale factor, corresponding to a 720 W output envelope. This is deliberately not described as a complete system pulse rating because fuse, interconnect, conductor, connector, contactor, thermal, imbalance, aging, and enclosure limits remain unmodeled.
 
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
@@ -69,6 +73,8 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/real-catalog-molicel.adoc` -- authoritative P45B battery-cell snapshot and executable conditional-rating policy.
 * `docs/power-systems.adoc` -- electrical power components and series/parallel battery-pack composition.
 * `docs/battery-sag.adoc` -- source-conditioned first-order battery resistance/voltage-drop analysis and its limits.
+* `docs/battery-pulse.adoc` -- exact source-conditioned short-duration cell-power analysis.
+* `docs/battery-known-envelope.adoc` -- weakest-known battery-path envelope using native-rating load-scale comparison.
 * `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
 * `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
 * `docs/research/product-data-standards.adoc` -- parts-library/product-data standards and provider strategy.
@@ -76,6 +82,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `spec/emes-ir-v0.schema.json` -- initial mechanism structural contract.
 * `spec/emes-catalog-v0.schema.json` -- initial purchased-component catalog contract.
 * `spec/emes-battery-sag-v0.schema.json` -- battery-sag analysis extension contract.
+* `spec/emes-battery-pulse-v0.schema.json` -- structured exact-point battery-pulse analysis request contract.
 * `examples/two-link-arm/mechanism.json` -- reference mechanical mechanism.
 * `examples/power-pack/mechanism.json` -- synthetic 21700 battery-powered subsystem.
-* `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls and source-conditioned sag analysis.
+* `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls and source-conditioned analyses.
