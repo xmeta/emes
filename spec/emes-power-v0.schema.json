@@ -49,7 +49,21 @@
         "bms_component": {"$ref": "#/$defs/id"},
         "series_parameter": {"$ref": "#/$defs/id"},
         "parallel_parameter": {"$ref": "#/$defs/id"},
-        "overhead_mass": {"$ref": "#/$defs/quantity"}
+        "overhead_mass": {"$ref": "#/$defs/quantity"},
+        "condition_bindings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["parameter", "control_component", "control_property"],
+            "properties": {
+              "parameter": {"$ref": "#/$defs/id"},
+              "control_component": {"$ref": "#/$defs/id"},
+              "control_property": {"$ref": "#/$defs/id"}
+            }
+          },
+          "propertyNames": {"$ref": "#/$defs/id"}
+        }
       }
     },
     "power_path": {

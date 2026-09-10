@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "spec/emes-power-v0.schema.json"
+      - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/anderson-sb50-992g4-5900.catalog.json"
       - "catalogs/sources/anderson-sb50-992g4-5900.source.json"
       - "examples/power-pack-molicel-p45b-connected/mechanism.json"
@@ -13,6 +14,7 @@ on:
   pull_request:
     paths:
       - "spec/emes-power-v0.schema.json"
+      - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/anderson-sb50-992g4-5900.catalog.json"
       - "catalogs/sources/anderson-sb50-992g4-5900.source.json"
       - "examples/power-pack-molicel-p45b-connected/mechanism.json"
@@ -63,8 +65,8 @@ jobs:
           assert math.isclose(c['max_pack_current'], 21.05263157894737, rel_tol=1e-12)
           assert math.isclose(m['M_KNOWN_CONNECTOR_RATED_LOAD_SCALE'], 2.375, rel_tol=1e-12)
           assert math.isclose(m['M_KNOWN_CONNECTOR_VOLTAGE_MARGIN'], 208.0, rel_tol=1e-12)
-          assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.425, rel_tol=1e-12)
-          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 712.5, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.44, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 720.0, rel_tol=1e-12)
           print('VALID sb50-reference-path-envelope')
           PY
       - run: |

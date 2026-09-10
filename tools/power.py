@@ -93,13 +93,24 @@ def condition_value(item: dict[str, Any], unit: str, context: str) -> float | st
     raise ValueError(f"{context}: unsupported condition value {value!r}")
 
 
+def parameter_condition_value(
+    document: dict[str, Any], parameter_id: str, unit: str
+) -> float:
+    parameters = index_by_id(document["parameters"])
+    if parameter_id not in parameters:
+        raise ValueError(f"unknown condition parameter {parameter_id}")
+    return quantity_value(parameters[parameter_id]["value"], unit, parameter_id)
+
+
 def conditioned_property_number(
+    document: dict[str, Any],
     part: dict[str, Any],
     name: str,
     unit: str,
     *,
     rated_component: str,
     controls: dict[str, dict[str, Any]],
+    condition_bindings: dict[str, dict[str, str]] | None = None,
 ) -> tuple[float, list[dict[str, Any]]]:
     try:
         item = part["properties"][name]
@@ -107,31 +118,53 @@ def conditioned_property_number(
         raise ValueError(f"{part['id']}: missing property {name}") from exc
     value = quantity_value(item, unit, f"{part['id']}.{name}")
 
+    bindings = condition_bindings or {}
     results: list[dict[str, Any]] = []
     for condition in item.get("conditions", []):
         parameter = condition["parameter"]
         condition_unit = condition["unit"]
-        matches = [
-            (component_id, control_part)
-            for component_id, control_part in controls.items()
-            if parameter in control_part.get("properties", {})
-        ]
-        if not matches:
+        binding = bindings.get(parameter)
+        if binding is None:
             raise ValueError(
-                f"{part['id']}.{name}: conditional rating requires control "
-                f"{parameter!r}, but no selected control component provides it"
+                f"{part['id']}.{name}: conditional rating requires explicit binding "
+                f"for {parameter!r}"
             )
-        if len(matches) != 1:
+        control_component = binding["control_component"]
+        if control_component not in controls:
             raise ValueError(
-                f"{part['id']}.{name}: conditional rating control {parameter!r} "
-                "is ambiguous across selected components"
+                f"{part['id']}.{name}: bound control component {control_component!r} "
+                "is not selected for this rating"
             )
-
-        control_component, control_part = matches[0]
-        control_item = control_part["properties"][parameter]
-        control_value = condition_value(
-            control_item, condition_unit, f"{control_part['id']}.{parameter}"
+        control_part = controls[control_component]
+        control_property = binding["control_property"]
+        try:
+            source_item = control_part["properties"][control_property]
+        except KeyError as exc:
+            raise ValueError(
+                f"{control_part['id']}: missing source-backed control property "
+                f"{control_property!r}"
+            ) from exc
+        source_value = condition_value(
+            source_item, condition_unit, f"{control_part['id']}.{control_property}"
         )
+        design_parameter = binding["parameter"]
+        control_value = parameter_condition_value(
+            document, design_parameter, condition_unit
+        )
+        if control_value != source_value:
+            raise ValueError(
+                f"{design_parameter}: selected condition value {control_value:g} "
+                f"{condition_unit} is not backed by {control_part['id']}."
+                f"{control_property}={source_value:g} {condition_unit}"
+            )
+        control_record = {
+            "control_component": control_component,
+            "control_part": control_part["id"],
+            "control_property": control_property,
+            "design_parameter": design_parameter,
+            "control_value": control_value,
+        }
+
         target_value = condition_value(
             condition, condition_unit, f"{part['id']}.{name}.condition"
         )
@@ -154,9 +187,7 @@ def conditioned_property_number(
             "condition_op": op,
             "condition_value": target_value,
             "condition_unit": condition_unit,
-            "control_component": control_component,
-            "control_part": control_part["id"],
-            "control_value": control_value,
+            **control_record,
             "status": "pass" if passed else "fail",
         }
         if not passed:
@@ -167,7 +198,6 @@ def conditioned_property_number(
             )
         results.append(result)
     return value, results
-
 
 def evaluate_constraints(
     document: dict[str, Any], metrics: dict[str, tuple[float, str]]
@@ -340,11 +370,13 @@ def evaluate_battery_pack(
     cell_min_v = property_number(cell, "min_discharge_voltage", "V")
     cell_capacity_ah = property_number(cell, "nominal_capacity", "A*h")
     cell_current_a, rating_condition_results = conditioned_property_number(
+        document,
         cell,
         "continuous_discharge_current",
         "A",
         rated_component=cell_component,
         controls={bms_component: bms},
+        condition_bindings=pack.get("condition_bindings"),
     )
     cell_mass_kg = property_number(cell, "mass", "kg")
 
@@ -358,9 +390,28 @@ def evaluate_battery_pack(
     bms_series_limit = property_number(bms, "max_series_cells", "1")
     bms_current_a = property_number(bms, "continuous_discharge_current", "A")
     bms_max_v = property_number(bms, "max_pack_voltage", "V")
+    bms_properties = bms.get("properties", {})
+    bms_min_series = (
+        property_number(bms, "min_series_cells", "1")
+        if "min_series_cells" in bms_properties
+        else None
+    )
+    bms_min_v = (
+        property_number(bms, "min_pack_voltage", "V")
+        if "min_pack_voltage" in bms_properties
+        else None
+    )
+    if bms_min_series is not None and series < bms_min_series:
+        raise ValueError(
+            f"BMS minimum series count not met: pack={series}S bms={bms_min_series:g}S"
+        )
     if series > bms_series_limit:
         raise ValueError(
             f"BMS series limit exceeded: pack={series}S bms={bms_series_limit:g}S"
+        )
+    if bms_min_v is not None and pack_min_v < bms_min_v:
+        raise ValueError(
+            f"BMS minimum pack voltage not met: pack={pack_min_v:g}V bms={bms_min_v:g}V"
         )
     if pack_max_v > bms_max_v:
         raise ValueError(
@@ -424,6 +475,11 @@ def evaluate_battery_pack(
         "M_CONVERTER_OUTPUT_CURRENT": (load_output_a, "A"),
         "M_CONVERTER_POWER_MARGIN": (converter_power_margin_w, "W"),
     }
+    if bms_min_series is not None:
+        metrics["M_BMS_MIN_SERIES_MARGIN"] = (series - bms_min_series, "1")
+    if bms_min_v is not None:
+        metrics["M_BMS_MIN_VOLTAGE_MARGIN"] = (pack_min_v - bms_min_v, "V")
+
     return evidence(
         document,
         {

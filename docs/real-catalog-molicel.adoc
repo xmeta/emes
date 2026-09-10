@@ -55,16 +55,17 @@ Normal CI asserts deterministic regeneration of the catalog and exact preservati
 
 == Executable discharge-rating control
 
-`examples/power-pack-molicel-p45b/mechanism.json` binds the authoritative P45B cell to synthetic BMS and DC/DC fixtures. The synthetic BMS declares a `cell_discharge_cutoff_temperature` of 75 degC.
+`examples/power-pack-molicel-p45b/mechanism.json` binds the authoritative P45B cell to the hash-pinned JKBMS `JK-BD6A20S-6P` catalog part and a synthetic DC/DC fixture. The JKBMS manual states that discharge over-temperature protection is user-configurable and gives 70 degC as the Li-ion factory default. EMES therefore does not flatten 70 degC into an immutable hardware property.
 
-When `tools/power.py` consumes the P45B `continuous_discharge_current` property it must resolve every attached rating condition to exactly one selected control component. The evaluator records the rated property, condition, controlling component, control value, and pass status in `rating_condition_results`.
+When `tools/power.py` consumes the P45B `continuous_discharge_current` property it resolves the cell condition through an explicit mechanism binding from `P_BMS_DISCHARGE_OVERTEMP` to the JKBMS source-backed `default_cell_discharge_cutoff_temperature`. The evaluator records the rated property, condition, controlling component/property, selected design parameter, control value, and pass status in `rating_condition_results`.
 
-The 75 degC synthetic BMS control satisfies the normalized `<= 80 degC` discharge-rating contract. The cell-side raw 10S2P current capability is still clamped by the 30 A BMS limit before pack capability is reported.
+The current mechanism fixes that setting at the only source-backed value used by this slice, 70 degC, which satisfies the normalized P45B `<= 80 degC` contract. The 10S2P cell-side 90 A raw capability is clamped by the real JKBMS 60 A continuous-discharge rating before pack capability is reported.
 
-CI also creates two negative variants:
+CI also creates negative variants:
 
-* a synthetic BMS whose discharge cut-off is changed to 85 degC must be rejected;
-* a synthetic BMS with the discharge cut-off property removed must be rejected because the manufacturer rating condition has no executable control.
+* selecting 75 degC is rejected because this slice has no source-backed configuration evidence for that selected value;
+* removing the explicit condition binding is rejected rather than guessing a control;
+* 6S is rejected by the JKBMS 7S Li-ion minimum, and 7S is rejected because the P45B minimum pack voltage is 17.5 V, below the BMS 20 V supply minimum.
 
 The maximum-charge rating is preserved with its own 70 degC control condition but is not consumed by the current discharge-only power path because no charger analysis is implemented yet.
 

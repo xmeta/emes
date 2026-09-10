@@ -1,0 +1,123 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_JKBMS_BD6A20S6P",
+    "name": "JKBMS JK-BD6A20S-6P",
+    "description": "Hash-pinned manufacturer manual normalized for EMES; configurable factory-default temperature settings are kept distinct from selected mechanism configuration."
+  },
+  "sources": [
+    {
+      "id": "SRC_JKBMS_BD6A20S6P",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.jkbms.com/wp-content/uploads/2026/02/JK-BD6AxxS-6P-JK-BD6AxxS-8P-Product-specification.pdf",
+      "retrieved_at": "2026-09-10T18:50:00Z",
+      "license": "Jikong/JKBMS upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:cb5954cab179b440d5f9e80cd7f36673612cb9078a097f41e1f58c6bb02693d1"
+    }
+  ],
+  "parts": [
+    {
+      "id": "JKBMS_JK_BD6A20S_6P",
+      "kind": "bms",
+      "identity": {
+        "manufacturer": "Jikong Technology Co., Ltd",
+        "part_number": "JK-BD6A20S-6P"
+      },
+      "properties": {
+        "mass": {
+          "value": 0.464,
+          "unit": "kg",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "min_series_cells": {
+          "value": 7.0,
+          "unit": "1",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "max_series_cells": {
+          "value": 20.0,
+          "unit": "1",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "min_pack_voltage": {
+          "value": 20.0,
+          "unit": "V",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "max_pack_voltage": {
+          "value": 100.0,
+          "unit": "V",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "continuous_discharge_current": {
+          "value": 60.0,
+          "unit": "A",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "max_charge_current": {
+          "value": 60.0,
+          "unit": "A",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "max_instantaneous_current": {
+          "value": 120.0,
+          "unit": "A",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "max_balancing_current": {
+          "value": 0.6,
+          "unit": "A",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "max_internal_loop_resistance": {
+          "value": 0.00153,
+          "unit": "ohm",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "operating_temperature_min": {
+          "value": -30.0,
+          "unit": "degC",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "operating_temperature_max": {
+          "value": 70.0,
+          "unit": "degC",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "default_cell_charge_cutoff_temperature": {
+          "value": 70.0,
+          "unit": "degC",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "default_cell_discharge_cutoff_temperature": {
+          "value": 70.0,
+          "unit": "degC",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        }
+      },
+      "interfaces": [
+        {
+          "id": "IF_BATTERY",
+          "kind": "electrical_dc",
+          "properties": {}
+        },
+        {
+          "id": "IF_LOAD",
+          "kind": "electrical_dc",
+          "properties": {}
+        }
+      ],
+      "assets": [
+        {
+          "id": "ASSET_DATASHEET",
+          "kind": "datasheet",
+          "uri": "https://www.jkbms.com/wp-content/uploads/2026/02/JK-BD6AxxS-6P-JK-BD6AxxS-8P-Product-specification.pdf",
+          "digest": "sha256:cb5954cab179b440d5f9e80cd7f36673612cb9078a097f41e1f58c6bb02693d1",
+          "source": "SRC_JKBMS_BD6A20S6P",
+          "license": "Jikong/JKBMS upstream terms; redistribution not asserted"
+        }
+      ]
+    }
+  ]
+}

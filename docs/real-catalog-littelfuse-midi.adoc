@@ -20,7 +20,7 @@ battery pack -> main fuse -> DC/DC converter -> load
 `tools/battery_known_envelope.py` consumes the fuse in two ways:
 
 * `rated_voltage_dc` must be at least the maximum pack voltage. The 70 V fuse therefore has 28 V margin over the 42 V maximum 10S P45B pack voltage. An otherwise identical 30 V fuse is rejected.
-* `rated_current` is converted to a dimensionless load-scale factor against modeled battery-side current. The 40 A fuse has a 1.9x factor at the 500 W reference load when compared with the maximum pack-side current over the modeled battery voltage range. The synthetic BMS is the weakest known element at 1.425x; a 15 A counterexample moves the weakest-link identity to the fuse at 0.7125x.
+* `rated_current` is converted to a dimensionless load-scale factor against modeled battery-side current. The 40 A fuse has a 1.9x factor at the 500 W reference load when compared with the maximum pack-side current over the modeled battery voltage range. The real 60 A JKBMS is above the synthetic converter, so the converter is the weakest known element at 1.44x; a 15 A counterexample moves the weakest-link identity to the fuse at 0.7125x.
 
 The fuse rating is not coerced into an invented common wattage rating. Heterogeneous limits remain in their native engineering domains and are compared only through dimensionless reference-load scale factors.
 

@@ -1,0 +1,115 @@
+{
+  "provider": "jkbms",
+  "manufacturer": "Jikong Technology Co., Ltd",
+  "part_number": "JK-BD6A20S-6P",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-10T18:50:00Z",
+  "capture_method": "official Jikong/JKBMS product specification PDF, raw bytes hash-pinned; facts transcribed from pages 9-10, 17, 20, and 22-23",
+  "upstream": {
+    "datasheet_pdf": {
+      "uri": "https://www.jkbms.com/wp-content/uploads/2026/02/JK-BD6AxxS-6P-JK-BD6AxxS-8P-Product-specification.pdf",
+      "manual_version": "20.1.1",
+      "bytes": 14559927,
+      "sha256": "sha256:cb5954cab179b440d5f9e80cd7f36673612cb9078a097f41e1f58c6bb02693d1",
+      "redistribution": "not_asserted",
+      "integrity_status": "raw_bytes_pinned"
+    },
+    "product_page": {
+      "uri": "https://www.jkbms.com/product/jk-bd6a20s6p/",
+      "role": "auxiliary-source-conflict-check",
+      "integrity_status": "raw_bytes_not_pinned"
+    }
+  },
+  "facts": {
+    "min_series_cells_li_ion": {
+      "source": "datasheet_pdf",
+      "locator": "p.9 Product adaptation guide / JK-BD6A20S-6P/8P / ternary lithium battery",
+      "value": 7.0,
+      "unit": "1"
+    },
+    "max_series_cells_li_ion": {
+      "source": "datasheet_pdf",
+      "locator": "p.9 Product adaptation guide / JK-BD6A20S-6P/8P / ternary lithium battery",
+      "value": 20.0,
+      "unit": "1"
+    },
+    "supply_voltage_min": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Supply voltage",
+      "value": 20.0,
+      "unit": "V"
+    },
+    "supply_voltage_max": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Supply voltage",
+      "value": 100.0,
+      "unit": "V"
+    },
+    "operating_temperature_min": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Operating temperature",
+      "value": -30.0,
+      "unit": "degC"
+    },
+    "operating_temperature_max": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Operating temperature",
+      "value": 70.0,
+      "unit": "degC"
+    },
+    "max_balancing_current": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Maximum balancing current",
+      "value": 0.6,
+      "unit": "A"
+    },
+    "max_charge_current": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Maximum charging current",
+      "value": 60.0,
+      "unit": "A"
+    },
+    "continuous_discharge_current": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Maximum discharge current; p.17 states configured continuous discharge current cannot exceed 60A design value",
+      "value": 60.0,
+      "unit": "A"
+    },
+    "max_instantaneous_current": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Maximum instantaneous current",
+      "value": 120.0,
+      "unit": "A"
+    },
+    "max_internal_loop_resistance": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Maximum internal loop resistance",
+      "value": 0.00153,
+      "unit": "ohm"
+    },
+    "mass": {
+      "source": "datasheet_pdf",
+      "locator": "p.20 60A protection board Basic parameter / Finished weight",
+      "value": 0.464,
+      "unit": "kg"
+    },
+    "default_charge_overtemperature": {
+      "source": "datasheet_pdf",
+      "locator": "p.23 Default parameters / Charging overtemperature protection temperature / LI-ION",
+      "value": 70.0,
+      "unit": "degC"
+    },
+    "default_discharge_overtemperature": {
+      "source": "datasheet_pdf",
+      "locator": "p.23 Default parameters / Discharge overtemperature protection temperature / LI-ION",
+      "value": 70.0,
+      "unit": "degC"
+    }
+  },
+  "notes": [
+    "The manual states charge/discharge overtemperature thresholds are user-configurable in the app; 70 degC is the LI-ION factory default, not an immutable hardware limit.",
+    "The EMES mechanism must bind the selected discharge-overtemperature setting explicitly before using a cell rating conditioned on that setting.",
+    "The 60 A value is retained in its native current domain; no pulse capability is inferred from the 120 A instantaneous-current entry.",
+    "The hash-pinned v20.1.1 manual reports 120 A maximum instantaneous current, while the older official product page reports 100 A peak discharge; EMES does not consume either value as a pulse envelope in this slice."
+  ]
+}
