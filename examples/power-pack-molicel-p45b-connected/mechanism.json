@@ -28,7 +28,7 @@
     {"id": "bms", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_BMS_THERMAL", "part": "BMS_REF_12S_30A_THERMAL", "digest": "sha256:320f52a55b882a21a86c456ef768d5b78dcd553f3d2210ea0d2697c70e243966"}}},
     {"id": "battery_pack", "kind": "other", "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL"], "metadata": {"org.emes.role": "battery_pack_assembly"}},
     {"id": "main_fuse", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_MIDI70V", "part": "LITTELFUSE_4998040_M_M6", "digest": "sha256:8dea4164629aaee0d4bd4a658bb61c82568b51c62c572097547ffeee4ccbc169"}}},
-    {"id": "main_connector", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_ANDERSON_SB50", "part": "ANDERSON_SB50_992G4_5900_WTW", "digest": "sha256:805b2cbefd157f9f4e738d80461f5643b140f7fc9732e773ade6f41ad5639b10"}}},
+    {"id": "main_connector", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_ANDERSON_SB50", "part": "ANDERSON_SB50_992G4_5900_WTW", "digest": "sha256:1c7493019531bb72989e04ec67368d914d183bc846e51df092c9f45f58df4966"}}},
     {"id": "dc_converter", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_POWER", "part": "DCDC_REF_25_50V_TO_36V_20A", "digest": "sha256:71785ddca5367b924235f7e1e9fbd8de313f0e97dc8e3e7fb03f5553929b695d"}}},
     {"id": "dc_bus_load", "kind": "other", "metadata": {"org.emes.role": "electrical_load"}}
   ],
@@ -112,7 +112,7 @@
       {"id": "CAT_BMS_THERMAL", "path": "catalogs/reference-bms-thermal.catalog.json", "digest": "sha256:06fab8fbcbab3691d4a870213277fc183bcf2d16bf688d80dd43376b54874f32"},
       {"id": "CAT_POWER", "path": "catalogs/reference-power.catalog.json", "digest": "sha256:ae2d9cd11b18fc0233f2b96d4ce65eb69f3c43a3cc92eccf5940b4c0096a6ade"},
       {"id": "CAT_LITTELFUSE_MIDI70V", "path": "catalogs/littelfuse-midi70v-40a.catalog.json", "digest": "sha256:a0163dbfe1b5f06227225481d565fb722c4f8c586bea89de8d5dca0ae09966a0"},
-      {"id": "CAT_ANDERSON_SB50", "path": "catalogs/anderson-sb50-992g4-5900.catalog.json", "digest": "sha256:00cc876323ac8919ec104a58c380426def12e07caf70abeff467e62ae52e5f4f"}
+      {"id": "CAT_ANDERSON_SB50", "path": "catalogs/anderson-sb50-992g4-5900.catalog.json", "digest": "sha256:4b026b207840bd5fd663ff4a025ce3ef5d2155510ce24e89877c1589641e23bb"}
     ],
     "org.emes.power": {
       "battery_packs": [
