@@ -1,0 +1,8 @@
+{
+  "analysis_id": "A_KNOWN_ENVELOPE_FUSE_20C",
+  "path_id": "PATH_MAIN",
+  "fuse_current_properties": ["max_allowed_current_20c"],
+  "context": {
+    "ambient_temperature": {"value": 20.0, "unit": "degC"}
+  }
+}
