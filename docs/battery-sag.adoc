@@ -1,0 +1,60 @@
+= Source-Conditioned Battery Voltage-Drop Analysis
+
+== Scope
+
+`tools/battery_sag.py` is a deliberately narrow fidelity step layered on top of the existing electrical-power evidence.
+
+It does not recompute load power or converter behavior. Instead it consumes the deterministic `power.py` evidence and combines its reference pack current with a catalog-backed cell DC-impedance value.
+
+For the current P45B example, Molicel reports typical DC impedance of 15 mOhm with a 50% SOC condition. The design binds that source condition to fixed parameter `P_SAG_SOC = 50%`.
+
+If the design requests another SOC, the adapter fails rather than interpolating or pretending the 50% value applies elsewhere.
+
+== Series/parallel composition
+
+For identical cells represented by `S` series groups and `P` parallel cells per group, the first-order equivalent resistance is:
+
+[stem]
+++++
+R_{pack} = R_{cell} \frac{S}{P}
+++++
+
+The reference resistive voltage drop is:
+
+[stem]
+++++
+\Delta V_{R} = I_{pack} R_{pack}
+++++
+
+For the executable 10S2P P45B example at the existing nominal-point power-analysis current:
+
+* source-conditioned typical cell DC impedance: 0.015 ohm at 50% SOC;
+* pack reference current: approximately 14.6199 A;
+* per-cell reference current: approximately 7.30994 A;
+* equivalent pack resistance: 0.075 ohm;
+* first-order resistive drop: approximately 1.09649 V;
+* drop / nominal pack voltage: approximately 0.0304581.
+
+These numbers are deterministic derived evidence, not additional manufacturer claims.
+
+== Interpretation boundary
+
+The adapter intentionally does not report a predicted loaded terminal voltage. The current catalog snapshot does not provide a machine-readable open-circuit-voltage-vs-SOC curve suitable for that calculation.
+
+The result is therefore a first-order resistive-drop estimate at a source-supported SOC and at the nominal-point current already produced by the power evaluator.
+
+It is not a thermal model and does not cover transient impedance, temperature dependence, aging, cell imbalance, interconnect resistance, contact resistance, enclosure effects, certification, or physical-pack approval.
+
+== Evidence contract
+
+The sag evidence records:
+
+* mechanism digest;
+* input power-evidence digest;
+* exact selected cell part digest;
+* series/parallel topology;
+* source-condition check and bound design parameter;
+* derived cell current, pack resistance, voltage drop, and sag fraction;
+* explicit limitations.
+
+Changing `P_SAG_SOC` from 50% to 40% is an expected-failure CI case. No unsupported SOC interpolation is performed.
