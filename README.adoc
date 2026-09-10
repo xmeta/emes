@@ -37,18 +37,18 @@ Purchased components are also explicit engineering inputs. Motors, gearboxes, be
 
 == Current status
 
-The architecture foundation from Issue #1 is merged. Issue #3 implements the first real external-tool vertical slice:
+The architecture foundation and first external-tool vertical slice are merged:
 
 [source,text]
 ----
 EMES JSON
   -> semantic + catalog validation
-  -> build123d -> STEP
+  -> build123d -> exact BREP + STEP
   -> MJCF -> MuJoCo
   -> machine-readable evidence
 ----
 
-The first catalog fixture also demonstrates deterministic structured CSV import. The fixture is synthetic and is not real hardware evidence; live manufacturer/provider integration is tracked separately.
+The catalog layer supports deterministic import and pinned part binding. A synthetic motor fixture exercises the generic import contract, while `catalogs/maxon-496661.catalog.json` exercises the same architecture with an attributable real manufacturer motor snapshot. The maxon record is regenerated offline from a reviewed source snapshot and independently checked against hash-pinned manufacturer PDF/CAD assets.
 
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
@@ -57,6 +57,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/architecture.adoc` -- normative architecture direction.
 * `docs/executable-loop.adoc` -- first CAD/MuJoCo end-to-end slice.
 * `docs/catalogs.adoc` -- purchased-component snapshot and binding model.
+* `docs/real-catalog-maxon.adoc` -- first authoritative manufacturer catalog and evidence policy.
 * `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
 * `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
 * `docs/research/product-data-standards.adoc` -- parts-library/product-data standards and provider strategy.
