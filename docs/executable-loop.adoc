@@ -74,3 +74,14 @@ STEP raw bytes are recorded but are not used as the geometry determinism key.
 `tools/catalog.py import-motor-csv` converts the repository's synthetic motor CSV into the normalized catalog snapshot schema. CI verifies that re-importing the raw fixture produces the same canonical catalog digest as the committed normalized snapshot.
 
 The synthetic values exist only to exercise the import contract. Real manufacturer data ingestion is tracked separately.
+
+
+== First design iteration
+
+`tools/power_pack_iteration.py` closes the first proposal-to-decision loop on the synthetic battery-pack example. The intentionally narrow proposer is allowed to change only `P_PACK_PARALLEL`; the trusted code constructs the candidate source, so the proposer cannot alter requirements, constraints, verifier code, or catalog reference data.
+
+The reference proposal changes `10S2P` to `10S1P`. It improves the declared `M_PACK_TOTAL_MASS` objective from 1.73 kg to 1.03 kg, but the existing power evaluator reports failed `C_ENERGY` and `C_CURRENT_MARGIN` constraints. The iteration therefore records `reject` even though the objective improved.
+
+The iteration artifact records the proposal, baseline and candidate design digests, baseline and candidate evidence digests, verification states, objective comparison, final decision, and reason. Re-running the iteration must reproduce the same record.
+
+A future LLM may replace the trivial proposal policy, but it should only propose values or catalog choices from an explicit allowlist. It is not verification authority: the canonical validator, registered engineering adapters, active verification policy, and deterministic comparison remain responsible for accepting or rejecting the candidate.

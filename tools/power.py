@@ -538,16 +538,16 @@ def run(source: Path, out: Path, repo_root: Path) -> dict[str, Any]:
     validator_cls(schema).validate(document)
     validate_semantics(document)
     result = evaluate(document, repo_root)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(
+        json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     verification = result["verification"]
     if verification["design_decision"] == "rejected":
         raise RuntimeError(
             "power constraints failed: "
             + ", ".join(verification["failed_constraints"])
         )
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
     return result
 
 
