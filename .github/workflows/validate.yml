@@ -31,4 +31,16 @@ jobs:
           assert canonical_digest(committed) == canonical_digest(regenerated)
           print('DETERMINISTIC catalog-import')
           PY
+      - run: python tools/catalog.py validate catalogs/maxon-496661.catalog.json
+      - run: python tools/providers/maxon.py normalize catalogs/sources/maxon-496661.source.json /tmp/maxon-496661.catalog.json
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.catalog import canonical_digest
+          committed = json.loads(Path('catalogs/maxon-496661.catalog.json').read_text())
+          regenerated = json.loads(Path('/tmp/maxon-496661.catalog.json').read_text())
+          assert canonical_digest(committed) == canonical_digest(regenerated)
+          print('DETERMINISTIC maxon-normalization')
+          PY
       - run: python tools/run_reference_loop.py --out-dir generated/two-link-arm --check-determinism
