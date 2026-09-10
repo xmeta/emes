@@ -62,4 +62,18 @@ jobs:
             exit 1
           fi
           echo 'EXPECTED-FAIL incompatible 13S pack rejected'
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source = Path('examples/power-pack/mechanism.json')
+          document = json.loads(source.read_text())
+          document['load_cases'][0]['loads'][0]['value']['value'] = 800.0
+          Path('/tmp/overload-power.json').write_text(json.dumps(document))
+          PY
+          if python tools/power.py /tmp/overload-power.json --out /tmp/overload-evidence.json; then
+            echo 'ERROR: 800 W load unexpectedly passed 720 W converter limit'
+            exit 1
+          fi
+          echo 'EXPECTED-FAIL converter overload rejected'
       - run: python tools/run_reference_loop.py --out-dir generated/two-link-arm --check-determinism
