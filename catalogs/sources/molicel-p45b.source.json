@@ -17,8 +17,8 @@
     "performance_page": {
       "uri": "https://www.molicel.com/inr-21700-p45b/",
       "role": "manufacturer SOC-specific short-duration power observations",
-      "bytes": 0,
-      "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 64320,
+      "sha256": "sha256:dba5836104c4072789cd97610491e1378cf597a061e86c245039dfde3a3b41bc",
       "redistribution": "not_asserted"
     }
   },
