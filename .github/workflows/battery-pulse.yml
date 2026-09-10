@@ -2,7 +2,18 @@ name: battery-pulse
 
 on:
   push:
+    branches:
+      - main
     paths:
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "spec/emes-ir-v0.schema.json"
+      - "catalogs/reference-bms-thermal.catalog.json"
+      - "catalogs/reference-power.catalog.json"
       - "tools/battery_pulse.py"
       - "spec/emes-battery-pulse-v0.schema.json"
       - "examples/power-pack-molicel-p45b/**"
@@ -11,6 +22,15 @@ on:
       - ".github/workflows/battery-pulse.yml"
   pull_request:
     paths:
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "spec/emes-ir-v0.schema.json"
+      - "catalogs/reference-bms-thermal.catalog.json"
+      - "catalogs/reference-power.catalog.json"
       - "tools/battery_pulse.py"
       - "spec/emes-battery-pulse-v0.schema.json"
       - "examples/power-pack-molicel-p45b/**"

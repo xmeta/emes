@@ -2,7 +2,19 @@ name: battery-known-envelope
 
 on:
   push:
+    branches:
+      - main
     paths:
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "spec/emes-battery-known-envelope-v0.schema.json"
+      - "catalogs/molicel-p45b.catalog.json"
       - "tools/battery_known_envelope.py"
       - "tools/battery_pulse.py"
       - "examples/power-pack-molicel-p45b/**"
@@ -11,6 +23,16 @@ on:
       - ".github/workflows/battery-known-envelope.yml"
   pull_request:
     paths:
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "spec/emes-battery-known-envelope-v0.schema.json"
+      - "catalogs/molicel-p45b.catalog.json"
       - "tools/battery_known_envelope.py"
       - "tools/battery_pulse.py"
       - "examples/power-pack-molicel-p45b/**"

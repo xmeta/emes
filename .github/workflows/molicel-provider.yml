@@ -3,6 +3,8 @@ name: molicel-provider
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - "tools/providers/molicel.py"
       - "catalogs/sources/molicel-p45b.source.json"

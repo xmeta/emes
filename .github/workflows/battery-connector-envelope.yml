@@ -2,7 +2,24 @@ name: battery-connector-envelope
 
 on:
   push:
+    branches:
+      - main
     paths:
+      - "requirements-dev.txt"
+      - "tools/battery_known_envelope.py"
+      - "tools/battery_pulse.py"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "spec/emes-battery-known-envelope-v0.schema.json"
+      - "examples/power-pack-molicel-p45b/pulse-10s-soc50.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - "catalogs/reference-bms-thermal.catalog.json"
+      - "catalogs/reference-power.catalog.json"
+      - "catalogs/littelfuse-midi70v-40a.catalog.json"
       - "spec/emes-power-v0.schema.json"
       - "catalogs/anderson-sb50-992g4-5900.catalog.json"
       - "catalogs/sources/anderson-sb50-992g4-5900.source.json"
@@ -12,6 +29,21 @@ on:
       - ".github/workflows/battery-connector-envelope.yml"
   pull_request:
     paths:
+      - "requirements-dev.txt"
+      - "tools/battery_known_envelope.py"
+      - "tools/battery_pulse.py"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "spec/emes-battery-known-envelope-v0.schema.json"
+      - "examples/power-pack-molicel-p45b/pulse-10s-soc50.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - "catalogs/reference-bms-thermal.catalog.json"
+      - "catalogs/reference-power.catalog.json"
+      - "catalogs/littelfuse-midi70v-40a.catalog.json"
       - "spec/emes-power-v0.schema.json"
       - "catalogs/anderson-sb50-992g4-5900.catalog.json"
       - "catalogs/sources/anderson-sb50-992g4-5900.source.json"

@@ -2,13 +2,19 @@ name: littelfuse-midi-provider
 
 on:
   push:
+    branches:
+      - main
     paths:
+      - "tools/catalog.py"
+      - "spec/emes-catalog-v0.schema.json"
       - "tools/providers/littelfuse_midi.py"
       - "catalogs/sources/littelfuse-midi70v-40a.source.json"
       - "catalogs/littelfuse-midi70v-40a.catalog.json"
       - ".github/workflows/littelfuse-midi-provider.yml"
   pull_request:
     paths:
+      - "tools/catalog.py"
+      - "spec/emes-catalog-v0.schema.json"
       - "tools/providers/littelfuse_midi.py"
       - "catalogs/sources/littelfuse-midi70v-40a.source.json"
       - "catalogs/littelfuse-midi70v-40a.catalog.json"
