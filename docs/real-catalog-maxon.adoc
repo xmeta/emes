@@ -1,0 +1,76 @@
+= First Authoritative Manufacturer Catalog: maxon 496661
+
+== Purpose
+
+Issue #4 exercises the purchased-component architecture with a real manufacturer record instead of the synthetic reference fixture.
+
+The selected part is maxon EC-i 40, 100 W, part number `496661`.
+
+== Evidence boundary
+
+EMES separates three layers:
+
+[source,text]
+----
+manufacturer PDF / CAD archive
+          |
+          | exact SHA-256
+          v
+reviewed factual source snapshot
+          |
+          | deterministic unit normalization
+          v
+EMES catalog snapshot
+----
+
+The March 2025 maxon catalog page is the technical-data authority for this snapshot because one immutable PDF contains the motor-data table and dimension drawing. The official CAD ZIP is independently content-addressed.
+
+The live product page is useful for detecting newer information, but it is not the reproducibility anchor because dynamic web delivery was observed to vary across CI runners.
+
+== Source conflict policy
+
+The live product page observed on 2026-09-10 differs slightly from the March 2025 PDF for several values. For example, continuous torque is 208 mNm on the live page and 210 mNm in the pinned PDF.
+
+EMES does not silently overwrite one source with another. The normalized snapshot uses the hash-pinned PDF values; the live-page discrepancy remains recorded in `catalogs/sources/maxon-496661.source.json` as an auxiliary observation.
+
+A future catalog refresh should create a new snapshot rather than mutate the meaning of an existing design.
+
+== CAD asset policy
+
+The manufacturer download linked for part 496661 contains `496660_ec-i40_100w.stp`. Its exact STEP member SHA-256 is recorded in the catalog.
+
+The family-style filename is preserved as evidence. EMES does not claim that the file is unique to part 496661 merely because the 496661 product page links to it.
+
+The upstream PDF, ZIP, and STEP bytes are not committed to this repository because redistribution rights were not established. Their URIs and content digests are sufficient to identify the exact upstream assets and to verify them when accessible.
+
+== Technical model
+
+The normalized record currently includes:
+
+* mass and nominal voltage;
+* no-load, nominal, and maximum speed;
+* no-load, continuous, and stall current;
+* continuous and stall torque;
+* efficiency, resistance, inductance, motor constants, and rotor inertia;
+* pole-pair and phase counts;
+* body diameter and maximum body length;
+* output-shaft and mounting-pilot interfaces;
+* content-addressed STEP and datasheet assets.
+
+`stall_torque` is intentionally named as such. It is not promoted to `peak_torque` or an allowable operating rating.
+
+== Verification
+
+Normal repository CI performs offline verification:
+
+. validate the normalized catalog schema and references;
+. regenerate the catalog from the reviewed source snapshot;
+. compare canonical catalog digests.
+
+The separate `maxon-provider` workflow performs network-dependent freshness verification:
+
+. retrieve the official PDF and compare SHA-256;
+. retrieve the official CAD ZIP and compare SHA-256;
+. verify every recorded ZIP member digest.
+
+This separation keeps ordinary design reproduction independent of manufacturer-site availability while retaining a direct check against authoritative upstream sources.
