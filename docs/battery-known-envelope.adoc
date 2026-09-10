@@ -4,7 +4,7 @@
 
 `tools/battery_known_envelope.py` combines the source-conditioned cell pulse envelope with downstream limits that EMES can currently prove from selected catalog parts.
 
-The key rule is to preserve each rating in its native engineering domain. Cell pulse power is compared as power, BMS capability as current, and converter capability as output current. EMES does not manufacture a common power rating by multiplying every current limit by an arbitrary voltage.
+The key rule is to preserve each rating in its native engineering domain. Cell pulse power is compared as power, BMS capability as current, converter capability as output current, and fuse capability as current plus a separate DC-voltage compatibility check. EMES does not manufacture a common power rating by multiplying every current limit by an arbitrary voltage.
 
 == Dimensionless load scaling
 
@@ -24,7 +24,7 @@ s_{known} = \min_i s_i
 
 This permits comparison of heterogeneous constraints without erasing their native units or rating semantics.
 
-== Current reference result
+== Base reference result
 
 For the P45B 10S2P example at 10 s and 50% SOC:
 
@@ -36,18 +36,60 @@ The currently known limiting component is therefore the converter. Scaling the 5
 
 The BMS and converter records in this example are synthetic fixtures. Their continuous ratings are used as conservative caps for the 10-second context; they are not relabeled as pulse ratings.
 
-== Executable counterexample
+== Explicit fuse variant
 
-Focused CI mutates the synthetic BMS continuous-discharge limit from 30 A to 16 A while keeping the reference load feasible.
+`examples/power-pack-molicel-p45b-fused/mechanism.json` adds a catalog-backed Littelfuse MIDI High Performance 70 V `4998040.M-M6` fuse in series between the battery pack and converter.
 
-The load-scale minimum then moves from the converter to the BMS, with approximately 547.2 W output and 576 W battery-side input envelopes. This verifies that the limiting-element identity is computed from evidence rather than hard-coded.
+The nominal 40 A fuse rating is a separate weakest-link candidate. For the 10S P45B pack, the maximum pack voltage is 42 V, so the 70 Vdc fuse rating has a 28 V compatibility margin. At the 500 W reference load the nominal fuse-current load scale is 2.736, so the converter remains the weakest known component at 1.44 and the output envelope remains 720 W.
 
-CI also rejects a pulse-evidence object whose recorded parent power-evidence digest has been altered.
+The nominal current rating is not treated as a fuse time-current model. EMES does not infer a 10-second fuse ampacity from nominal current, I2t, or sparse time-current data.
+
+== Exact source-conditioned ambient derating
+
+The reviewed Littelfuse catalog snapshot also contains a distinct manufacturer point `max_allowed_current_20c = 38 A`, conditioned on `ambient_temperature == 20 degC`.
+
+This value is deliberately not flattened into the 40 A nominal rating. It is consumed only when a known-envelope analysis request explicitly supplies the matching context, for example:
+
+[source,json]
+----
+{
+  "analysis_id": "A_KNOWN_ENVELOPE_FUSE_20C",
+  "path_id": "PATH_MAIN",
+  "fuse_current_properties": ["max_allowed_current_20c"],
+  "context": {
+    "ambient_temperature": {"value": 20.0, "unit": "degC"}
+  }
+}
+----
+
+At exactly 20 degC, the evaluator keeps both candidates:
+
+* nominal fuse current: 40 A, load scale 2.736;
+* source-conditioned fuse current: 38 A, load scale 2.5992.
+
+The 38 A point is therefore more restrictive than the nominal fuse rating, but the converter still limits the current reference design at 1.44.
+
+If an analysis request explicitly supplies an unsupported ambient temperature, EMES rejects the analysis rather than interpolating, extrapolating, or silently falling back to the nominal fuse current. Omitting a known-envelope analysis request preserves the previous nominal-only behavior and records that ambient derating was not applied.
+
+== Executable counterexamples
+
+Focused CI verifies several limiting-identity and fail-closed cases:
+
+* reducing the synthetic BMS continuous-discharge limit from 30 A to 16 A moves the base-example minimum from the converter to the BMS;
+* reducing the fuse nominal rating to 15 A moves the fused-example minimum to the nominal fuse-current candidate;
+* keeping the nominal fuse rating at 40 A but changing the exact 20 degC source-conditioned point to 15 A moves the minimum to the source-conditioned fuse-current candidate;
+* reducing fuse DC voltage rating to 30 V is rejected against the 42 V maximum pack voltage;
+* requesting 21 degC when only the exact 20 degC source-conditioned fuse-current point is available is rejected rather than interpolated or nominally substituted;
+* altering the recorded parent power-evidence digest in pulse evidence is rejected.
+
+These checks verify that limiting-element identity and source-condition applicability are computed from evidence rather than hard-coded.
 
 == Remaining boundary
 
 This is intentionally called the _weakest-known-component envelope_, not a complete system pulse rating.
 
-Fuse, cell interconnect, bus conductor, connector, contactor, temperature rise, cell imbalance, aging, enclosure, and other applicable limits are not yet represented in this calculation. Adding any of those may only maintain or reduce the known envelope.
+Cell interconnect, bus conductor, connector, contactor, temperature rise beyond the explicitly supported fuse ambient point, cell imbalance, aging, enclosure, and other applicable limits are not yet represented in this calculation. Adding any of those may only maintain or reduce the known envelope.
+
+The reviewed Littelfuse snapshot is reproducible from the committed reviewed source snapshot, but the upstream PDF raw-byte digest is not yet pinned because automated source acquisition is blocked. This prevents treating the current result as physical safety approval.
 
 Physical fabrication, charging, and energization remain outside automatic approval.

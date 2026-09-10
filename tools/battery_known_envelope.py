@@ -10,8 +10,11 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+import jsonschema
+
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
+from power import OPERATORS, quantity_value
 from validate import canonical_digest, load_json
 
 
@@ -45,11 +48,87 @@ def matching_power_path(document: dict[str, Any], path_id: str) -> dict[str, Any
     return matches[0]
 
 
+def context_value(config: dict[str, Any], name: str, unit: str) -> float:
+    context = config["context"]
+    if name not in context:
+        raise ValueError(f"missing known-envelope context value {name!r}")
+    return quantity_value(context[name], unit, f"known-envelope context {name}")
+
+
+def conditioned_fuse_current_match(
+    config: dict[str, Any], fuse: dict[str, Any], property_name: str
+) -> tuple[bool, dict[str, Any]]:
+    try:
+        item = fuse["properties"][property_name]
+    except KeyError as exc:
+        raise ValueError(f"{fuse['id']}: missing fuse current property {property_name}") from exc
+
+    current = quantity_value(item, "A", f"{fuse['id']}.{property_name}")
+    conditions = item.get("conditions", [])
+    if not conditions:
+        raise ValueError(
+            f"{fuse['id']}.{property_name}: source-conditioned fuse property must declare conditions"
+        )
+
+    checks: list[dict[str, Any]] = []
+    matched = True
+    for condition in conditions:
+        name = condition["parameter"]
+        unit = condition["unit"]
+        actual = context_value(config, name, unit)
+        target = float(condition["value"])
+        if not math.isfinite(target):
+            raise ValueError(f"{fuse['id']}.{property_name}.{name}: non-finite condition target")
+        op = condition["op"]
+        passed = OPERATORS[op](actual, target)
+        matched = matched and passed
+        checks.append(
+            {
+                "condition_parameter": name,
+                "condition_op": op,
+                "condition_value": target,
+                "condition_unit": unit,
+                "context_value": actual,
+                "status": "pass" if passed else "fail",
+            }
+        )
+
+    return matched, {
+        "property": property_name,
+        "property_value": current,
+        "property_unit": "A",
+        "source": item.get("source"),
+        "condition_results": checks,
+    }
+
+
+def select_source_conditioned_fuse_current(
+    config: dict[str, Any], fuse: dict[str, Any]
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    evaluated = [
+        conditioned_fuse_current_match(config, fuse, name)
+        for name in config["fuse_current_properties"]
+    ]
+    matches = [record for matched, record in evaluated if matched]
+    if not matches:
+        raise ValueError(
+            "no source-conditioned fuse current point matches the requested context; "
+            "interpolation or fallback to nominal current is not allowed"
+        )
+    if len(matches) != 1:
+        names = ", ".join(record["property"] for record in matches)
+        raise ValueError(
+            f"ambiguous fuse current context matched multiple properties: {names}"
+        )
+    return matches[0], [record for _, record in evaluated]
+
+
 def evaluate(
     document: dict[str, Any],
     power_evidence: dict[str, Any],
     pulse_evidence: dict[str, Any],
     repo_root: Path,
+    config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     design_digest = canonical_digest(document)
     if power_evidence.get("design_digest") != design_digest:
@@ -76,6 +155,8 @@ def evaluate(
     path_id = topology.get("path_id")
     if not isinstance(path_id, str):
         raise ValueError("power topology must expose a path id")
+    if config is not None and config["path_id"] != path_id:
+        raise ValueError("known-envelope analysis path_id does not match power evidence")
     power_path = matching_power_path(document, path_id)
     fuse_component = power_path.get("fuse_component")
     if fuse_component is not None and not isinstance(fuse_component, str):
@@ -102,6 +183,8 @@ def evaluate(
         fuse = selected[fuse_component]
         if fuse.get("kind") != "fuse":
             raise ValueError(f"{fuse_component}: expected fuse catalog part")
+    if config is not None and fuse is None:
+        raise ValueError("source-conditioned fuse analysis requires an explicit catalog-backed fuse")
 
     cell_envelope_w = evidence_metric(
         pulse_evidence, "M_PACK_CELL_ENVELOPE_PULSE_POWER", "W"
@@ -163,6 +246,8 @@ def evaluate(
     ]
 
     fuse_voltage_margin_v: float | None = None
+    conditioned_fuse_point: dict[str, Any] | None = None
+    conditioned_fuse_results: list[dict[str, Any]] | None = None
     if fuse is not None and fuse_component is not None:
         fuse_rated_a = property_number(fuse, "rated_current", "A")
         fuse_rated_voltage_v = property_number(fuse, "rated_voltage_dc", "V")
@@ -187,6 +272,31 @@ def evaluate(
                 ),
             }
         )
+        if config is not None:
+            conditioned_fuse_point, conditioned_fuse_results = (
+                select_source_conditioned_fuse_current(config, fuse)
+            )
+            conditioned_a = float(conditioned_fuse_point["property_value"])
+            candidates.append(
+                {
+                    "id": "fuse_source_conditioned_current",
+                    "component": fuse_component,
+                    "part": fuse["id"],
+                    "part_digest": catalog_digest(fuse),
+                    "rating_kind": "source_conditioned_current_used_as_conservative_10s_cap",
+                    "source_property": conditioned_fuse_point["property"],
+                    "source": conditioned_fuse_point.get("source"),
+                    "condition_results": conditioned_fuse_point["condition_results"],
+                    "limit": conditioned_a,
+                    "demand": pack_current_a,
+                    "unit": "A",
+                    "scale_factor": positive_ratio(
+                        conditioned_a,
+                        pack_current_a,
+                        "source-conditioned fuse current",
+                    ),
+                }
+            )
 
     limiting = min(candidates, key=lambda item: item["scale_factor"])
     scale = float(limiting["scale_factor"])
@@ -231,6 +341,20 @@ def evaluate(
                 },
             ]
         )
+        if conditioned_fuse_point is not None:
+            conditioned_candidate = next(
+                item
+                for item in candidates
+                if item["id"] == "fuse_source_conditioned_current"
+            )
+            metrics.append(
+                {
+                    "id": "M_KNOWN_FUSE_SOURCE_CONDITIONED_LOAD_SCALE",
+                    "value": conditioned_candidate["scale_factor"],
+                    "unit": "1",
+                    "method": "native_rating_ratio",
+                }
+            )
     metrics.extend(
         [
             {
@@ -262,16 +386,22 @@ def evaluate(
         "The result is a weakest-known-component envelope, not a complete system pulse rating or approval to fabricate, charge, or energize a pack.",
     ]
     if fuse is not None:
-        limitations.insert(
-            3,
-            "Fuse nominal rated current is used only as a conservative cap; time-current/I2t data and source-conditioned ambient derating are not converted into an inferred 10 s pulse ampacity.",
-        )
+        if config is None:
+            limitations.insert(
+                3,
+                "Fuse nominal rated current is used only as a conservative cap; time-current/I2t data and source-conditioned ambient derating are not converted into an inferred 10 s pulse ampacity.",
+            )
+        else:
+            limitations.insert(
+                3,
+                "The nominal fuse rating remains a separate candidate; the source-conditioned fuse current is added only for an exact supported analysis context, with no interpolation or extrapolation.",
+            )
         limitations.insert(
             4,
             "The reviewed Littelfuse manufacturer snapshot is reproducible, but the upstream PDF raw-byte digest is not yet pinned because automated source acquisition is blocked; physical safety approval therefore remains out of scope.",
         )
 
-    return {
+    result: dict[str, Any] = {
         "emes_known_power_envelope_evidence_version": "0.1",
         "design_id": document["design"]["id"],
         "design_digest": design_digest,
@@ -283,6 +413,17 @@ def evaluate(
         "metrics": metrics,
         "limitations": limitations,
     }
+    if config is not None:
+        result.update(
+            {
+                "analysis_id": config["analysis_id"],
+                "analysis_request_digest": canonical_digest(config),
+                "context": config["context"],
+                "selected_fuse_current_point": conditioned_fuse_point,
+                "fuse_current_condition_results": conditioned_fuse_results,
+            }
+        )
+    return result
 
 
 def run(
@@ -291,11 +432,21 @@ def run(
     pulse_evidence_path: Path,
     out: Path,
     repo_root: Path,
+    analysis_request_path: Path | None = None,
 ) -> dict[str, Any]:
     document = load_json(source)
     power_evidence = load_json(power_evidence_path)
     pulse_evidence = load_json(pulse_evidence_path)
-    result = evaluate(document, power_evidence, pulse_evidence, repo_root)
+
+    config: dict[str, Any] | None = None
+    if analysis_request_path is not None:
+        config = load_json(analysis_request_path)
+        schema = load_json(repo_root / "spec/emes-battery-known-envelope-v0.schema.json")
+        validator_cls = jsonschema.validators.validator_for(schema)
+        validator_cls.check_schema(schema)
+        validator_cls(schema).validate(config)
+
+    result = evaluate(document, power_evidence, pulse_evidence, repo_root, config)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return result
@@ -306,6 +457,7 @@ def main() -> int:
     parser.add_argument("source", type=Path)
     parser.add_argument("--power-evidence", type=Path, required=True)
     parser.add_argument("--pulse-evidence", type=Path, required=True)
+    parser.add_argument("--analysis-request", type=Path)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--check-determinism", action="store_true")
@@ -317,6 +469,7 @@ def main() -> int:
         args.pulse_evidence,
         args.out,
         args.repo_root,
+        args.analysis_request,
     )
     if args.check_determinism:
         with tempfile.TemporaryDirectory(prefix="emes-known-envelope-") as temp_dir:
@@ -326,6 +479,7 @@ def main() -> int:
                 args.pulse_evidence,
                 Path(temp_dir) / "evidence.json",
                 args.repo_root,
+                args.analysis_request,
             )
         if first != second:
             raise RuntimeError("non-deterministic known power envelope evidence")

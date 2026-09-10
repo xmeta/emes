@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/xmeta/emes/spec/emes-battery-known-envelope-v0.schema.json",
+  "title": "EMES Source-Conditioned Battery Known-Envelope Analysis v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["analysis_id", "path_id", "fuse_current_properties", "context"],
+  "properties": {
+    "analysis_id": {"$ref": "#/$defs/id"},
+    "path_id": {"$ref": "#/$defs/id"},
+    "fuse_current_properties": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"$ref": "#/$defs/id"}
+    },
+    "context": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/quantity"},
+      "propertyNames": {"$ref": "#/$defs/id"}
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"},
+    "quantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
