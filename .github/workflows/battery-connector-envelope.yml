@@ -1,0 +1,136 @@
+name: battery-connector-envelope
+
+on:
+  push:
+    paths:
+      - "spec/emes-power-v0.schema.json"
+      - "catalogs/anderson-sb50-992g4-5900.catalog.json"
+      - "catalogs/sources/anderson-sb50-992g4-5900.source.json"
+      - "examples/power-pack-molicel-p45b-connected/mechanism.json"
+      - "tools/providers/anderson_sb50.py"
+      - "tools/battery_connector_envelope.py"
+      - ".github/workflows/battery-connector-envelope.yml"
+  pull_request:
+    paths:
+      - "spec/emes-power-v0.schema.json"
+      - "catalogs/anderson-sb50-992g4-5900.catalog.json"
+      - "catalogs/sources/anderson-sb50-992g4-5900.source.json"
+      - "examples/power-pack-molicel-p45b-connected/mechanism.json"
+      - "tools/providers/anderson_sb50.py"
+      - "tools/battery_connector_envelope.py"
+      - ".github/workflows/battery-connector-envelope.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pack-side-connector:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python tools/providers/anderson_sb50.py catalogs/sources/anderson-sb50-992g4-5900.source.json /tmp/anderson-sb50.catalog.json
+      - run: |
+          python - <<'PY'
+          import json
+          committed = json.load(open('catalogs/anderson-sb50-992g4-5900.catalog.json'))
+          generated = json.load(open('/tmp/anderson-sb50.catalog.json'))
+          assert committed == generated
+          print('VALID deterministic-anderson-sb50-catalog-content')
+          PY
+      - run: python tools/catalog.py validate catalogs/anderson-sb50-992g4-5900.catalog.json
+      - run: python tools/validate.py examples/power-pack-molicel-p45b-connected/mechanism.json
+      - run: python tools/power.py examples/power-pack-molicel-p45b-connected/mechanism.json --out /tmp/connected-power.json --check-determinism
+      - run: python tools/battery_pulse.py examples/power-pack-molicel-p45b-connected/mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/connected-power.json --out /tmp/connected-pulse.json --check-determinism
+      - run: python tools/battery_known_envelope.py examples/power-pack-molicel-p45b-connected/mechanism.json --power-evidence /tmp/connected-power.json --pulse-evidence /tmp/connected-pulse.json --out /tmp/connected-known.json --check-determinism
+      - run: python tools/battery_connector_envelope.py examples/power-pack-molicel-p45b-connected/mechanism.json --power-evidence /tmp/connected-power.json --known-envelope-evidence /tmp/connected-known.json --out /tmp/connected-path.json --check-determinism
+      - run: |
+          python - <<'PY'
+          import json, math
+          e = json.load(open('/tmp/connected-path.json'))
+          m = {x['id']: x['value'] for x in e['metrics']}
+          assert e['limiting_candidate'] == 'upstream_known_component_envelope'
+          assert len(e['connectors']) == 1
+          c = e['connectors'][0]
+          assert c['component'] == 'main_connector'
+          assert c['part'] == 'ANDERSON_SB50_992G4_5900_WTW'
+          assert math.isclose(c['rated_current'], 50.0)
+          assert math.isclose(c['rated_voltage_dc'], 250.0)
+          assert math.isclose(m['M_KNOWN_CONNECTOR_RATED_LOAD_SCALE'], 3.42, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_CONNECTOR_VOLTAGE_MARGIN'], 208.0, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.44, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 720.0, rel_tol=1e-12)
+          print('VALID sb50-reference-path-envelope')
+          PY
+      - run: |
+          python - <<'PY'
+          import copy, json, sys
+          from pathlib import Path
+          sys.path.insert(0, 'tools')
+          from catalog import canonical_digest
+
+          mechanism = json.load(open('examples/power-pack-molicel-p45b-connected/mechanism.json'))
+          base_catalog = json.load(open('catalogs/anderson-sb50-992g4-5900.catalog.json'))
+
+          def variant(name, current, voltage):
+              catalog = copy.deepcopy(base_catalog)
+              part = catalog['parts'][0]
+              part['properties']['rated_current']['value'] = current
+              part['properties']['rated_voltage_dc']['value'] = voltage
+              catalog_path = Path(f'/tmp/{name}.catalog.json')
+              catalog_path.write_text(json.dumps(catalog, indent=2) + '\n')
+
+              doc = copy.deepcopy(mechanism)
+              for binding in doc['extensions']['org.emes.catalogs']:
+                  if binding['id'] == 'CAT_ANDERSON_SB50':
+                      binding['path'] = str(catalog_path)
+                      binding['digest'] = canonical_digest(catalog)
+              for component in doc['components']:
+                  if component['id'] == 'main_connector':
+                      component['metadata']['org.emes.catalog_ref']['digest'] = canonical_digest(part)
+              doc_path = Path(f'/tmp/{name}.mechanism.json')
+              doc_path.write_text(json.dumps(doc, indent=2) + '\n')
+
+          variant('connector10a', 10.0, 250.0)
+          variant('connector30v', 50.0, 30.0)
+          print('CREATED connector counterexamples')
+          PY
+      - run: python tools/power.py /tmp/connector10a.mechanism.json --out /tmp/connector10a-power.json --check-determinism
+      - run: python tools/battery_pulse.py /tmp/connector10a.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/connector10a-power.json --out /tmp/connector10a-pulse.json --check-determinism
+      - run: python tools/battery_known_envelope.py /tmp/connector10a.mechanism.json --power-evidence /tmp/connector10a-power.json --pulse-evidence /tmp/connector10a-pulse.json --out /tmp/connector10a-known.json --check-determinism
+      - run: python tools/battery_connector_envelope.py /tmp/connector10a.mechanism.json --power-evidence /tmp/connector10a-power.json --known-envelope-evidence /tmp/connector10a-known.json --out /tmp/connector10a-path.json --check-determinism
+      - run: |
+          python - <<'PY'
+          import json, math
+          e = json.load(open('/tmp/connector10a-path.json'))
+          m = {x['id']: x['value'] for x in e['metrics']}
+          assert e['limiting_candidate'] == 'connector_rated_current:main_connector'
+          assert math.isclose(m['M_KNOWN_CONNECTOR_RATED_LOAD_SCALE'], 0.684, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 342.0, rel_tol=1e-12)
+          print('VALID connector-becomes-weakest-link')
+          PY
+      - run: python tools/power.py /tmp/connector30v.mechanism.json --out /tmp/connector30v-power.json --check-determinism
+      - run: python tools/battery_pulse.py /tmp/connector30v.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/connector30v-power.json --out /tmp/connector30v-pulse.json --check-determinism
+      - run: python tools/battery_known_envelope.py /tmp/connector30v.mechanism.json --power-evidence /tmp/connector30v-power.json --pulse-evidence /tmp/connector30v-pulse.json --out /tmp/connector30v-known.json --check-determinism
+      - run: |
+          if python tools/battery_connector_envelope.py /tmp/connector30v.mechanism.json --power-evidence /tmp/connector30v-power.json --known-envelope-evidence /tmp/connector30v-known.json --out /tmp/connector30v-path.json; then
+            echo 'expected connector undervoltage rejection' >&2
+            exit 1
+          fi
+          echo 'VALID connector-voltage-fail-closed'
+      - run: |
+          python - <<'PY'
+          import json
+          e = json.load(open('/tmp/connected-known.json'))
+          e['input_power_evidence_digest'] = 'sha256:' + '0' * 64
+          json.dump(e, open('/tmp/tampered-known.json', 'w'), indent=2)
+          PY
+          if python tools/battery_connector_envelope.py examples/power-pack-molicel-p45b-connected/mechanism.json --power-evidence /tmp/connected-power.json --known-envelope-evidence /tmp/tampered-known.json --out /tmp/tampered-path.json; then
+            echo 'expected parent evidence digest rejection' >&2
+            exit 1
+          fi
+          echo 'VALID connector-parent-evidence-fail-closed'

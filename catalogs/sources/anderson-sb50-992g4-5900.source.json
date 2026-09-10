@@ -1,0 +1,45 @@
+{
+  "provider": "anderson_power",
+  "manufacturer": "Anderson Power Products",
+  "assembly": "SB50 wire-to-wire mated assembly",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-10T17:28:00Z",
+  "capture_method": "reviewed transcription from Anderson Power Products SB50 manufacturer datasheet and product page; raw PDF byte acquisition unavailable in current environment",
+  "upstream": {
+    "datasheet_pdf": {
+      "uri": "https://www.andersonpower.com/content/dam/app/ecommerce/product-pdfs/DS-SB50.pdf",
+      "edition": "SB 50 Connectors - up to 120 amps",
+      "bytes": null,
+      "sha256": null,
+      "redistribution": "not_asserted",
+      "integrity_status": "raw_bytes_not_pinned"
+    },
+    "product_page": {
+      "uri": "https://www.andersonpower.com/product-lines/sb-connector-series/",
+      "role": "auxiliary-product-page"
+    }
+  },
+  "configuration": {
+    "housing_part_number": "992G4",
+    "contact_part_number": "5900",
+    "connection_mode": "wire_to_wire",
+    "contact_series_tested": "5900/1307",
+    "wire_cross_section_tested": {"value": 16.0, "unit": "mm^2"}
+  },
+  "facts": {
+    "rated_current_iec": {"source": "datasheet_pdf", "locator": "IEC INFORMATION / AMP Rating AC/DC / SB50", "value": 50.0, "unit": "A"},
+    "rated_voltage_dc_iec": {"source": "datasheet_pdf", "locator": "IEC INFORMATION / Voltage Rating AC/DC (Steady State) / SB50", "value": 250.0, "unit": "V"},
+    "wire_cross_section_tested": {"source": "datasheet_pdf", "locator": "IEC INFORMATION / Wire Size Tested / SB50", "value": 16.0, "unit": "mm^2"},
+    "contact_series_tested": {"source": "datasheet_pdf", "locator": "IEC INFORMATION / Contact Series Tested / SB50", "value": "5900/1307", "unit": "1"},
+    "operating_temperature_min": {"source": "datasheet_pdf", "locator": "IEC INFORMATION / Temperature Range / SB50", "value": -20.0, "unit": "degC"},
+    "operating_temperature_max": {"source": "datasheet_pdf", "locator": "IEC INFORMATION / Temperature Range / SB50", "value": 105.0, "unit": "degC"},
+    "mating_cycles_iec": {"source": "datasheet_pdf", "locator": "IEC INFORMATION / Cycle Life / IEC 60512 Test 9a / SB50", "value": 5000.0, "unit": "1"}
+  },
+  "notes": [
+    "The 50 A / 250 V values are the SB50 IEC ratings, not the higher UL wire-to-wire current rating.",
+    "This catalog part represents a reviewed wire-to-wire mated assembly using blue 992G4 housings and 5900 high-force 6 AWG contacts; it is not a claim that the housing alone carries the electrical rating.",
+    "The IEC information identifies 16 mm^2 wire and contact series 5900/1307 as the tested configuration and states 5000-cycle life under IEC 60512 Test 9a.",
+    "The separate general silver-contact no-load 10000-cycle figure is intentionally not substituted for the IEC configuration's 5000-cycle result.",
+    "Raw PDF bytes are not pinned because the current automated download path returned an upstream retrieval error; no digest is fabricated."
+  ]
+}

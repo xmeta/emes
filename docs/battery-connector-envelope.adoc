@@ -1,0 +1,90 @@
+= Pack-Side Connector Envelope
+
+== Purpose
+
+`tools/battery_connector_envelope.py` composes explicit pack-side connector limits with the existing weakest-known battery-component evidence.
+
+It intentionally does not reopen or recompute the upstream cell/BMS/converter/fuse analysis. Instead it consumes the digest-bound parent evidence and adds connector candidates in their native electrical domains.
+
+[source,text]
+----
+mechanism + power evidence + known-component evidence
+                  |
+                  v
+       pack-side connector ratings
+                  |
+                  v
+       minimum load-scale factor
+                  |
+                  v
+        connector/path evidence
+----
+
+== Anderson SB50 reference assembly
+
+The first real connector snapshot is an Anderson Power Products SB50 wire-to-wire mated assembly built from blue `992G4` housings and `5900` high-force contacts.
+
+The reviewed manufacturer SB50 material reports the IEC configuration as:
+
+* current rating AC/DC: 50 A;
+* steady-state voltage rating AC/DC: 250 V;
+* tested wire cross-section: 16 mm^2;
+* tested contact series: 5900/1307.
+
+The catalog record represents that reviewed _assembly configuration_. EMES does not attach the electrical rating to a bare housing in isolation, and it deliberately does not substitute the higher UL wire-to-wire rating for the IEC value used here.
+
+The source snapshot is `catalogs/sources/anderson-sb50-992g4-5900.source.json`, normalized deterministically by `tools/providers/anderson_sb50.py` into `catalogs/anderson-sb50-992g4-5900.catalog.json`.
+
+The current environment could read the official manufacturer PDF through the research browser but could not retrieve stable raw PDF bytes for local hashing. Therefore `raw_bytes_not_pinned` is explicit and no source digest is fabricated.
+
+== Native-domain composition
+
+For each declared `pack_connector_components` entry, the adapter computes:
+
+[stem]
++++++
+s_{connector} = \frac{I_{rated}}{I_{pack,reference}}
++++++
+
+and independently checks:
+
+[stem]
++++++
+V_{margin} = V_{connector,rated} - V_{pack,max}
++++++
+
+A negative voltage margin is rejected. Current and voltage are not multiplied together to invent a connector power rating.
+
+The parent known-component scale is retained as another candidate, so the final known path scale is:
+
+[stem]
++++++
+s_{path} = \min(s_{parent}, s_{connector,1}, \ldots)
++++++
+
+== Reference result
+
+For `examples/power-pack-molicel-p45b-connected/mechanism.json` at the existing 500 W load:
+
+* reference pack-side current is approximately 14.62 A;
+* SB50 rated current is 50 A, giving a 3.42 load-scale factor;
+* maximum pack voltage is 42 V;
+* SB50 steady-state rating is 250 V, giving a 208 V margin;
+* the upstream converter remains the weakest known element at 1.44;
+* the composed known path output envelope therefore remains 720 W.
+
+== Counterexamples
+
+Focused CI verifies that the connector actually participates in the decision:
+
+* replacing the connector rating with 10 A moves the limiting candidate to `connector_rated_current:main_connector`, giving a 0.684 load scale and 342 W output envelope;
+* replacing the connector voltage rating with 30 V is rejected against the 42 V maximum pack voltage;
+* tampering with the parent known-envelope evidence linkage is rejected rather than accepted as a valid evidence chain.
+
+== Remaining boundary
+
+This slice does not model conductor thermal ampacity, cable bundling, ambient-temperature derating, crimp process capability, contact aging, contamination, enclosure heating, or contactor limits.
+
+In particular, the manufacturer statement that a connector configuration was tested with 16 mm^2 wire is not treated as proof that every 16 mm^2 conductor installation is safe at the connector current rating. Conductor sizing remains a separate evidence problem.
+
+Physical fabrication, charging, and energization remain outside automatic approval.
