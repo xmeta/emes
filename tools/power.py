@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EMES Phase-1 electrical power and battery-pack evaluator."""
+"""EMES electrical power and battery-pack evaluator."""
 
 from __future__ import annotations
 
@@ -15,6 +15,15 @@ import jsonschema
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
 from validate import canonical_digest, load_json, validate_semantics
+
+
+OPERATORS = {
+    ">=": lambda value, target: value >= target,
+    "<=": lambda value, target: value <= target,
+    ">": lambda value, target: value > target,
+    "<": lambda value, target: value < target,
+    "==": lambda value, target: value == target,
+}
 
 
 def quantity_value(item: dict[str, Any], unit: str, context: str) -> float:
@@ -64,31 +73,122 @@ def load_power_watts(
         elif unit == "A":
             direct_amps += quantity_value(load["value"], "A", f"{load_case_id}.load")
         else:
-            raise ValueError(f"{load_case_id}: power adapter does not support load unit {unit}")
+            raise ValueError(
+                f"{load_case_id}: power adapter does not support load unit {unit}"
+            )
     return watts + direct_amps * voltage, direct_amps + watts / voltage
+
+
+def condition_value(item: dict[str, Any], unit: str, context: str) -> float | str | bool:
+    if item.get("unit") != unit:
+        raise ValueError(f"{context}: expected {unit}, got {item.get('unit')}")
+    value = item["value"]
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        numeric = float(value)
+        if not math.isfinite(numeric):
+            raise ValueError(f"{context}: non-finite value")
+        return numeric
+    if isinstance(value, (str, bool)):
+        return value
+    raise ValueError(f"{context}: unsupported condition value {value!r}")
+
+
+def conditioned_property_number(
+    part: dict[str, Any],
+    name: str,
+    unit: str,
+    *,
+    rated_component: str,
+    controls: dict[str, dict[str, Any]],
+) -> tuple[float, list[dict[str, Any]]]:
+    try:
+        item = part["properties"][name]
+    except KeyError as exc:
+        raise ValueError(f"{part['id']}: missing property {name}") from exc
+    value = quantity_value(item, unit, f"{part['id']}.{name}")
+
+    results: list[dict[str, Any]] = []
+    for condition in item.get("conditions", []):
+        parameter = condition["parameter"]
+        condition_unit = condition["unit"]
+        matches = [
+            (component_id, control_part)
+            for component_id, control_part in controls.items()
+            if parameter in control_part.get("properties", {})
+        ]
+        if not matches:
+            raise ValueError(
+                f"{part['id']}.{name}: conditional rating requires control "
+                f"{parameter!r}, but no selected control component provides it"
+            )
+        if len(matches) != 1:
+            raise ValueError(
+                f"{part['id']}.{name}: conditional rating control {parameter!r} "
+                "is ambiguous across selected components"
+            )
+
+        control_component, control_part = matches[0]
+        control_item = control_part["properties"][parameter]
+        control_value = condition_value(
+            control_item, condition_unit, f"{control_part['id']}.{parameter}"
+        )
+        target_value = condition_value(
+            condition, condition_unit, f"{part['id']}.{name}.condition"
+        )
+        op = condition["op"]
+        if op != "==" and (
+            isinstance(control_value, (str, bool))
+            or isinstance(target_value, (str, bool))
+        ):
+            raise ValueError(
+                f"{part['id']}.{name}: ordered condition {op} requires numeric values"
+            )
+        passed = OPERATORS[op](control_value, target_value)
+        result = {
+            "rated_component": rated_component,
+            "rated_part": part["id"],
+            "rated_property": name,
+            "rated_value": value,
+            "rated_unit": unit,
+            "condition_parameter": parameter,
+            "condition_op": op,
+            "condition_value": target_value,
+            "condition_unit": condition_unit,
+            "control_component": control_component,
+            "control_part": control_part["id"],
+            "control_value": control_value,
+            "status": "pass" if passed else "fail",
+        }
+        if not passed:
+            raise ValueError(
+                f"{part['id']}.{name}: rating condition failed: "
+                f"{parameter}={control_value} {condition_unit} {op} "
+                f"{target_value} {condition_unit}"
+            )
+        results.append(result)
+    return value, results
 
 
 def evaluate_constraints(
     document: dict[str, Any], metrics: dict[str, tuple[float, str]]
 ) -> list[dict[str, Any]]:
-    operators = {
-        ">=": lambda value, target: value >= target,
-        "<=": lambda value, target: value <= target,
-        ">": lambda value, target: value > target,
-        "<": lambda value, target: value < target,
-        "==": lambda value, target: value == target,
-    }
     results: list[dict[str, Any]] = []
     for constraint in document["constraints"]:
         metric_id = constraint["metric"]
         if metric_id not in metrics:
             results.append(
-                {"id": constraint["id"], "status": "not_evaluated", "reason": "metric unavailable"}
+                {
+                    "id": constraint["id"],
+                    "status": "not_evaluated",
+                    "reason": "metric unavailable",
+                }
             )
             continue
         value, unit = metrics[metric_id]
-        target = quantity_value(constraint["target"], unit, f"{constraint['id']}.target")
-        passed = operators[constraint["op"]](value, target)
+        target = quantity_value(
+            constraint["target"], unit, f"{constraint['id']}.target"
+        )
+        passed = OPERATORS[constraint["op"]](value, target)
         results.append(
             {
                 "id": constraint["id"],
@@ -120,6 +220,8 @@ def evidence(
     selected: dict[str, dict[str, Any]],
     selected_ids: list[str],
     metrics: dict[str, tuple[float, str]],
+    *,
+    rating_condition_results: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     return {
         "emes_evidence_version": "0.1",
@@ -130,8 +232,14 @@ def evidence(
             selected_part_record(component_id, selected[component_id])
             for component_id in sorted(selected_ids)
         ],
+        "rating_condition_results": rating_condition_results or [],
         "metrics": [
-            {"id": metric_id, "value": value, "unit": unit, "method": "analytic"}
+            {
+                "id": metric_id,
+                "value": value,
+                "unit": unit,
+                "method": "analytic",
+            }
             for metric_id, (value, unit) in metrics.items()
         ],
         "constraint_results": evaluate_constraints(document, metrics),
@@ -145,7 +253,9 @@ def evaluate_fixed_supply(
 ) -> dict[str, Any]:
     source_component = path["source_component"]
     if "converter_component" in path:
-        raise ValueError("Phase-1 fixed power-supply path does not yet support a converter")
+        raise ValueError(
+            "Phase-1 fixed power-supply path does not yet support a converter"
+        )
     if source_component not in selected:
         raise ValueError(f"{source_component}: power source must be catalog-backed")
     source = selected[source_component]
@@ -156,7 +266,9 @@ def evaluate_fixed_supply(
     declared_power = property_number(source, "continuous_output_power", "W")
     current_power = voltage * current_limit
     power_limit = min(declared_power, current_power)
-    load_power, load_current = load_power_watts(document, path["load_case"], voltage)
+    load_power, load_current = load_power_watts(
+        document, path["load_case"], voltage
+    )
 
     metrics: dict[str, tuple[float, str]] = {
         "M_BUS_VOLTAGE": (voltage, "V"),
@@ -192,13 +304,20 @@ def evaluate_battery_pack(
     if "bms_component" not in pack:
         raise ValueError("Phase-1 battery pack requires an explicit BMS component")
     if "converter_component" not in path:
-        raise ValueError("Phase-1 battery pack path requires an explicit power converter")
+        raise ValueError(
+            "Phase-1 battery pack path requires an explicit power converter"
+        )
 
     cell_component = pack["cell_component"]
     bms_component = pack["bms_component"]
     converter_component = path["converter_component"]
     component_ids = {item["id"] for item in document["components"]}
-    for component_id in (pack["component"], cell_component, bms_component, converter_component):
+    for component_id in (
+        pack["component"],
+        cell_component,
+        bms_component,
+        converter_component,
+    ):
         if component_id not in component_ids:
             raise ValueError(f"{pack['id']}: unknown component {component_id}")
     for component_id in (cell_component, bms_component, converter_component):
@@ -220,7 +339,13 @@ def evaluate_battery_pack(
     cell_max_v = property_number(cell, "max_charge_voltage", "V")
     cell_min_v = property_number(cell, "min_discharge_voltage", "V")
     cell_capacity_ah = property_number(cell, "nominal_capacity", "A*h")
-    cell_current_a = property_number(cell, "continuous_discharge_current", "A")
+    cell_current_a, rating_condition_results = conditioned_property_number(
+        cell,
+        "continuous_discharge_current",
+        "A",
+        rated_component=cell_component,
+        controls={bms_component: bms},
+    )
     cell_mass_kg = property_number(cell, "mass", "kg")
 
     pack_nominal_v = series * cell_nominal_v
@@ -234,9 +359,13 @@ def evaluate_battery_pack(
     bms_current_a = property_number(bms, "continuous_discharge_current", "A")
     bms_max_v = property_number(bms, "max_pack_voltage", "V")
     if series > bms_series_limit:
-        raise ValueError(f"BMS series limit exceeded: pack={series}S bms={bms_series_limit:g}S")
+        raise ValueError(
+            f"BMS series limit exceeded: pack={series}S bms={bms_series_limit:g}S"
+        )
     if pack_max_v > bms_max_v:
-        raise ValueError(f"BMS voltage limit exceeded: pack={pack_max_v:g}V bms={bms_max_v:g}V")
+        raise ValueError(
+            f"BMS voltage limit exceeded: pack={pack_max_v:g}V bms={bms_max_v:g}V"
+        )
     pack_current_a = min(raw_pack_current_a, bms_current_a)
 
     converter_min_v = property_number(converter, "input_voltage_min", "V")
@@ -249,17 +378,22 @@ def evaluate_battery_pack(
     if pack_min_v < converter_min_v or pack_max_v > converter_max_v:
         raise ValueError(
             "converter input range incompatible with full pack voltage range: "
-            f"pack=[{pack_min_v:g},{pack_max_v:g}]V converter=[{converter_min_v:g},{converter_max_v:g}]V"
+            f"pack=[{pack_min_v:g},{pack_max_v:g}]V "
+            f"converter=[{converter_min_v:g},{converter_max_v:g}]V"
         )
 
-    load_power_w, load_output_a = load_power_watts(document, path["load_case"], converter_output_v)
+    load_power_w, load_output_a = load_power_watts(
+        document, path["load_case"], converter_output_v
+    )
     converter_output_limit_w = converter_output_v * converter_output_a
     converter_power_margin_w = converter_output_limit_w - load_power_w
     input_power_w = load_power_w / efficiency
     equivalent_pack_current_a = input_power_w / pack_nominal_v
     current_margin_a = pack_current_a - equivalent_pack_current_a
 
-    overhead_mass = quantity_value(pack["overhead_mass"], "kg", f"{pack['id']}.overhead_mass")
+    overhead_mass = quantity_value(
+        pack["overhead_mass"], "kg", f"{pack['id']}.overhead_mass"
+    )
     bms_mass = property_number(bms, "mass", "kg")
     cell_mass_total = cell_count * cell_mass_kg
     total_mass = cell_mass_total + bms_mass + overhead_mass
@@ -301,6 +435,7 @@ def evaluate_battery_pack(
         selected,
         [cell_component, bms_component, converter_component],
         metrics,
+        rating_condition_results=rating_condition_results,
     )
 
 
@@ -339,18 +474,31 @@ def run(source: Path, out: Path, repo_root: Path) -> dict[str, Any]:
     validator_cls(schema).validate(document)
     validate_semantics(document)
     result = evaluate(document, repo_root)
-    failures = [item["id"] for item in result["constraint_results"] if item["status"] == "fail"]
+    failures = [
+        item["id"]
+        for item in result["constraint_results"]
+        if item["status"] == "fail"
+    ]
     if failures:
         raise RuntimeError("power constraints failed: " + ", ".join(failures))
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return result
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("source", nargs="?", type=Path, default=Path("examples/power-pack/mechanism.json"))
-    parser.add_argument("--out", type=Path, default=Path("generated/power/evidence.json"))
+    parser.add_argument(
+        "source",
+        nargs="?",
+        type=Path,
+        default=Path("examples/power-pack/mechanism.json"),
+    )
+    parser.add_argument(
+        "--out", type=Path, default=Path("generated/power/evidence.json")
+    )
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--check-determinism", action="store_true")
     args = parser.parse_args()
@@ -358,7 +506,9 @@ def main() -> int:
     first = run(args.source, args.out, args.repo_root)
     if args.check_determinism:
         with tempfile.TemporaryDirectory(prefix="emes-power-") as temp_dir:
-            second = run(args.source, Path(temp_dir) / "evidence.json", args.repo_root)
+            second = run(
+                args.source, Path(temp_dir) / "evidence.json", args.repo_root
+            )
         if first != second:
             raise RuntimeError("non-deterministic power evidence")
         print("DETERMINISTIC power-evidence")

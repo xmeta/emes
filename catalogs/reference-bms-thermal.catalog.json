@@ -1,0 +1,51 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_REFERENCE_BMS_THERMAL",
+    "name": "EMES reference thermal-aware BMS fixture",
+    "description": "Synthetic BMS used only to exercise conditional battery-rating controls."
+  },
+  "sources": [
+    {
+      "id": "SRC_REFERENCE_BMS_THERMAL",
+      "authority": "synthetic",
+      "format": "json",
+      "license": "CC0-1.0"
+    }
+  ],
+  "parts": [
+    {
+      "id": "BMS_REF_12S_30A_THERMAL",
+      "kind": "bms",
+      "identity": {
+        "manufacturer": "EMES Fixture",
+        "part_number": "BMS-12S-30A-THERMAL"
+      },
+      "properties": {
+        "mass": {"value": 0.08, "unit": "kg", "source": "SRC_REFERENCE_BMS_THERMAL"},
+        "max_series_cells": {"value": 12.0, "unit": "1", "source": "SRC_REFERENCE_BMS_THERMAL"},
+        "continuous_discharge_current": {"value": 30.0, "unit": "A", "source": "SRC_REFERENCE_BMS_THERMAL"},
+        "max_charge_current": {"value": 10.0, "unit": "A", "source": "SRC_REFERENCE_BMS_THERMAL"},
+        "max_pack_voltage": {"value": 50.4, "unit": "V", "source": "SRC_REFERENCE_BMS_THERMAL"},
+        "cell_discharge_cutoff_temperature": {"value": 75.0, "unit": "degC", "source": "SRC_REFERENCE_BMS_THERMAL"},
+        "cell_charge_cutoff_temperature": {"value": 65.0, "unit": "degC", "source": "SRC_REFERENCE_BMS_THERMAL"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_BATTERY",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "battery", "unit": "1", "source": "SRC_REFERENCE_BMS_THERMAL"}
+          }
+        },
+        {
+          "id": "IF_LOAD",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "load", "unit": "1", "source": "SRC_REFERENCE_BMS_THERMAL"}
+          }
+        }
+      ]
+    }
+  ]
+}

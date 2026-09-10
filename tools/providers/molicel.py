@@ -14,7 +14,9 @@ USER_AGENT = "EMES/0.1 (+https://github.com/xmeta/emes)"
 
 
 def fetch(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/pdf,*/*"})
+    request = urllib.request.Request(
+        url, headers={"User-Agent": USER_AGENT, "Accept": "application/pdf,*/*"}
+    )
     with urllib.request.urlopen(request, timeout=30) as response:
         return response.read()
 
@@ -24,7 +26,9 @@ def sha256(data: bytes) -> str:
 
 
 def canonical_digest(value: Any) -> str:
-    payload = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    payload = json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    ).encode("utf-8")
     return sha256(payload)
 
 
@@ -41,7 +45,9 @@ def verify_snapshot(path: Path) -> dict[str, Any]:
         raise RuntimeError("Molicel datasheet URL did not return a PDF")
     actual = sha256(pdf)
     if actual != expected:
-        raise RuntimeError(f"Molicel datasheet changed: expected {expected}, got {actual}; bytes={len(pdf)}")
+        raise RuntimeError(
+            f"Molicel datasheet changed: expected {expected}, got {actual}; bytes={len(pdf)}"
+        )
     return {
         "provider": "molicel",
         "part_number": snapshot["part_number"],
@@ -72,7 +78,47 @@ def conditions(snapshot: dict[str, Any], name: str) -> list[dict[str, Any]]:
     return [dict(item) for item in fact(snapshot, name).get("conditions", [])]
 
 
-def q(value: float | str, unit: str, source: str, *, rating_conditions: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def normalized_rating_conditions(
+    snapshot: dict[str, Any], name: str
+) -> list[dict[str, Any]]:
+    raw = conditions(snapshot, name)
+    if name not in {"continuous_discharge_current", "maximum_charge_current"}:
+        return raw
+
+    if len(raw) != 1:
+        raise ValueError(f"{name}: expected exactly one manufacturer cutoff condition")
+    cutoff = raw[0]
+    expected_temperature = 80.0 if name == "continuous_discharge_current" else 70.0
+    if (
+        cutoff.get("parameter") != "cutoff_temperature"
+        or cutoff.get("op") != "=="
+        or cutoff.get("unit") != "degC"
+        or float(cutoff.get("value")) != expected_temperature
+    ):
+        raise ValueError(f"{name}: unexpected manufacturer cutoff condition {cutoff}")
+
+    control_parameter = (
+        "cell_discharge_cutoff_temperature"
+        if name == "continuous_discharge_current"
+        else "cell_charge_cutoff_temperature"
+    )
+    return [
+        {
+            "parameter": control_parameter,
+            "op": "<=",
+            "value": expected_temperature,
+            "unit": "degC",
+        }
+    ]
+
+
+def q(
+    value: float | str,
+    unit: str,
+    source: str,
+    *,
+    rating_conditions: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     result: dict[str, Any] = {"value": value, "unit": unit, "source": source}
     if rating_conditions:
         result["conditions"] = rating_conditions
@@ -91,29 +137,87 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
         "properties": {
             "form_factor": q(scalar(snapshot, "form_factor"), "1", source_id),
             "chemistry_family": q(scalar(snapshot, "chemistry_family"), "1", source_id),
-            "nominal_capacity": q(number(snapshot, "nominal_capacity_typical", "A*h"), "A*h", source_id),
-            "minimum_capacity": q(number(snapshot, "nominal_capacity_minimum", "A*h"), "A*h", source_id),
-            "nominal_energy": q(number(snapshot, "nominal_energy_typical", "W*h"), "W*h", source_id),
-            "minimum_energy": q(number(snapshot, "nominal_energy_minimum", "W*h"), "W*h", source_id),
+            "nominal_capacity": q(
+                number(snapshot, "nominal_capacity_typical", "A*h"), "A*h", source_id
+            ),
+            "minimum_capacity": q(
+                number(snapshot, "nominal_capacity_minimum", "A*h"), "A*h", source_id
+            ),
+            "nominal_energy": q(
+                number(snapshot, "nominal_energy_typical", "W*h"), "W*h", source_id
+            ),
+            "minimum_energy": q(
+                number(snapshot, "nominal_energy_minimum", "W*h"), "W*h", source_id
+            ),
             "nominal_voltage": q(number(snapshot, "nominal_voltage", "V"), "V", source_id),
-            "max_charge_voltage": q(number(snapshot, "max_charge_voltage", "V"), "V", source_id),
-            "min_discharge_voltage": q(number(snapshot, "min_discharge_voltage", "V"), "V", source_id),
-            "standard_charge_current": q(number(snapshot, "standard_charge_current", "A"), "A", source_id),
-            "maximum_charge_current": q(number(snapshot, "maximum_charge_current", "A"), "A", source_id, rating_conditions=conditions(snapshot, "maximum_charge_current")),
-            "continuous_discharge_current": q(number(snapshot, "continuous_discharge_current", "A"), "A", source_id, rating_conditions=conditions(snapshot, "continuous_discharge_current")),
-            "charge_temperature_min": q(number(snapshot, "charge_temperature_min", "degC"), "degC", source_id),
-            "charge_temperature_max": q(number(snapshot, "charge_temperature_max", "degC"), "degC", source_id),
-            "discharge_temperature_min": q(number(snapshot, "discharge_temperature_min", "degC"), "degC", source_id),
-            "discharge_temperature_max": q(number(snapshot, "discharge_temperature_max", "degC"), "degC", source_id),
-            "ac_impedance_typical": q(number(snapshot, "ac_impedance_typical", "ohm"), "ohm", source_id, rating_conditions=conditions(snapshot, "ac_impedance_typical")),
-            "dc_impedance_typical": q(number(snapshot, "dc_impedance_typical", "ohm"), "ohm", source_id, rating_conditions=conditions(snapshot, "dc_impedance_typical")),
-            "diameter_max": q(number(snapshot, "diameter_max", "mm") * 1e-3, "m", source_id),
-            "height_max": q(number(snapshot, "height_max", "mm") * 1e-3, "m", source_id),
+            "max_charge_voltage": q(
+                number(snapshot, "max_charge_voltage", "V"), "V", source_id
+            ),
+            "min_discharge_voltage": q(
+                number(snapshot, "min_discharge_voltage", "V"), "V", source_id
+            ),
+            "standard_charge_current": q(
+                number(snapshot, "standard_charge_current", "A"), "A", source_id
+            ),
+            "maximum_charge_current": q(
+                number(snapshot, "maximum_charge_current", "A"),
+                "A",
+                source_id,
+                rating_conditions=normalized_rating_conditions(
+                    snapshot, "maximum_charge_current"
+                ),
+            ),
+            "continuous_discharge_current": q(
+                number(snapshot, "continuous_discharge_current", "A"),
+                "A",
+                source_id,
+                rating_conditions=normalized_rating_conditions(
+                    snapshot, "continuous_discharge_current"
+                ),
+            ),
+            "charge_temperature_min": q(
+                number(snapshot, "charge_temperature_min", "degC"), "degC", source_id
+            ),
+            "charge_temperature_max": q(
+                number(snapshot, "charge_temperature_max", "degC"), "degC", source_id
+            ),
+            "discharge_temperature_min": q(
+                number(snapshot, "discharge_temperature_min", "degC"), "degC", source_id
+            ),
+            "discharge_temperature_max": q(
+                number(snapshot, "discharge_temperature_max", "degC"), "degC", source_id
+            ),
+            "ac_impedance_typical": q(
+                number(snapshot, "ac_impedance_typical", "ohm"),
+                "ohm",
+                source_id,
+                rating_conditions=conditions(snapshot, "ac_impedance_typical"),
+            ),
+            "dc_impedance_typical": q(
+                number(snapshot, "dc_impedance_typical", "ohm"),
+                "ohm",
+                source_id,
+                rating_conditions=conditions(snapshot, "dc_impedance_typical"),
+            ),
+            "diameter_max": q(
+                number(snapshot, "diameter_max", "mm") * 1e-3, "m", source_id
+            ),
+            "height_max": q(
+                number(snapshot, "height_max", "mm") * 1e-3, "m", source_id
+            ),
             "mass": q(number(snapshot, "mass_max", "g") * 1e-3, "kg", source_id),
         },
         "interfaces": [
-            {"id": "IF_POSITIVE_TERMINAL", "kind": "electrical_terminal", "properties": {}},
-            {"id": "IF_NEGATIVE_TERMINAL", "kind": "electrical_terminal", "properties": {}}
+            {
+                "id": "IF_POSITIVE_TERMINAL",
+                "kind": "electrical_terminal",
+                "properties": {},
+            },
+            {
+                "id": "IF_NEGATIVE_TERMINAL",
+                "kind": "electrical_terminal",
+                "properties": {},
+            },
         ],
         "assets": [
             {
@@ -122,9 +226,9 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
                 "uri": upstream["uri"],
                 "digest": upstream["sha256"],
                 "source": source_id,
-                "license": "Molicel upstream terms; redistribution not asserted"
+                "license": "Molicel upstream terms; redistribution not asserted",
             }
-        ]
+        ],
     }
 
     catalog = {
@@ -132,7 +236,11 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
         "catalog": {
             "id": "CAT_MOLICEL_P45B",
             "name": "Molicel INR-21700-P45B",
-            "description": "Manufacturer Product Data Sheet v1.4 normalized for EMES; conditional ratings are preserved and upstream bytes are referenced, not redistributed."
+            "description": (
+                "Manufacturer Product Data Sheet v1.4 normalized for EMES; "
+                "conditional ratings are preserved and upstream bytes are referenced, "
+                "not redistributed."
+            ),
         },
         "sources": [
             {
@@ -142,13 +250,15 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
                 "uri": upstream["uri"],
                 "retrieved_at": snapshot["captured_at"],
                 "license": "Molicel upstream terms; redistribution not asserted",
-                "raw_digest": upstream["sha256"]
+                "raw_digest": upstream["sha256"],
             }
         ],
-        "parts": [part]
+        "parts": [part],
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(catalog, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    output_path.write_text(
+        json.dumps(catalog, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
     return catalog
 
 

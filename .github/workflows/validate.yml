@@ -56,20 +56,101 @@ jobs:
           part = committed['parts'][0]
           props = part['properties']
           assert props['continuous_discharge_current']['conditions'] == [
-              {'parameter': 'cutoff_temperature', 'op': '==', 'value': 80.0, 'unit': 'degC'}
+              {'parameter': 'cell_discharge_cutoff_temperature', 'op': '<=', 'value': 80.0, 'unit': 'degC'}
           ]
           assert props['maximum_charge_current']['conditions'] == [
-              {'parameter': 'cutoff_temperature', 'op': '==', 'value': 70.0, 'unit': 'degC'}
+              {'parameter': 'cell_charge_cutoff_temperature', 'op': '<=', 'value': 70.0, 'unit': 'degC'}
           ]
           assert props['ac_impedance_typical']['conditions'][0]['value'] == 30.0
           assert props['dc_impedance_typical']['conditions'][0]['value'] == 50.0
-          print('DETERMINISTIC molicel-normalization with conditional ratings')
+          assert canonical_digest(committed) == 'sha256:8dd6d815b5f9bcc8c2b010e8891672bb775f07d7391f2dfed9a002fc491c9f6d'
+          assert canonical_digest(part) == 'sha256:321bee539013d2e1fc40ec67f6a05127dfbdc50605b5a3b5b6575fca79b5384f'
+          print('DETERMINISTIC molicel-normalization with executable conditional ratings')
           PY
+      - run: python tools/catalog.py validate catalogs/reference-bms-thermal.catalog.json
       - run: python tools/catalog.py validate catalogs/reference-power.catalog.json
       - run: python tools/validate.py examples/power-pack/mechanism.json
       - run: python tools/power.py examples/power-pack/mechanism.json --out generated/power-pack/evidence.json --check-determinism
       - run: python tools/validate.py examples/power-supply/mechanism.json
       - run: python tools/power.py examples/power-supply/mechanism.json --out generated/power-supply/evidence.json --check-determinism
+      - run: python tools/validate.py examples/power-pack-molicel-p45b/mechanism.json
+      - run: python tools/power.py examples/power-pack-molicel-p45b/mechanism.json --out generated/power-pack-molicel-p45b/evidence.json --check-determinism
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          evidence = json.loads(Path('generated/power-pack-molicel-p45b/evidence.json').read_text())
+          checks = evidence['rating_condition_results']
+          assert len(checks) == 1
+          check = checks[0]
+          assert check['rated_part'] == 'MOLICEL_INR_21700_P45B'
+          assert check['rated_property'] == 'continuous_discharge_current'
+          assert check['condition_parameter'] == 'cell_discharge_cutoff_temperature'
+          assert check['condition_op'] == '<='
+          assert check['condition_value'] == 80.0
+          assert check['control_component'] == 'bms'
+          assert check['control_part'] == 'BMS_REF_12S_30A_THERMAL'
+          assert check['control_value'] == 75.0
+          assert check['status'] == 'pass'
+          metrics = {item['id']: item['value'] for item in evidence['metrics']}
+          assert metrics['M_PACK_CONTINUOUS_CURRENT'] == 30.0
+          assert metrics['M_PACK_NOMINAL_ENERGY'] == 324.0
+          print('VERIFIED real-cell conditional rating and BMS clamp')
+          PY
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.catalog import canonical_digest
+
+          mechanism = json.loads(Path('examples/power-pack-molicel-p45b/mechanism.json').read_text())
+          catalog = json.loads(Path('catalogs/reference-bms-thermal.catalog.json').read_text())
+          catalog['parts'][0]['properties']['cell_discharge_cutoff_temperature']['value'] = 85.0
+          temp_catalog = Path('/tmp/bms-hot-cutoff.catalog.json')
+          temp_catalog.write_text(json.dumps(catalog))
+          catalog_digest = canonical_digest(catalog)
+          part_digest = canonical_digest(catalog['parts'][0])
+          for binding in mechanism['extensions']['org.emes.catalogs']:
+              if binding['id'] == 'CAT_BMS_THERMAL':
+                  binding['path'] = str(temp_catalog)
+                  binding['digest'] = catalog_digest
+          for component in mechanism['components']:
+              if component['id'] == 'bms':
+                  component['metadata']['org.emes.catalog_ref']['digest'] = part_digest
+          Path('/tmp/p45b-invalid-cutoff.json').write_text(json.dumps(mechanism))
+          PY
+          if python tools/power.py /tmp/p45b-invalid-cutoff.json --out /tmp/p45b-invalid-cutoff-evidence.json; then
+            echo 'ERROR: P45B rating unexpectedly accepted with 85 degC BMS cutoff'
+            exit 1
+          fi
+          echo 'EXPECTED-FAIL P45B rating rejected with 85 degC BMS cutoff'
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.catalog import canonical_digest
+
+          mechanism = json.loads(Path('examples/power-pack-molicel-p45b/mechanism.json').read_text())
+          catalog = json.loads(Path('catalogs/reference-bms-thermal.catalog.json').read_text())
+          del catalog['parts'][0]['properties']['cell_discharge_cutoff_temperature']
+          temp_catalog = Path('/tmp/bms-no-cutoff.catalog.json')
+          temp_catalog.write_text(json.dumps(catalog))
+          catalog_digest = canonical_digest(catalog)
+          part_digest = canonical_digest(catalog['parts'][0])
+          for binding in mechanism['extensions']['org.emes.catalogs']:
+              if binding['id'] == 'CAT_BMS_THERMAL':
+                  binding['path'] = str(temp_catalog)
+                  binding['digest'] = catalog_digest
+          for component in mechanism['components']:
+              if component['id'] == 'bms':
+                  component['metadata']['org.emes.catalog_ref']['digest'] = part_digest
+          Path('/tmp/p45b-missing-cutoff.json').write_text(json.dumps(mechanism))
+          PY
+          if python tools/power.py /tmp/p45b-missing-cutoff.json --out /tmp/p45b-missing-cutoff-evidence.json; then
+            echo 'ERROR: P45B rating unexpectedly accepted without a cutoff control'
+            exit 1
+          fi
+          echo 'EXPECTED-FAIL P45B rating rejected without a cutoff control'
       - run: |
           python - <<'PY'
           import json
