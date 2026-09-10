@@ -31,4 +31,4 @@ jobs:
           assert canonical_digest(committed) == canonical_digest(regenerated)
           print('DETERMINISTIC catalog-import')
           PY
-      - run: python tools/reference_loop.py --out-dir generated/two-link-arm --check-determinism
+      - run: python tools/run_reference_loop.py --out-dir generated/two-link-arm --check-determinism
