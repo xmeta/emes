@@ -57,7 +57,7 @@
         "org.emes.catalog_ref": {
           "catalog": "CAT_MOLICEL",
           "part": "MOLICEL_INR_21700_P45B",
-          "digest": "sha256:321bee539013d2e1fc40ec67f6a05127dfbdc50605b5a3b5b6575fca79b5384f"
+          "digest": "sha256:b98c1e3f071b945fbbd3bfc8f44fb0faa17b17ec01017e1716ae72e6d7e6bff6"
         }
       }
     },
@@ -186,7 +186,7 @@
       {
         "id": "CAT_MOLICEL",
         "path": "catalogs/molicel-p45b.catalog.json",
-        "digest": "sha256:8dd6d815b5f9bcc8c2b010e8891672bb775f07d7391f2dfed9a002fc491c9f6d"
+        "digest": "sha256:bce19e9220c1d77091310da16dd91d64f3689cae80277e356a66a45ad0847b56"
       },
       {
         "id": "CAT_BMS_THERMAL",
