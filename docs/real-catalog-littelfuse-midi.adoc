@@ -1,0 +1,35 @@
+= Littelfuse MIDI HP 70 V fuse integration
+
+== Purpose
+
+This slice makes a real DC fuse an explicit EMES power-path component and consumes its manufacturer ratings in executable design checks.
+
+The selected reviewed part is Littelfuse `4998040.M-M6`, a 40 A MIDI High Performance Series bolt-down fuse with a 70 V DC rating. The reviewed manufacturer datasheet also records a 2.5 kA interrupting rating at 70 V DC, typical 94 mV voltage drop, 1.56 mOhm cold resistance, 4700 A^2*s I^2t, and a 38 A typical maximum-allowed-current point at 20 degC.
+
+The normalized source record is `catalogs/sources/littelfuse-midi70v-40a.source.json`; the deterministic catalog projection is `catalogs/littelfuse-midi70v-40a.catalog.json`.
+
+== Executable semantics
+
+`org.emes.power.power_paths[].fuse_component` identifies an optional catalog-backed series fuse. The fused P45B example uses:
+
+[source,text]
+----
+battery pack -> main fuse -> DC/DC converter -> load
+----
+
+`tools/battery_known_envelope.py` consumes the fuse in two ways:
+
+* `rated_voltage_dc` must be at least the maximum pack voltage. The 70 V fuse therefore has 28 V margin over the 42 V maximum 10S P45B pack voltage. An otherwise identical 30 V fuse is rejected.
+* `rated_current` is converted to a dimensionless load-scale factor against modeled battery-side current. The 40 A fuse has a 2.736x factor at the 500 W reference load. The converter remains the weakest known element at 1.44x; a 15 A counterexample moves the weakest-link identity to the fuse.
+
+The fuse rating is not coerced into an invented common wattage rating. Heterogeneous limits remain in their native engineering domains and are compared only through dimensionless reference-load scale factors.
+
+== Deliberate limits
+
+The 40 A nominal rating is used as a conservative known-limit cap. It is not claimed to be a 10-second pulse rating.
+
+The source-conditioned 38 A value at 20 degC is preserved in the catalog but is not silently applied at other temperatures. The time-current curve and I^2t value are likewise retained as source facts; this slice does not infer an arbitrary 10-second ampacity from them.
+
+The Littelfuse manufacturer PDF is reviewable through its upstream URL, but GitHub-hosted runners receive HTTP 403 when attempting raw PDF acquisition. The authorized remote-workstation connector was also unavailable during this slice. Therefore no PDF byte hash is fabricated: the source snapshot explicitly records `raw_bytes_not_pinned`, and deterministic CI verifies the reviewed snapshot-to-catalog projection instead.
+
+Raw-byte pinning remains follow-up work. Until the broader battery safety evidence is complete, this analysis is sizing/traceability evidence only and is not approval to fabricate, charge, or energize a battery pack.
