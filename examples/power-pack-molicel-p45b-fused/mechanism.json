@@ -64,6 +64,7 @@
         {"id": "M_PACK_CELL_COUNT", "unit": "1"}, {"id": "M_PACK_NOMINAL_VOLTAGE", "unit": "V"}, {"id": "M_PACK_MAX_VOLTAGE", "unit": "V"}, {"id": "M_PACK_MIN_VOLTAGE", "unit": "V"},
         {"id": "M_PACK_CAPACITY", "unit": "A*h"}, {"id": "M_PACK_NOMINAL_ENERGY", "unit": "W*h"}, {"id": "M_PACK_CONTINUOUS_CURRENT", "unit": "A"}, {"id": "M_PACK_CONTINUOUS_POWER", "unit": "W"},
         {"id": "M_PACK_CELL_MASS", "unit": "kg"}, {"id": "M_PACK_TOTAL_MASS", "unit": "kg"}, {"id": "M_LOAD_POWER", "unit": "W"}, {"id": "M_LOAD_EQUIV_PACK_CURRENT", "unit": "A"},
+        {"id": "M_LOAD_MAX_PACK_CURRENT", "unit": "A"},
         {"id": "M_PACK_CURRENT_MARGIN", "unit": "A"}, {"id": "M_BMS_SERIES_MARGIN", "unit": "1"}, {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"}, {"id": "M_CONVERTER_OUTPUT_VOLTAGE", "unit": "V"},
         {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"}, {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}
       ]

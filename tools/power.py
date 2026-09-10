@@ -388,8 +388,13 @@ def evaluate_battery_pack(
     converter_output_limit_w = converter_output_v * converter_output_a
     converter_power_margin_w = converter_output_limit_w - load_power_w
     input_power_w = load_power_w / efficiency
+    # Preserve a nominal-point reference current for SOC-conditioned analyses.
     equivalent_pack_current_a = input_power_w / pack_nominal_v
-    current_margin_a = pack_current_a - equivalent_pack_current_a
+    if pack_min_v <= 0:
+        raise ValueError(f"pack minimum voltage must be positive, got {pack_min_v:g}V")
+    # Protection/path current sizing must cover the full modeled pack voltage range.
+    max_pack_current_a = input_power_w / pack_min_v
+    current_margin_a = pack_current_a - max_pack_current_a
 
     overhead_mass = quantity_value(
         pack["overhead_mass"], "kg", f"{pack['id']}.overhead_mass"
@@ -411,6 +416,7 @@ def evaluate_battery_pack(
         "M_PACK_TOTAL_MASS": (total_mass, "kg"),
         "M_LOAD_POWER": (load_power_w, "W"),
         "M_LOAD_EQUIV_PACK_CURRENT": (equivalent_pack_current_a, "A"),
+        "M_LOAD_MAX_PACK_CURRENT": (max_pack_current_a, "A"),
         "M_PACK_CURRENT_MARGIN": (current_margin_a, "A"),
         "M_BMS_SERIES_MARGIN": (bms_series_limit - series, "1"),
         "M_BMS_VOLTAGE_MARGIN": (bms_max_v - pack_max_v, "V"),

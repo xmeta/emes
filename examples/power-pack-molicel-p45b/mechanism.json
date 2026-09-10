@@ -151,6 +151,7 @@
         {"id": "M_PACK_TOTAL_MASS", "unit": "kg"},
         {"id": "M_LOAD_POWER", "unit": "W"},
         {"id": "M_LOAD_EQUIV_PACK_CURRENT", "unit": "A"},
+        {"id": "M_LOAD_MAX_PACK_CURRENT", "unit": "A"},
         {"id": "M_PACK_CURRENT_MARGIN", "unit": "A"},
         {"id": "M_BMS_SERIES_MARGIN", "unit": "1"},
         {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"},

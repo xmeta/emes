@@ -77,7 +77,7 @@ def evaluate(
         repo_root=repo_root,
         catalog_schema_path=repo_root / "spec/emes-catalog-v0.schema.json",
     )
-    pack_current_a = evidence_metric(power_evidence, "M_LOAD_EQUIV_PACK_CURRENT", "A")
+    max_pack_current_a = evidence_metric(power_evidence, "M_LOAD_MAX_PACK_CURRENT", "A")
     pack_max_voltage_v = evidence_metric(power_evidence, "M_PACK_MAX_VOLTAGE", "V")
     reference_output_w = evidence_metric(power_evidence, "M_LOAD_POWER", "W")
     parent_scale = evidence_metric(
@@ -112,7 +112,7 @@ def evaluate(
                 f"connector={rated_voltage_v:g}V"
             )
         scale = positive_ratio(
-            rated_current_a, pack_current_a, f"{component_id} rated current"
+            rated_current_a, max_pack_current_a, f"{component_id} rated current"
         )
         record = {
             "component": component_id,
@@ -124,8 +124,8 @@ def evaluate(
             "rated_voltage_unit": "V",
             "voltage_margin": voltage_margin_v,
             "voltage_margin_unit": "V",
-            "reference_pack_current": pack_current_a,
-            "reference_pack_current_unit": "A",
+            "max_pack_current": max_pack_current_a,
+            "max_pack_current_unit": "A",
             "scale_factor": scale,
         }
         connector_records.append(record)
@@ -137,7 +137,7 @@ def evaluate(
                 "part_digest": catalog_digest(connector),
                 "rating_kind": "connector_rated_current_used_as_conservative_known_cap",
                 "limit": rated_current_a,
-                "demand": pack_current_a,
+                "demand": max_pack_current_a,
                 "unit": "A",
                 "scale_factor": scale,
             }
@@ -165,7 +165,7 @@ def evaluate(
                 "id": "M_KNOWN_CONNECTOR_RATED_LOAD_SCALE",
                 "value": min_connector_scale,
                 "unit": "1",
-                "method": "minimum_connector_rated_current_over_reference_pack_current",
+                "method": "minimum_connector_rated_current_over_max_pack_current",
             },
             {
                 "id": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN",
@@ -187,7 +187,7 @@ def evaluate(
             },
         ],
         "limitations": [
-            "Connector current is evaluated in the pack-side native current domain; no arbitrary voltage is used to manufacture a power rating.",
+            "Connector current is evaluated against the maximum pack-side current over the modeled battery voltage range; no arbitrary voltage is used to manufacture a power rating.",
             "The selected SB50 rating is tied to the reviewed manufacturer assembly configuration recorded in the catalog snapshot; it is not a rating for a bare housing in isolation.",
             "Conductor thermal ampacity, crimp quality, installation method, contact aging, contamination, enclosure temperature rise, and contactor limits are not yet modeled.",
             "The result composes with parent weakest-known evidence and is not approval to fabricate, charge, or energize a battery pack.",
