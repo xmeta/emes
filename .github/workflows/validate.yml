@@ -231,10 +231,10 @@ jobs:
           Path('/tmp/overload-power.json').write_text(json.dumps(document))
           PY
           if python tools/power.py /tmp/overload-power.json --out /tmp/overload-evidence.json; then
-            echo 'ERROR: 800 W load unexpectedly passed 720 W converter limit'
+            echo 'ERROR: 800 W load unexpectedly passed battery-path limits'
             exit 1
           fi
-          echo 'EXPECTED-FAIL converter overload rejected'
+          echo 'EXPECTED-FAIL battery-path overload rejected'
       - run: |
           python - <<'PY'
           import json

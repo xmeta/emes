@@ -60,10 +60,11 @@ jobs:
           assert c['part'] == 'ANDERSON_SB50_992G4_5900_WTW'
           assert math.isclose(c['rated_current'], 50.0)
           assert math.isclose(c['rated_voltage_dc'], 250.0)
-          assert math.isclose(m['M_KNOWN_CONNECTOR_RATED_LOAD_SCALE'], 3.42, rel_tol=1e-12)
+          assert math.isclose(c['max_pack_current'], 21.05263157894737, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_CONNECTOR_RATED_LOAD_SCALE'], 2.375, rel_tol=1e-12)
           assert math.isclose(m['M_KNOWN_CONNECTOR_VOLTAGE_MARGIN'], 208.0, rel_tol=1e-12)
-          assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.44, rel_tol=1e-12)
-          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 720.0, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.425, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 712.5, rel_tol=1e-12)
           print('VALID sb50-reference-path-envelope')
           PY
       - run: |
@@ -109,8 +110,8 @@ jobs:
           e = json.load(open('/tmp/connector10a-path.json'))
           m = {x['id']: x['value'] for x in e['metrics']}
           assert e['limiting_candidate'] == 'connector_rated_current:main_connector'
-          assert math.isclose(m['M_KNOWN_CONNECTOR_RATED_LOAD_SCALE'], 0.684, rel_tol=1e-12)
-          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 342.0, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_CONNECTOR_RATED_LOAD_SCALE'], 0.475, rel_tol=1e-12)
+          assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 237.5, rel_tol=1e-12)
           print('VALID connector-becomes-weakest-link')
           PY
       - run: python tools/power.py /tmp/connector30v.mechanism.json --out /tmp/connector30v-power.json --check-determinism

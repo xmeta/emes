@@ -43,7 +43,7 @@ For each declared `pack_connector_components` entry, the adapter computes:
 
 [stem]
 +++++
-s_{connector} = \frac{I_{rated}}{I_{pack,reference}}
+s_{connector} = \frac{I_{rated}}{I_{pack,max}}
 +++++
 
 and independently checks:
@@ -66,18 +66,18 @@ s_{path} = \min(s_{parent}, s_{connector,1}, \ldots)
 
 For `examples/power-pack-molicel-p45b-connected/mechanism.json` at the existing 500 W load:
 
-* reference pack-side current is approximately 14.62 A;
-* SB50 rated current is 50 A, giving a 3.42 load-scale factor;
+* nominal-point pack-side current is approximately 14.62 A, while the maximum over the modeled 25--42 V pack range is approximately 21.05 A;
+* SB50 rated current is 50 A, giving a 2.375 load-scale factor against that maximum current;
 * maximum pack voltage is 42 V;
 * SB50 steady-state rating is 250 V, giving a 208 V margin;
-* the upstream converter remains the weakest known element at 1.44;
-* the composed known path output envelope therefore remains 720 W.
+* the upstream synthetic BMS is the weakest known element at 1.425;
+* the composed known path output envelope is therefore 712.5 W.
 
 == Counterexamples
 
 Focused CI verifies that the connector actually participates in the decision:
 
-* replacing the connector rating with 10 A moves the limiting candidate to `connector_rated_current:main_connector`, giving a 0.684 load scale and 342 W output envelope;
+* replacing the connector rating with 10 A moves the limiting candidate to `connector_rated_current:main_connector`, giving a 0.475 load scale and 237.5 W output envelope;
 * replacing the connector voltage rating with 30 V is rejected against the 42 V maximum pack voltage;
 * tampering with the parent known-envelope evidence linkage is rejected rather than accepted as a valid evidence chain.
 

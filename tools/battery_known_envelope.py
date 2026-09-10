@@ -192,7 +192,7 @@ def evaluate(
     pulse_reference_input_w = evidence_metric(
         pulse_evidence, "M_PULSE_REFERENCE_PACK_INPUT_POWER", "W"
     )
-    pack_current_a = evidence_metric(power_evidence, "M_LOAD_EQUIV_PACK_CURRENT", "A")
+    max_pack_current_a = evidence_metric(power_evidence, "M_LOAD_MAX_PACK_CURRENT", "A")
     output_current_a = evidence_metric(power_evidence, "M_CONVERTER_OUTPUT_CURRENT", "A")
     output_power_w = evidence_metric(power_evidence, "M_LOAD_POWER", "W")
     pack_max_voltage_v = evidence_metric(power_evidence, "M_PACK_MAX_VOLTAGE", "V")
@@ -222,10 +222,10 @@ def evaluate(
             "part_digest": catalog_digest(bms),
             "rating_kind": "continuous_current_used_as_conservative_10s_cap",
             "limit": bms_continuous_a,
-            "demand": pack_current_a,
+            "demand": max_pack_current_a,
             "unit": "A",
             "scale_factor": positive_ratio(
-                bms_continuous_a, pack_current_a, "BMS continuous current"
+                bms_continuous_a, max_pack_current_a, "BMS continuous current"
             ),
         },
         {
@@ -265,10 +265,10 @@ def evaluate(
                 "part_digest": catalog_digest(fuse),
                 "rating_kind": "nominal_rated_current_used_as_conservative_10s_cap",
                 "limit": fuse_rated_a,
-                "demand": pack_current_a,
+                "demand": max_pack_current_a,
                 "unit": "A",
                 "scale_factor": positive_ratio(
-                    fuse_rated_a, pack_current_a, "fuse nominal rated current"
+                    fuse_rated_a, max_pack_current_a, "fuse nominal rated current"
                 ),
             }
         )
@@ -288,11 +288,11 @@ def evaluate(
                     "source": conditioned_fuse_point.get("source"),
                     "condition_results": conditioned_fuse_point["condition_results"],
                     "limit": conditioned_a,
-                    "demand": pack_current_a,
+                    "demand": max_pack_current_a,
                     "unit": "A",
                     "scale_factor": positive_ratio(
                         conditioned_a,
-                        pack_current_a,
+                        max_pack_current_a,
                         "source-conditioned fuse current",
                     ),
                 }
