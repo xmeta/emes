@@ -1,0 +1,78 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_REFERENCE_MOTORS",
+    "name": "EMES reference motor fixture",
+    "description": "Synthetic motor data used only to exercise catalog import and binding semantics."
+  },
+  "sources": [
+    {
+      "id": "SRC_REFERENCE_CSV",
+      "authority": "synthetic",
+      "format": "csv",
+      "path": "catalogs/raw/reference-motors.csv",
+      "license": "CC0-1.0",
+      "raw_digest": "sha256:bf66188fd55aeadefc7ea96b62f1a802df705c4491c78eb8f271b93b1e1eca9c"
+    }
+  ],
+  "parts": [
+    {
+      "id": "MOTOR_REF_48V_A",
+      "kind": "motor",
+      "identity": {
+        "manufacturer": "EMES Fixture",
+        "part_number": "EMES-M48-A"
+      },
+      "properties": {
+        "mass": {"value": 1.2, "unit": "kg", "source": "SRC_REFERENCE_CSV"},
+        "nominal_voltage": {"value": 48.0, "unit": "V", "source": "SRC_REFERENCE_CSV"},
+        "continuous_torque": {"value": 2.0, "unit": "N*m", "source": "SRC_REFERENCE_CSV"},
+        "peak_torque": {"value": 6.0, "unit": "N*m", "source": "SRC_REFERENCE_CSV"},
+        "no_load_speed": {"value": 418.87902047863906, "unit": "rad/s", "source": "SRC_REFERENCE_CSV"},
+        "rotor_inertia": {"value": 0.00011, "unit": "kg*m^2", "source": "SRC_REFERENCE_CSV"},
+        "torque_constant": {"value": 0.1, "unit": "N*m/A", "source": "SRC_REFERENCE_CSV"},
+        "body_diameter": {"value": 0.08, "unit": "m", "source": "SRC_REFERENCE_CSV"},
+        "body_length": {"value": 0.12, "unit": "m", "source": "SRC_REFERENCE_CSV"},
+        "shaft_diameter": {"value": 0.014, "unit": "m", "source": "SRC_REFERENCE_CSV"},
+        "shaft_length": {"value": 0.03, "unit": "m", "source": "SRC_REFERENCE_CSV"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_MOUNT",
+          "kind": "mechanical_mount",
+          "properties": {
+            "pilot_diameter": {"value": 0.05, "unit": "m", "source": "SRC_REFERENCE_CSV"},
+            "bolt_circle_diameter": {"value": 0.065, "unit": "m", "source": "SRC_REFERENCE_CSV"},
+            "hole_count": {"value": 4.0, "unit": "1", "source": "SRC_REFERENCE_CSV"}
+          }
+        },
+        {
+          "id": "IF_SHAFT",
+          "kind": "mechanical_shaft",
+          "properties": {
+            "diameter": {"value": 0.014, "unit": "m", "source": "SRC_REFERENCE_CSV"},
+            "length": {"value": 0.03, "unit": "m", "source": "SRC_REFERENCE_CSV"}
+          }
+        }
+      ],
+      "performance": {
+        "curves": [
+          {
+            "id": "CURVE_TORQUE_SPEED",
+            "x": {
+              "quantity": "angular_speed",
+              "unit": "rad/s",
+              "values": [0.0, 209.43951023931953, 418.87902047863906]
+            },
+            "y": {
+              "quantity": "torque",
+              "unit": "N*m",
+              "values": [6.0, 3.0, 0.0]
+            },
+            "source": "SRC_REFERENCE_CSV"
+          }
+        ]
+      }
+    }
+  ]
+}
