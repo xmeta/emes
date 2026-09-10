@@ -46,6 +46,8 @@ jobs:
       - run: python tools/catalog.py validate catalogs/reference-power.catalog.json
       - run: python tools/validate.py examples/power-pack/mechanism.json
       - run: python tools/power.py examples/power-pack/mechanism.json --out generated/power-pack/evidence.json --check-determinism
+      - run: python tools/validate.py examples/power-supply/mechanism.json
+      - run: python tools/power.py examples/power-supply/mechanism.json --out generated/power-supply/evidence.json --check-determinism
       - run: |
           python - <<'PY'
           import json
@@ -76,4 +78,18 @@ jobs:
             exit 1
           fi
           echo 'EXPECTED-FAIL converter overload rejected'
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source = Path('examples/power-supply/mechanism.json')
+          document = json.loads(source.read_text())
+          document['load_cases'][0]['loads'][0]['value']['value'] = 500.0
+          Path('/tmp/overload-psu.json').write_text(json.dumps(document))
+          PY
+          if python tools/power.py /tmp/overload-psu.json --out /tmp/overload-psu-evidence.json; then
+            echo 'ERROR: 500 W load unexpectedly passed 480 W power-supply limit'
+            exit 1
+          fi
+          echo 'EXPECTED-FAIL fixed power-supply overload rejected'
       - run: python tools/run_reference_loop.py --out-dir generated/two-link-arm --check-determinism
