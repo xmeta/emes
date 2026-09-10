@@ -1,0 +1,29 @@
+name: eaton-ack-provider
+
+on:
+  push:
+    paths:
+      - "tools/providers/eaton_ack.py"
+      - "catalogs/sources/eaton-ack40.source.json"
+      - "catalogs/eaton-ack40.catalog.json"
+      - ".github/workflows/eaton-ack-provider.yml"
+  pull_request:
+    paths:
+      - "tools/providers/eaton_ack.py"
+      - "catalogs/sources/eaton-ack40.source.json"
+      - "catalogs/eaton-ack40.catalog.json"
+      - ".github/workflows/eaton-ack-provider.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/providers/eaton_ack.py verify-snapshot catalogs/sources/eaton-ack40.source.json
