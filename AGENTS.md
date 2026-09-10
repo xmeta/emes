@@ -48,4 +48,4 @@ Classify discoveries:
 
 ## Verification
 
-Use the cheapest relevant check first. Before merging a Phase 1 slice, run the repository validation workflow and any adapter-specific smoke tests.
+Use the cheapest relevant check first. Run `bash tools/ci/validate.sh` for the repository acceptance suite and the relevant `tools/ci/` focused check when changing a specialized adapter. GitHub Actions invokes these same repository-owned checks.

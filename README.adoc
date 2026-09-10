@@ -74,6 +74,17 @@ The same fuse snapshot keeps its manufacturer `38 A at 20 degC` maximum-allowed-
 
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
+== Local acceptance
+
+After installing `requirements-dev.txt`, run the same normal acceptance suite used by GitHub Actions:
+
+[source,shell]
+----
+bash tools/ci/validate.sh
+----
+
+The focused battery/provider workflows likewise invoke repository-owned scripts under `tools/ci/`; workflow YAML only installs dependencies and dispatches those checks.
+
 == Documents
 
 * `docs/architecture.adoc` -- normative architecture direction.

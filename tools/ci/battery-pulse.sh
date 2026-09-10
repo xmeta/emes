@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v python >/dev/null 2>&1; then
+  python() { python3 "$@"; }
+fi
+
+python tools/catalog.py validate catalogs/molicel-p45b.catalog.json
+
+python tools/validate.py examples/power-pack-molicel-p45b/mechanism.json
+
+python tools/power.py examples/power-pack-molicel-p45b/mechanism.json --out /tmp/p45b-power.json --check-determinism
+
+python tools/battery_pulse.py examples/power-pack-molicel-p45b/mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/p45b-power.json --out /tmp/p45b-pulse50.json --check-determinism
+
+python - <<'PY'
+import json
+import math
+from pathlib import Path
+evidence = json.loads(Path('/tmp/p45b-pulse50.json').read_text())
+point = evidence['selected_power_point']
+assert point['property'] == 'power_output_10s_soc50'
+assert point['property_value'] == 168.0
+assert point['source'] == 'SRC_MOLICEL_P45B_PERFORMANCE_PAGE'
+assert all(item['status'] == 'pass' for item in point['condition_results'])
+metrics = {item['id']: item['value'] for item in evidence['metrics']}
+assert metrics['M_CELL_PULSE_POWER_LIMIT'] == 168.0
+assert metrics['M_PACK_CELL_ENVELOPE_PULSE_POWER'] == 3360.0
+assert math.isclose(metrics['M_PULSE_REFERENCE_PACK_INPUT_POWER'], 526.3157894736842)
+assert math.isclose(metrics['M_PACK_CELL_ENVELOPE_PULSE_POWER_MARGIN'], 2833.684210526316)
+assert evidence['constraint_result']['status'] == 'pass'
+print('VERIFIED exact 10 s / 50% SOC P45B pulse point')
+PY
+
+python - <<'PY'
+import json
+from pathlib import Path
+source = Path('examples/power-pack-molicel-p45b/pulse-10s-soc50.json')
+request = json.loads(source.read_text())
+request['analysis_id'] = 'A_BATTERY_PULSE_10S_SOC90'
+request['context']['soc']['value'] = 90.0
+Path('/tmp/pulse90.json').write_text(json.dumps(request))
+PY
+python tools/battery_pulse.py examples/power-pack-molicel-p45b/mechanism.json --analysis-request /tmp/pulse90.json --power-evidence /tmp/p45b-power.json --out /tmp/p45b-pulse90.json
+python - <<'PY'
+import json
+from pathlib import Path
+evidence = json.loads(Path('/tmp/p45b-pulse90.json').read_text())
+assert evidence['selected_power_point']['property'] == 'power_output_10s_soc90'
+assert evidence['selected_power_point']['property_value'] == 184.0
+metrics = {item['id']: item['value'] for item in evidence['metrics']}
+assert metrics['M_PACK_CELL_ENVELOPE_PULSE_POWER'] == 3680.0
+print('VERIFIED exact 10 s / 90% SOC P45B pulse point')
+PY
+
+python - <<'PY'
+import json
+from pathlib import Path
+source = Path('examples/power-pack-molicel-p45b/pulse-10s-soc50.json')
+request = json.loads(source.read_text())
+request['context']['soc']['value'] = 40.0
+Path('/tmp/pulse40.json').write_text(json.dumps(request))
+PY
+if python tools/battery_pulse.py examples/power-pack-molicel-p45b/mechanism.json --analysis-request /tmp/pulse40.json --power-evidence /tmp/p45b-power.json --out /tmp/p45b-pulse40.json; then
+  echo 'ERROR: unsupported 40% SOC unexpectedly matched a manufacturer pulse point'
+  exit 1
+fi
+echo 'EXPECTED-FAIL no interpolation at unsupported 40% SOC'
+
+python - <<'PY'
+import json
+from pathlib import Path
+source = Path('examples/power-pack-molicel-p45b/pulse-10s-soc50.json')
+request = json.loads(source.read_text())
+request['context']['duration']['value'] = 5.0
+Path('/tmp/pulse5s.json').write_text(json.dumps(request))
+PY
+if python tools/battery_pulse.py examples/power-pack-molicel-p45b/mechanism.json --analysis-request /tmp/pulse5s.json --power-evidence /tmp/p45b-power.json --out /tmp/p45b-pulse5s.json; then
+  echo 'ERROR: unsupported 5 s duration unexpectedly matched a 10 s manufacturer pulse point'
+  exit 1
+fi
+echo 'EXPECTED-FAIL no duration extrapolation from 10 s to 5 s'

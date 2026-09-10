@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v python >/dev/null 2>&1; then
+  python() { python3 "$@"; }
+fi
+
+python tools/catalog.py validate catalogs/littelfuse-midi70v-40a.catalog.json
+
+python tools/validate.py examples/power-pack-molicel-p45b-fused/mechanism.json
+
+python tools/power.py examples/power-pack-molicel-p45b-fused/mechanism.json --out /tmp/fused-power.json --check-determinism
+
+python tools/battery_pulse.py examples/power-pack-molicel-p45b-fused/mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/fused-power.json --out /tmp/fused-pulse.json --check-determinism
+
+python tools/battery_known_envelope.py examples/power-pack-molicel-p45b-fused/mechanism.json --power-evidence /tmp/fused-power.json --pulse-evidence /tmp/fused-pulse.json --out /tmp/fused-known.json --check-determinism
+
+python - <<'PY'
+import json, math
+e = json.load(open('/tmp/fused-known.json'))
+by_id = {x['id']: x for x in e['candidates']}
+metrics = {x['id']: x['value'] for x in e['metrics']}
+assert e['limiting_candidate'] == 'converter_continuous_output_current'
+assert 'fuse_source_conditioned_current' not in by_id
+assert math.isclose(by_id['fuse_rated_current']['limit'], 40.0)
+assert math.isclose(by_id['fuse_rated_current']['scale_factor'], 1.9, rel_tol=1e-12)
+assert math.isclose(metrics['M_KNOWN_FUSE_VOLTAGE_MARGIN'], 28.0)
+assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 720.0)
+print('VALID fused-reference-envelope-nominal-only')
+PY
+
+python tools/battery_known_envelope.py examples/power-pack-molicel-p45b-fused/mechanism.json --analysis-request examples/power-pack-molicel-p45b-fused/known-envelope-20c.json --power-evidence /tmp/fused-power.json --pulse-evidence /tmp/fused-pulse.json --out /tmp/fused-known-20c.json --check-determinism
+
+python - <<'PY'
+import json, math
+e = json.load(open('/tmp/fused-known-20c.json'))
+by_id = {x['id']: x for x in e['candidates']}
+metrics = {x['id']: x['value'] for x in e['metrics']}
+point = e['selected_fuse_current_point']
+assert e['analysis_id'] == 'A_KNOWN_ENVELOPE_FUSE_20C'
+assert e['limiting_candidate'] == 'converter_continuous_output_current'
+assert point['property'] == 'max_allowed_current_20c'
+assert math.isclose(point['property_value'], 38.0)
+assert point['condition_results'] == [{
+    'condition_parameter': 'ambient_temperature',
+    'condition_op': '==',
+    'condition_value': 20.0,
+    'condition_unit': 'degC',
+    'context_value': 20.0,
+    'status': 'pass',
+}]
+assert math.isclose(by_id['fuse_rated_current']['limit'], 40.0)
+assert math.isclose(by_id['fuse_source_conditioned_current']['limit'], 38.0)
+assert math.isclose(by_id['fuse_source_conditioned_current']['scale_factor'], 1.805, rel_tol=1e-12)
+assert math.isclose(metrics['M_KNOWN_FUSE_RATED_LOAD_SCALE'], 1.9, rel_tol=1e-12)
+assert math.isclose(metrics['M_KNOWN_FUSE_SOURCE_CONDITIONED_LOAD_SCALE'], 1.805, rel_tol=1e-12)
+assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 720.0)
+print('VALID exact-20c-fuse-derating')
+PY
+
+python - <<'PY'
+import copy, json, sys
+from pathlib import Path
+sys.path.insert(0, 'tools')
+from catalog import canonical_digest
+
+mechanism = json.load(open('examples/power-pack-molicel-p45b-fused/mechanism.json'))
+base_catalog = json.load(open('catalogs/littelfuse-midi70v-40a.catalog.json'))
+
+def variant(name, current, voltage, conditioned_current=None):
+    catalog = copy.deepcopy(base_catalog)
+    part = catalog['parts'][0]
+    part['properties']['rated_current']['value'] = current
+    part['properties']['rated_voltage_dc']['value'] = voltage
+    if conditioned_current is not None:
+        part['properties']['max_allowed_current_20c']['value'] = conditioned_current
+    catalog_path = Path(f'/tmp/{name}.catalog.json')
+    catalog_path.write_text(json.dumps(catalog, indent=2) + '\n')
+
+    doc = copy.deepcopy(mechanism)
+    for binding in doc['extensions']['org.emes.catalogs']:
+        if binding['id'] == 'CAT_LITTELFUSE_MIDI70V':
+            binding['path'] = str(catalog_path)
+            binding['digest'] = canonical_digest(catalog)
+    for component in doc['components']:
+        if component['id'] == 'main_fuse':
+            component['metadata']['org.emes.catalog_ref']['digest'] = canonical_digest(part)
+    doc_path = Path(f'/tmp/{name}.mechanism.json')
+    doc_path.write_text(json.dumps(doc, indent=2) + '\n')
+
+variant('fuse15a', 15.0, 70.0)
+variant('fuse30v', 40.0, 30.0)
+variant('fuse20c15a', 40.0, 70.0, conditioned_current=15.0)
+
+request = json.load(open('examples/power-pack-molicel-p45b-fused/known-envelope-20c.json'))
+request['analysis_id'] = 'A_KNOWN_ENVELOPE_FUSE_21C_UNSUPPORTED'
+request['context']['ambient_temperature']['value'] = 21.0
+Path('/tmp/known-envelope-21c.json').write_text(json.dumps(request, indent=2) + '\n')
+print('CREATED fuse counterexamples')
+PY
+
+if python tools/battery_known_envelope.py examples/power-pack-molicel-p45b-fused/mechanism.json --analysis-request /tmp/known-envelope-21c.json --power-evidence /tmp/fused-power.json --pulse-evidence /tmp/fused-pulse.json --out /tmp/fused-known-21c.json; then
+  echo 'expected unsupported ambient context rejection' >&2
+  exit 1
+fi
+echo 'VALID unsupported-fuse-ambient-fail-closed'
+
+python tools/power.py /tmp/fuse20c15a.mechanism.json --out /tmp/fuse20c15a-power.json --check-determinism
+
+python tools/battery_pulse.py /tmp/fuse20c15a.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/fuse20c15a-power.json --out /tmp/fuse20c15a-pulse.json --check-determinism
+
+python tools/battery_known_envelope.py /tmp/fuse20c15a.mechanism.json --analysis-request examples/power-pack-molicel-p45b-fused/known-envelope-20c.json --power-evidence /tmp/fuse20c15a-power.json --pulse-evidence /tmp/fuse20c15a-pulse.json --out /tmp/fuse20c15a-known.json --check-determinism
+
+python - <<'PY'
+import json, math
+e = json.load(open('/tmp/fuse20c15a-known.json'))
+metrics = {x['id']: x['value'] for x in e['metrics']}
+assert e['limiting_candidate'] == 'fuse_source_conditioned_current'
+assert math.isclose(metrics['M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT'], 0.7125, rel_tol=1e-12)
+assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 356.25, rel_tol=1e-12)
+print('VALID conditioned-fuse-becomes-weakest-link')
+PY
+
+python tools/power.py /tmp/fuse15a.mechanism.json --out /tmp/fuse15a-power.json --check-determinism
+
+python tools/battery_pulse.py /tmp/fuse15a.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/fuse15a-power.json --out /tmp/fuse15a-pulse.json --check-determinism
+
+python tools/battery_known_envelope.py /tmp/fuse15a.mechanism.json --power-evidence /tmp/fuse15a-power.json --pulse-evidence /tmp/fuse15a-pulse.json --out /tmp/fuse15a-known.json --check-determinism
+
+python - <<'PY'
+import json, math
+e = json.load(open('/tmp/fuse15a-known.json'))
+metrics = {x['id']: x['value'] for x in e['metrics']}
+assert e['limiting_candidate'] == 'fuse_rated_current'
+assert math.isclose(metrics['M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT'], 0.7125, rel_tol=1e-12)
+assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 356.25, rel_tol=1e-12)
+print('VALID nominal-fuse-becomes-weakest-link')
+PY
+
+python tools/power.py /tmp/fuse30v.mechanism.json --out /tmp/fuse30v-power.json --check-determinism
+
+python tools/battery_pulse.py /tmp/fuse30v.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/fuse30v-power.json --out /tmp/fuse30v-pulse.json --check-determinism
+
+if python tools/battery_known_envelope.py /tmp/fuse30v.mechanism.json --power-evidence /tmp/fuse30v-power.json --pulse-evidence /tmp/fuse30v-pulse.json --out /tmp/fuse30v-known.json; then
+  echo 'expected undervoltage fuse rejection' >&2
+  exit 1
+fi
+echo 'VALID fuse-voltage-fail-closed'
