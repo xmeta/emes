@@ -63,9 +63,27 @@ jobs:
           ]
           assert props['ac_impedance_typical']['conditions'][0]['value'] == 30.0
           assert props['dc_impedance_typical']['conditions'][0]['value'] == 50.0
-          assert canonical_digest(committed) == 'sha256:8dd6d815b5f9bcc8c2b010e8891672bb775f07d7391f2dfed9a002fc491c9f6d'
-          assert canonical_digest(part) == 'sha256:321bee539013d2e1fc40ec67f6a05127dfbdc50605b5a3b5b6575fca79b5384f'
-          print('DETERMINISTIC molicel-normalization with executable conditional ratings')
+          assert props['power_output_10s_soc50'] == {
+              'value': 168.0,
+              'unit': 'W',
+              'source': 'SRC_MOLICEL_P45B_PERFORMANCE_PAGE',
+              'conditions': [
+                  {'parameter': 'duration', 'op': '==', 'value': 10.0, 'unit': 's'},
+                  {'parameter': 'soc', 'op': '==', 'value': 50.0, 'unit': '%'}
+              ]
+          }
+          assert props['power_output_10s_soc90'] == {
+              'value': 184.0,
+              'unit': 'W',
+              'source': 'SRC_MOLICEL_P45B_PERFORMANCE_PAGE',
+              'conditions': [
+                  {'parameter': 'duration', 'op': '==', 'value': 10.0, 'unit': 's'},
+                  {'parameter': 'soc', 'op': '==', 'value': 90.0, 'unit': '%'}
+              ]
+          }
+          assert canonical_digest(committed) == 'sha256:bce19e9220c1d77091310da16dd91d64f3689cae80277e356a66a45ad0847b56'
+          assert canonical_digest(part) == 'sha256:b98c1e3f071b945fbbd3bfc8f44fb0faa17b17ec01017e1716ae72e6d7e6bff6'
+          print('DETERMINISTIC molicel-normalization with conditional ratings and SOC power points')
           PY
       - run: python tools/catalog.py validate catalogs/reference-bms-thermal.catalog.json
       - run: python tools/catalog.py validate catalogs/reference-power.catalog.json
