@@ -3,13 +3,13 @@
   "design": {
     "id": "DESIGN_POWER_PACK_MOLICEL_P45B",
     "name": "Molicel P45B battery-powered DC subsystem",
-    "description": "Authoritative Molicel P45B 10S2P cell selection with synthetic BMS/converter fixtures, executable conditional-current checks, and a source-conditioned first-order voltage-drop analysis."
+    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and synthetic converter fixture, executable conditional-current checks, and a source-conditioned first-order voltage-drop analysis."
   },
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
     {"id": "R_ENERGY", "kind": "performance", "statement": "Provide at least 300 Wh nominal stored energy."},
     {"id": "R_CURRENT", "kind": "performance", "statement": "Supply the reference load with nonnegative continuous current margin."},
-    {"id": "R_BMS", "kind": "safety", "statement": "Use a BMS compatible with pack series count and maximum pack voltage."}
+    {"id": "R_BMS", "kind": "safety", "statement": "Use a BMS compatible with the full modeled pack series-count and voltage ranges."}
   ],
   "design_intent": [
     {
@@ -47,6 +47,11 @@
       "id": "P_SAG_SOC",
       "role": "fixed",
       "value": {"value": 50.0, "unit": "%"}
+    },
+    {
+      "id": "P_BMS_DISCHARGE_OVERTEMP",
+      "role": "fixed",
+      "value": {"value": 70.0, "unit": "degC"}
     }
   ],
   "components": [
@@ -66,16 +71,16 @@
       "kind": "purchased_part",
       "metadata": {
         "org.emes.catalog_ref": {
-          "catalog": "CAT_BMS_THERMAL",
-          "part": "BMS_REF_12S_30A_THERMAL",
-          "digest": "sha256:320f52a55b882a21a86c456ef768d5b78dcd553f3d2210ea0d2697c70e243966"
+          "catalog": "CAT_JKBMS_BD6A20S6P",
+          "part": "JKBMS_JK_BD6A20S_6P",
+          "digest": "sha256:9d6d60ff9d22ccc3646736098296108f86b6baaaaefd1c42695ac4a5c37fb068"
         }
       }
     },
     {
       "id": "battery_pack",
       "kind": "other",
-      "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL", "P_SAG_SOC"],
+      "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL", "P_SAG_SOC", "P_BMS_DISCHARGE_OVERTEMP"],
       "metadata": {"org.emes.role": "battery_pack_assembly"}
     },
     {
@@ -124,7 +129,9 @@
     {"id": "C_BUS_VOLTAGE", "metric": "M_CONVERTER_OUTPUT_VOLTAGE", "op": "==", "target": {"value": 36.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_ENERGY", "metric": "M_PACK_NOMINAL_ENERGY", "op": ">=", "target": {"value": 300.0, "unit": "W*h"}, "load_case": "LC_POWER"},
     {"id": "C_CURRENT_MARGIN", "metric": "M_PACK_CURRENT_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "A"}, "load_case": "LC_POWER"},
+    {"id": "C_BMS_MIN_SERIES", "metric": "M_BMS_MIN_SERIES_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "1"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_SERIES", "metric": "M_BMS_SERIES_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "1"}, "load_case": "LC_POWER"},
+    {"id": "C_BMS_MIN_VOLTAGE", "metric": "M_BMS_MIN_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_VOLTAGE", "metric": "M_BMS_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"}
   ],
@@ -153,7 +160,9 @@
         {"id": "M_LOAD_EQUIV_PACK_CURRENT", "unit": "A"},
         {"id": "M_LOAD_MAX_PACK_CURRENT", "unit": "A"},
         {"id": "M_PACK_CURRENT_MARGIN", "unit": "A"},
+        {"id": "M_BMS_MIN_SERIES_MARGIN", "unit": "1"},
         {"id": "M_BMS_SERIES_MARGIN", "unit": "1"},
+        {"id": "M_BMS_MIN_VOLTAGE_MARGIN", "unit": "V"},
         {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"},
         {"id": "M_CONVERTER_OUTPUT_VOLTAGE", "unit": "V"},
         {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"},
@@ -180,7 +189,7 @@
     {"requirement": "R_BUS_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
     {"requirement": "R_ENERGY", "verified_by": ["C_ENERGY"]},
     {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER"]},
-    {"requirement": "R_BMS", "verified_by": ["C_BMS_SERIES", "C_BMS_VOLTAGE"]}
+    {"requirement": "R_BMS", "verified_by": ["C_BMS_MIN_SERIES", "C_BMS_SERIES", "C_BMS_MIN_VOLTAGE", "C_BMS_VOLTAGE"]}
   ],
   "extensions": {
     "org.emes.catalogs": [
@@ -190,9 +199,9 @@
         "digest": "sha256:bce19e9220c1d77091310da16dd91d64f3689cae80277e356a66a45ad0847b56"
       },
       {
-        "id": "CAT_BMS_THERMAL",
-        "path": "catalogs/reference-bms-thermal.catalog.json",
-        "digest": "sha256:06fab8fbcbab3691d4a870213277fc183bcf2d16bf688d80dd43376b54874f32"
+        "id": "CAT_JKBMS_BD6A20S6P",
+        "path": "catalogs/jkbms-bd6a20s6p.catalog.json",
+        "digest": "sha256:9e9dfc04fe5ca80cba10e0202b75c5e40a6fea3c35c68691763c2f41641f26c3"
       },
       {
         "id": "CAT_POWER",
@@ -209,6 +218,13 @@
           "bms_component": "bms",
           "series_parameter": "P_PACK_SERIES",
           "parallel_parameter": "P_PACK_PARALLEL",
+          "condition_bindings": {
+            "cell_discharge_cutoff_temperature": {
+              "parameter": "P_BMS_DISCHARGE_OVERTEMP",
+              "control_component": "bms",
+              "control_property": "default_cell_discharge_cutoff_temperature"
+            }
+          },
           "overhead_mass": {"value": 0.25, "unit": "kg"}
         }
       ],

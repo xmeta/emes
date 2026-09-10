@@ -29,18 +29,18 @@ This permits comparison of heterogeneous constraints without erasing their nativ
 For the P45B 10S2P example at 10 s and 50% SOC:
 
 * cell pulse envelope scale: 6.384;
-* BMS continuous-current scale: 1.425;
+* BMS continuous-current scale: 2.85;
 * converter continuous-output-current scale: 1.44.
 
-The 500 W load requires approximately 14.62 A at the 36 V nominal pack point, but approximately 21.05 A at the modeled 25 V pack minimum with the same 95% converter efficiency. The currently known limiting component is therefore the synthetic BMS. Scaling the reference output load by 1.425 gives a 712.5 W known-component output envelope and a 750 W reference input envelope.
+The 500 W load requires approximately 14.62 A at the 36 V nominal pack point, but approximately 21.05 A at the modeled 25 V pack minimum with the same 95% converter efficiency. The real JKBMS 60 A continuous rating therefore has a 2.85 load scale, while the current synthetic converter remains lower at 1.44. The known-component output envelope is 720 W and the corresponding reference input envelope is approximately 757.89 W.
 
-The BMS and converter records in this example are synthetic fixtures. Their continuous ratings are used as conservative caps for the 10-second context; they are not relabeled as pulse ratings.
+The JKBMS rating is manufacturer-backed; the converter remains a synthetic fixture. Continuous ratings are used as conservative known caps in the 10-second comparison and are not relabeled as pulse ratings.
 
 == Explicit fuse variant
 
 `examples/power-pack-molicel-p45b-fused/mechanism.json` adds a catalog-backed Littelfuse MIDI High Performance 70 V `4998040.M-M6` fuse in series between the battery pack and converter.
 
-The nominal 40 A fuse rating is a separate weakest-link candidate. For the 10S P45B pack, the maximum pack voltage is 42 V, so the 70 Vdc fuse rating has a 28 V compatibility margin. At the 500 W reference load the nominal fuse-current load scale is 1.9 against the maximum modeled pack-side current, so the BMS remains the weakest known component at 1.425 and the output envelope remains 712.5 W.
+The nominal 40 A fuse rating is a separate weakest-link candidate. For the 10S P45B pack, the maximum pack voltage is 42 V, so the 70 Vdc fuse rating has a 28 V compatibility margin. At the 500 W reference load the nominal fuse-current load scale is 1.9 against the maximum modeled pack-side current, so the converter remains the weakest known component at 1.44 and the output envelope remains 720 W.
 
 The nominal current rating is not treated as a fuse time-current model. EMES does not infer a 10-second fuse ampacity from nominal current, I2t, or sparse time-current data.
 
@@ -67,7 +67,7 @@ At exactly 20 degC, the evaluator keeps both candidates:
 * nominal fuse current: 40 A, load scale 1.9;
 * source-conditioned fuse current: 38 A, load scale 1.805.
 
-The 38 A point is therefore more restrictive than the nominal fuse rating, but the BMS still limits the current reference design at 1.425.
+The 38 A point is therefore more restrictive than the nominal fuse rating, but the synthetic converter still limits the current reference design at 1.44.
 
 If an analysis request explicitly supplies an unsupported ambient temperature, EMES rejects the analysis rather than interpolating, extrapolating, or silently falling back to the nominal fuse current. Omitting a known-envelope analysis request preserves the previous nominal-only behavior and records that ambient derating was not applied.
 

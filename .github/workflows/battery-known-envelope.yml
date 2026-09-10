@@ -6,7 +6,7 @@ on:
       - "tools/battery_known_envelope.py"
       - "tools/battery_pulse.py"
       - "examples/power-pack-molicel-p45b/**"
-      - "catalogs/reference-bms-thermal.catalog.json"
+      - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/reference-power.catalog.json"
       - ".github/workflows/battery-known-envelope.yml"
   pull_request:
@@ -14,7 +14,7 @@ on:
       - "tools/battery_known_envelope.py"
       - "tools/battery_pulse.py"
       - "examples/power-pack-molicel-p45b/**"
-      - "catalogs/reference-bms-thermal.catalog.json"
+      - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/reference-power.catalog.json"
       - ".github/workflows/battery-known-envelope.yml"
 
@@ -46,16 +46,16 @@ jobs:
           assert math.isclose(power_metrics['M_LOAD_EQUIV_PACK_CURRENT'], 14.619883040935674)
           assert math.isclose(power_metrics['M_LOAD_MAX_PACK_CURRENT'], 21.05263157894737)
           assert power_metrics['M_LOAD_MAX_PACK_CURRENT'] > power_metrics['M_LOAD_EQUIV_PACK_CURRENT']
-          assert evidence['limiting_candidate'] == 'bms_continuous_current'
+          assert evidence['limiting_candidate'] == 'converter_continuous_output_current'
           candidates = {item['id']: item for item in evidence['candidates']}
           assert math.isclose(candidates['cell_pulse_power']['scale_factor'], 6.384)
-          assert math.isclose(candidates['bms_continuous_current']['scale_factor'], 1.425)
+          assert math.isclose(candidates['bms_continuous_current']['scale_factor'], 2.85)
           assert math.isclose(candidates['converter_continuous_output_current']['scale_factor'], 1.44)
           metrics = {item['id']: item['value'] for item in evidence['metrics']}
-          assert math.isclose(metrics['M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT'], 1.425)
-          assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 712.5)
-          assert math.isclose(metrics['M_KNOWN_COMPONENT_INPUT_POWER_ENVELOPE'], 750.0)
-          print('VERIFIED full-range pack current makes BMS the weakest currently-known component')
+          assert math.isclose(metrics['M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT'], 1.44)
+          assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 720.0)
+          assert math.isclose(metrics['M_KNOWN_COMPONENT_INPUT_POWER_ENVELOPE'], 757.8947368421053)
+          print('VERIFIED real JKBMS leaves converter as weakest currently-known component')
           PY
       - run: |
           python - <<'PY'

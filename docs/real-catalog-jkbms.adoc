@@ -1,0 +1,64 @@
+= Authoritative JKBMS BMS snapshot
+
+== Scope
+
+EMES uses `JKBMS JK-BD6A20S-6P` as the first manufacturer-backed BMS bound to the real P45B battery example.
+
+The source is the Jikong/JKBMS `JK-BD6AxxS-6P / JK-BD6AxxS-8P` product specification, manual version `20.1.1`. The upstream PDF is referenced but not redistributed.
+
+[source,text]
+----
+bytes   = 14559927
+sha256  = cb5954cab179b440d5f9e80cd7f36673612cb9078a097f41e1f58c6bb02693d1
+----
+
+`tools/providers/jkbms.py` verifies those raw bytes and deterministically normalizes `catalogs/sources/jkbms-bd6a20s6p.source.json` into `catalogs/jkbms-bd6a20s6p.catalog.json`.
+
+== Source-backed engineering facts
+
+The normalized 60 A part records:
+
+* Li-ion series range: 7--20S;
+* supply/pack-voltage range: 20--100 V;
+* maximum charge current: 60 A;
+* continuous-discharge design value: 60 A;
+* maximum instantaneous-current source fact: 120 A;
+* maximum balancing current: 0.6 A;
+* maximum internal-loop resistance: 1.53 mOhm;
+* operating-temperature range: -30--70 degC;
+* finished mass: 0.464 kg.
+
+The 120 A instantaneous-current entry is preserved as a source fact only. EMES does not infer a pulse-duration capability from it.
+The hash-pinned v20.1.1 manual reports 120 A maximum instantaneous current, while the older official product page reports 100 A peak discharge. Because the semantics and source revisions differ, neither value is promoted into the current pulse-power analysis.
+
+== Configurable protection setting
+
+The same manual says charge/discharge over-temperature protection thresholds are user-configurable in the app and gives 70 degC as the Li-ion factory default.
+
+EMES therefore separates:
+
+[source,text]
+----
+manufacturer fact: default discharge over-temperature = 70 degC
+mechanism choice:   P_BMS_DISCHARGE_OVERTEMP = 70 degC
+----
+
+`org.emes.power.battery_packs[].condition_bindings` links the mechanism parameter to the source-backed JKBMS property before the P45B `continuous_discharge_current` condition is consumed.
+
+This slice accepts only the source-backed 70 degC point. A different selected value is rejected rather than assumed valid merely because the hardware is configurable.
+
+== Full-range compatibility
+
+For the 10S P45B example, the modeled cell limits produce a 25--42 V pack range. The JKBMS therefore has:
+
+* minimum-series margin: 3S;
+* maximum-series margin: 10S;
+* minimum-voltage margin: 5 V;
+* maximum-voltage margin: 58 V.
+CI rejects a 6S variant for violating the BMS minimum series count and a 7S P45B variant because its 17.5 V modeled minimum falls below the BMS 20 V supply minimum.
+
+== Evidence boundary
+
+The manufacturer-backed BMS removes the synthetic 30 A BMS as the reference weakest link. At the current 500 W load, the real 60 A BMS has a 2.85 load-scale factor against the maximum modeled pack-side current, so the still-synthetic DC/DC converter is lower at 1.44 and determines the current known-component envelope of 720 W.
+
+This is still not battery-pack safety approval. Cell temperature distribution, wiring and busbar thermal limits, contact resistance, charger behavior, fault-energy coordination, enclosure, certification, and physical build quality remain separate evidence problems.

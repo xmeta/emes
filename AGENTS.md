@@ -34,6 +34,8 @@ Classify discoveries:
 - Keep volatile sourcing facts such as price, stock, and lead time separate from pinned technical properties.
 - AI-extracted catalog values are derived evidence until attributable source material supports them.
 - A catalog rating and its stated operating conditions are one engineering fact; consumers must not silently treat a conditional rating as unconditional.
+- Configurable protection settings are mechanism choices, not immutable catalog ratings; a selected value may satisfy a rating condition only when its source-backed configuration evidence is explicit.
+- When a selected electrical part publishes lower and upper series/voltage limits, compatibility checks must cover the full modeled pack range rather than only the nominal point.
 - A source-conditioned battery impedance value may be used only when the analysis context satisfies its stated conditions; do not infer OCV or loaded terminal voltage from impedance alone.
 - Source-conditioned pulse-power points require exact supported analysis conditions unless an explicit interpolation model with evidence exists.
 - Compare heterogeneous weakest-link ratings through dimensionless utilization/load-scale factors while preserving each native rating unit; do not invent a common power rating merely for comparison.
