@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/xmeta/emes/spec/emes-battery-sag-v0.schema.json",
+  "title": "EMES Battery Sag Analysis Extension v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pack_id", "impedance_property", "condition_bindings"],
+  "properties": {
+    "pack_id": {"$ref": "#/$defs/id"},
+    "impedance_property": {
+      "type": "string",
+      "const": "dc_impedance_typical"
+    },
+    "condition_bindings": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/id"},
+      "propertyNames": {"$ref": "#/$defs/id"}
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"
+    }
+  }
+}
