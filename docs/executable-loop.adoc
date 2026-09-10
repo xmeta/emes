@@ -53,6 +53,10 @@ This is only a dynamics smoke test. The catalog motor torque-speed curve is not 
 
 A missing analysis never becomes an implicit pass.
 
+The evidence also separates execution from engineering acceptance. `verification.execution_status` records whether the analysis execution succeeded, `verification.verification_status` records whether every constraint required by the active policy was evaluated, and `verification.design_decision` is `accepted`, `rejected`, or `not_decidable`. The default reference-arm policy includes all declared constraints, so the missing stress result makes the design `not_decidable` even though CAD generation and the MuJoCo smoke test succeed.
+
+`--require-constraint` can select a narrower explicit verification policy for a particular caller. Any `accepted` result is scoped to the emitted `required_constraints`; omitted constraints are not thereby claimed to pass.
+
 == Reproducibility gate
 
 Within the pinned toolchain, CI requires repeatability of:

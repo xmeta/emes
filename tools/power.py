@@ -14,7 +14,7 @@ import jsonschema
 
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
-from validate import canonical_digest, load_json, validate_semantics
+from validate import canonical_digest, load_json, summarize_verification, validate_semantics
 
 
 OPERATORS = {
@@ -253,6 +253,7 @@ def evidence(
     *,
     rating_condition_results: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    constraint_results = evaluate_constraints(document, metrics)
     return {
         "emes_evidence_version": "0.1",
         "design_id": document["design"]["id"],
@@ -272,7 +273,8 @@ def evidence(
             }
             for metric_id, (value, unit) in metrics.items()
         ],
-        "constraint_results": evaluate_constraints(document, metrics),
+        "verification": summarize_verification(constraint_results),
+        "constraint_results": constraint_results,
     }
 
 
@@ -536,13 +538,12 @@ def run(source: Path, out: Path, repo_root: Path) -> dict[str, Any]:
     validator_cls(schema).validate(document)
     validate_semantics(document)
     result = evaluate(document, repo_root)
-    failures = [
-        item["id"]
-        for item in result["constraint_results"]
-        if item["status"] == "fail"
-    ]
-    if failures:
-        raise RuntimeError("power constraints failed: " + ", ".join(failures))
+    verification = result["verification"]
+    if verification["design_decision"] == "rejected":
+        raise RuntimeError(
+            "power constraints failed: "
+            + ", ".join(verification["failed_constraints"])
+        )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8"

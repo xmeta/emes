@@ -45,8 +45,17 @@ def add_exact_brep(evidence: dict[str, Any], out_dir: Path) -> dict[str, Any]:
     return evidence
 
 
-def run_once(source: Path, out_dir: Path, load_case: str, repo_root: Path) -> dict[str, Any]:
-    return add_exact_brep(impl.run_bundle(source, out_dir, load_case, repo_root), out_dir)
+def run_once(
+    source: Path,
+    out_dir: Path,
+    load_case: str,
+    repo_root: Path,
+    required_constraints: list[str] | None = None,
+) -> dict[str, Any]:
+    return add_exact_brep(
+        impl.run_bundle(source, out_dir, load_case, repo_root, required_constraints),
+        out_dir,
+    )
 
 
 def artifact_hash(evidence: dict[str, Any], kind: str) -> str:
@@ -62,6 +71,7 @@ def stable_projection(evidence: dict[str, Any]) -> dict[str, Any]:
         "mjcf": artifact_hash(evidence, "mjcf"),
         "metrics": evidence["metrics"],
         "constraints": evidence["constraint_results"],
+        "verification": evidence["verification"],
         "dynamics_smoke": evidence["dynamics_smoke"],
     }
 
@@ -75,12 +85,21 @@ def main() -> int:
     parser.add_argument("--load-case", default="LC_FULL")
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--check-determinism", action="store_true")
+    parser.add_argument("--require-constraint", action="append", default=None)
     args = parser.parse_args()
 
-    first = run_once(args.source, args.out_dir, args.load_case, args.repo_root)
+    first = run_once(
+        args.source, args.out_dir, args.load_case, args.repo_root, args.require_constraint
+    )
     if args.check_determinism:
         with tempfile.TemporaryDirectory(prefix="emes-determinism-") as temp_dir:
-            second = run_once(args.source, Path(temp_dir), args.load_case, args.repo_root)
+            second = run_once(
+                args.source,
+                Path(temp_dir),
+                args.load_case,
+                args.repo_root,
+                args.require_constraint,
+            )
         if stable_projection(first) != stable_projection(second):
             raise RuntimeError(
                 "non-deterministic exact geometry/dynamics projection: "
