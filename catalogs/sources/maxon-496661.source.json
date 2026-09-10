@@ -1,0 +1,157 @@
+{
+  "capture_method": "authoritative web/PDF/CAD probe plus reviewed factual transcription",
+  "captured_at": "2026-09-10T13:34:37Z",
+  "facts": {
+    "body_diameter": {
+      "locator": "dimension drawing",
+      "source": "catalog_pdf",
+      "tolerance": 0.25,
+      "unit": "mm",
+      "value": 40.0
+    },
+    "body_length_max": {
+      "locator": "dimension drawing",
+      "source": "catalog_pdf",
+      "unit": "mm",
+      "value": 56.0
+    },
+    "continuous_current": {
+      "source": "product",
+      "unit": "A",
+      "value": 2.74
+    },
+    "continuous_torque": {
+      "source": "product",
+      "unit": "mN*m",
+      "value": 208.0
+    },
+    "mass": {
+      "source": "product",
+      "unit": "g",
+      "value": 390.0
+    },
+    "max_efficiency": {
+      "source": "product",
+      "unit": "%",
+      "value": 87.0
+    },
+    "max_speed": {
+      "source": "product",
+      "unit": "rpm",
+      "value": 8000.0
+    },
+    "mechanical_time_constant": {
+      "source": "product",
+      "unit": "ms",
+      "value": 0.658
+    },
+    "no_load_speed": {
+      "source": "product",
+      "unit": "rpm",
+      "value": 4550.0
+    },
+    "nominal_speed": {
+      "source": "product",
+      "unit": "rpm",
+      "value": 3950.0
+    },
+    "nominal_voltage": {
+      "source": "product",
+      "unit": "V",
+      "value": 36.0
+    },
+    "output_shaft_diameter": {
+      "locator": "dimension drawing",
+      "source": "catalog_pdf",
+      "unit": "mm",
+      "value": 6.0
+    },
+    "output_shaft_length": {
+      "locator": "dimension drawing",
+      "source": "catalog_pdf",
+      "unit": "mm",
+      "value": 20.0
+    },
+    "pilot_diameter": {
+      "locator": "dimension drawing",
+      "source": "catalog_pdf",
+      "unit": "mm",
+      "value": 22.0
+    },
+    "product_name": {
+      "source": "product",
+      "value": "EC-i 40 Ø40 mm, brushless, 100 Watt, with Hall sensors | High Torque"
+    },
+    "rotor_inertia": {
+      "source": "product",
+      "unit": "g*cm^2",
+      "value": 44.0
+    },
+    "speed_constant": {
+      "source": "product",
+      "unit": "rpm/V",
+      "value": 127.0
+    },
+    "stall_current": {
+      "source": "product",
+      "unit": "A",
+      "value": 42.8
+    },
+    "stall_torque": {
+      "source": "product",
+      "unit": "mN*m",
+      "value": 1920.0
+    },
+    "terminal_inductance": {
+      "source": "product",
+      "unit": "mH",
+      "value": 0.675
+    },
+    "terminal_resistance": {
+      "source": "product",
+      "unit": "ohm",
+      "value": 0.84
+    },
+    "torque_constant": {
+      "source": "product",
+      "unit": "mN*m/A",
+      "value": 74.9
+    }
+  },
+  "manufacturer": "maxon",
+  "notes": [
+    "The live product page reports 208 mNm nominal/max-continuous torque; the March 2025 catalog table displays 210 mNm for part 496661. EMES keeps the live product page value for the normalized current snapshot and records the catalog PDF separately.",
+    "Stall torque is not treated as an allowable peak operating torque.",
+    "Upstream CAD bytes are content-addressed but not redistributed because redistribution rights were not established."
+  ],
+  "part_number": "496661",
+  "provider": "maxon",
+  "snapshot_version": "0.1",
+  "upstream": {
+    "cad_archive": {
+      "bytes": 240833,
+      "members": [
+        {
+          "bytes": 1358337,
+          "name": "496660_ec-i40_100w.stp",
+          "sha256": "sha256:0e971b305884a8703d5c9d8883b66248220ebb820caf4e7078c9399942b4595a"
+        }
+      ],
+      "redistribution": "not_asserted",
+      "sha256": "sha256:0385dda8d05d7b03b51df7efb8531fe39a0e246716eefcaeb165340a29f80c95",
+      "uri": "https://www.maxongroup.com/medias/sys_master/root/8824729010206/496660-ec-i40-100w.zip"
+    },
+    "catalog_pdf": {
+      "bytes": 105389,
+      "edition": "March 2025",
+      "page": 310,
+      "sha256": "sha256:3273ff843a2d643417cf5d200d57c5218370e224abdb8315918a84013d9d8b71",
+      "uri": "https://www.maxongroup.com/medias/sys_master/root/9406692261918/Cataloge-Page-EN-310.pdf"
+    },
+    "product": {
+      "bytes": 40825,
+      "sha256": "sha256:4b96d5792c92ada66c7eb0050d16d5ffeb745a588a1f195b621397d96ca511ba",
+      "uri": "https://www.maxongroup.com/maxon/view/product/motor/ecmotor/EC-i/496661"
+    }
+  }
+}
