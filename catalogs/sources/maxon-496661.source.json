@@ -1,141 +1,49 @@
 {
-  "capture_method": "authoritative web/PDF/CAD probe plus reviewed factual transcription",
+  "capture_method": "reviewed transcription from hash-pinned manufacturer PDF plus CAD-asset probe",
   "captured_at": "2026-09-10T13:34:37Z",
   "facts": {
-    "body_diameter": {
-      "locator": "dimension drawing",
-      "source": "catalog_pdf",
-      "tolerance": 0.25,
-      "unit": "mm",
-      "value": 40.0
-    },
-    "body_length_max": {
-      "locator": "dimension drawing",
-      "source": "catalog_pdf",
-      "unit": "mm",
-      "value": 56.0
-    },
-    "continuous_current": {
-      "source": "product",
-      "unit": "A",
-      "value": 2.74
-    },
-    "continuous_torque": {
-      "source": "product",
-      "unit": "mN*m",
-      "value": 208.0
-    },
-    "mass": {
-      "source": "product",
-      "unit": "g",
-      "value": 390.0
-    },
-    "max_efficiency": {
-      "source": "product",
-      "unit": "%",
-      "value": 87.0
-    },
-    "max_speed": {
-      "source": "product",
-      "unit": "rpm",
-      "value": 8000.0
-    },
-    "mechanical_time_constant": {
-      "source": "product",
-      "unit": "ms",
-      "value": 0.658
-    },
-    "no_load_speed": {
-      "source": "product",
-      "unit": "rpm",
-      "value": 4550.0
-    },
-    "nominal_speed": {
-      "source": "product",
-      "unit": "rpm",
-      "value": 3950.0
-    },
-    "nominal_voltage": {
-      "source": "product",
-      "unit": "V",
-      "value": 36.0
-    },
-    "output_shaft_diameter": {
-      "locator": "dimension drawing",
-      "source": "catalog_pdf",
-      "unit": "mm",
-      "value": 6.0
-    },
-    "output_shaft_length": {
-      "locator": "dimension drawing",
-      "source": "catalog_pdf",
-      "unit": "mm",
-      "value": 20.0
-    },
-    "pilot_diameter": {
-      "locator": "dimension drawing",
-      "source": "catalog_pdf",
-      "unit": "mm",
-      "value": 22.0
-    },
-    "product_name": {
-      "source": "product",
-      "value": "EC-i 40 Ø40 mm, brushless, 100 Watt, with Hall sensors | High Torque"
-    },
-    "rotor_inertia": {
-      "source": "product",
-      "unit": "g*cm^2",
-      "value": 44.0
-    },
-    "speed_constant": {
-      "source": "product",
-      "unit": "rpm/V",
-      "value": 127.0
-    },
-    "stall_current": {
-      "source": "product",
-      "unit": "A",
-      "value": 42.8
-    },
-    "stall_torque": {
-      "source": "product",
-      "unit": "mN*m",
-      "value": 1920.0
-    },
-    "terminal_inductance": {
-      "source": "product",
-      "unit": "mH",
-      "value": 0.675
-    },
-    "terminal_resistance": {
-      "source": "product",
-      "unit": "ohm",
-      "value": 0.84
-    },
-    "torque_constant": {
-      "source": "product",
-      "unit": "mN*m/A",
-      "value": 74.9
-    }
+    "body_diameter": {"source": "catalog_pdf", "locator": "dimension drawing", "value": 40.0, "unit": "mm", "tolerance": 0.25},
+    "body_length_max": {"source": "catalog_pdf", "locator": "dimension drawing", "value": 56.0, "unit": "mm"},
+    "continuous_current": {"source": "catalog_pdf", "locator": "motor data row 6, part 496661", "value": 2.76, "unit": "A"},
+    "continuous_torque": {"source": "catalog_pdf", "locator": "motor data row 5, part 496661", "value": 210.0, "unit": "mN*m"},
+    "mass": {"source": "catalog_pdf", "locator": "specification 31", "value": 390.0, "unit": "g"},
+    "max_efficiency": {"source": "catalog_pdf", "locator": "motor data row 9, part 496661", "value": 87.5, "unit": "%"},
+    "max_speed": {"source": "catalog_pdf", "locator": "mechanical data 23", "value": 8000.0, "unit": "rpm"},
+    "mechanical_time_constant": {"source": "catalog_pdf", "locator": "characteristics row 15, part 496661", "value": 0.65, "unit": "ms"},
+    "no_load_current": {"source": "catalog_pdf", "locator": "motor data row 3, part 496661", "value": 176.0, "unit": "mA"},
+    "no_load_speed": {"source": "catalog_pdf", "locator": "motor data row 2, part 496661", "value": 4550.0, "unit": "rpm"},
+    "nominal_speed": {"source": "catalog_pdf", "locator": "motor data row 4, part 496661", "value": 3950.0, "unit": "rpm"},
+    "nominal_voltage": {"source": "catalog_pdf", "locator": "motor data row 1, part 496661", "value": 36.0, "unit": "V"},
+    "number_of_phases": {"source": "catalog_pdf", "locator": "specification 30", "value": 3.0, "unit": "1"},
+    "number_of_pole_pairs": {"source": "catalog_pdf", "locator": "specification 29", "value": 7.0, "unit": "1"},
+    "output_shaft_diameter": {"source": "catalog_pdf", "locator": "dimension drawing", "value": 6.0, "unit": "mm"},
+    "output_shaft_length": {"source": "catalog_pdf", "locator": "dimension drawing", "value": 20.0, "unit": "mm"},
+    "pilot_diameter": {"source": "catalog_pdf", "locator": "dimension drawing", "value": 22.0, "unit": "mm"},
+    "rotor_inertia": {"source": "catalog_pdf", "locator": "characteristics row 16, part 496661", "value": 44.0, "unit": "g*cm^2"},
+    "speed_constant": {"source": "catalog_pdf", "locator": "characteristics row 13, part 496661", "value": 127.0, "unit": "rpm/V"},
+    "speed_torque_gradient": {"source": "catalog_pdf", "locator": "characteristics row 14, part 496661", "value": 1.41, "unit": "rpm/mN*m"},
+    "stall_current": {"source": "catalog_pdf", "locator": "motor data row 8, part 496661", "value": 43.4, "unit": "A"},
+    "stall_torque": {"source": "catalog_pdf", "locator": "motor data row 7, part 496661", "value": 1930.0, "unit": "mN*m"},
+    "terminal_inductance": {"source": "catalog_pdf", "locator": "characteristics row 11, part 496661", "value": 0.675, "unit": "mH"},
+    "terminal_resistance": {"source": "catalog_pdf", "locator": "characteristics row 10, part 496661", "value": 0.829, "unit": "ohm"},
+    "torque_constant": {"source": "catalog_pdf", "locator": "characteristics row 12, part 496661", "value": 74.9, "unit": "mN*m/A"}
   },
   "manufacturer": "maxon",
   "notes": [
-    "The live product page reports 208 mNm nominal/max-continuous torque; the March 2025 catalog table displays 210 mNm for part 496661. EMES keeps the live product page value for the normalized current snapshot and records the catalog PDF separately.",
+    "The immutable March 2025 manufacturer catalog PDF is the technical snapshot authority for this record because its exact bytes are hash-pinned and it contains both the motor table and dimension drawing.",
+    "The live maxon product page was observed on 2026-09-10 to report 208 mNm continuous torque, 2.74 A continuous current, 1920 mNm stall torque, 42.8 A stall current, 87% max efficiency, and 0.84 ohm resistance. These differ slightly from the pinned March 2025 PDF and are retained as a source-conflict observation rather than silently replacing the snapshot.",
     "Stall torque is not treated as an allowable peak operating torque.",
-    "Upstream CAD bytes are content-addressed but not redistributed because redistribution rights were not established."
+    "The official CAD download linked for part 496661 contains a family-named STEP file 496660_ec-i40_100w.stp; EMES records that exact member name and digest rather than asserting part-exclusive geometry.",
+    "Upstream PDF and CAD bytes are content-addressed but not redistributed because redistribution rights were not established."
   ],
   "part_number": "496661",
   "provider": "maxon",
-  "snapshot_version": "0.1",
+  "snapshot_version": "0.2",
   "upstream": {
     "cad_archive": {
       "bytes": 240833,
       "members": [
-        {
-          "bytes": 1358337,
-          "name": "496660_ec-i40_100w.stp",
-          "sha256": "sha256:0e971b305884a8703d5c9d8883b66248220ebb820caf4e7078c9399942b4595a"
-        }
+        {"bytes": 1358337, "name": "496660_ec-i40_100w.stp", "sha256": "sha256:0e971b305884a8703d5c9d8883b66248220ebb820caf4e7078c9399942b4595a"}
       ],
       "redistribution": "not_asserted",
       "sha256": "sha256:0385dda8d05d7b03b51df7efb8531fe39a0e246716eefcaeb165340a29f80c95",
@@ -148,10 +56,10 @@
       "sha256": "sha256:3273ff843a2d643417cf5d200d57c5218370e224abdb8315918a84013d9d8b71",
       "uri": "https://www.maxongroup.com/medias/sys_master/root/9406692261918/Cataloge-Page-EN-310.pdf"
     },
-    "product": {
-      "bytes": 40825,
-      "sha256": "sha256:4b96d5792c92ada66c7eb0050d16d5ffeb745a588a1f195b621397d96ca511ba",
-      "uri": "https://www.maxongroup.com/maxon/view/product/motor/ecmotor/EC-i/496661"
+    "live_product_observation": {
+      "observed_at": "2026-09-10",
+      "uri": "https://www.maxongroup.com/maxon/view/product/motor/ecmotor/EC-i/496661",
+      "role": "auxiliary-current-observation-not-snapshot-authority"
     }
   }
 }
