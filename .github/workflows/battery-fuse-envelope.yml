@@ -2,6 +2,7 @@ name: battery-fuse-envelope
 
 on:
   push:
+    branches: ["main"]
     paths:
       - "spec/emes-power-v0.schema.json"
       - "spec/emes-battery-known-envelope-v0.schema.json"
@@ -11,6 +12,17 @@ on:
       - "examples/power-pack-molicel-p45b-fused/known-envelope-20c.json"
       - "tools/battery_known_envelope.py"
       - ".github/workflows/battery-fuse-envelope.yml"
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "tools/battery_pulse.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - "catalogs/reference-power.catalog.json"
+      - "examples/power-pack-molicel-p45b/pulse-10s-soc50.json"
   pull_request:
     paths:
       - "spec/emes-power-v0.schema.json"
@@ -21,6 +33,17 @@ on:
       - "examples/power-pack-molicel-p45b-fused/known-envelope-20c.json"
       - "tools/battery_known_envelope.py"
       - ".github/workflows/battery-fuse-envelope.yml"
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "tools/battery_pulse.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - "catalogs/reference-power.catalog.json"
+      - "examples/power-pack-molicel-p45b/pulse-10s-soc50.json"
   workflow_dispatch:
 
 permissions:

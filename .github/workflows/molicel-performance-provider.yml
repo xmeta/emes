@@ -3,6 +3,7 @@ name: molicel-performance-provider
 on:
   workflow_dispatch:
   push:
+    branches: ["main"]
     paths:
       - "tools/providers/molicel_performance.py"
       - "catalogs/sources/molicel-p45b.source.json"

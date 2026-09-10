@@ -2,6 +2,7 @@ name: battery-pulse
 
 on:
   push:
+    branches: ["main"]
     paths:
       - "tools/battery_pulse.py"
       - "spec/emes-battery-pulse-v0.schema.json"
@@ -10,6 +11,14 @@ on:
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/sources/molicel-p45b.source.json"
       - ".github/workflows/battery-pulse.yml"
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "catalogs/reference-power.catalog.json"
   pull_request:
     paths:
       - "tools/battery_pulse.py"
@@ -19,6 +28,14 @@ on:
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/sources/molicel-p45b.source.json"
       - ".github/workflows/battery-pulse.yml"
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "catalogs/reference-power.catalog.json"
 
 permissions:
   contents: read

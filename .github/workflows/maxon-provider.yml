@@ -3,6 +3,7 @@ name: maxon-provider
 on:
   workflow_dispatch:
   push:
+    branches: ["main"]
     paths:
       - "tools/providers/maxon.py"
       - "catalogs/sources/maxon-496661.source.json"

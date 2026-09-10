@@ -2,6 +2,7 @@ name: battery-known-envelope
 
 on:
   push:
+    branches: ["main"]
     paths:
       - "tools/battery_known_envelope.py"
       - "tools/battery_pulse.py"
@@ -9,6 +10,15 @@ on:
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/reference-power.catalog.json"
       - ".github/workflows/battery-known-envelope.yml"
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "catalogs/molicel-p45b.catalog.json"
   pull_request:
     paths:
       - "tools/battery_known_envelope.py"
@@ -17,6 +27,15 @@ on:
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/reference-power.catalog.json"
       - ".github/workflows/battery-known-envelope.yml"
+      - "requirements-dev.txt"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-power-v0.schema.json"
+      - "spec/emes-battery-pulse-v0.schema.json"
+      - "catalogs/molicel-p45b.catalog.json"
 
 permissions:
   contents: read
