@@ -7,7 +7,7 @@ Issue #3 establishes the first external-tool vertical slice:
 EMES mechanism.json
   |-- semantic validation
   |-- catalog resolution
-  |-- build123d --> arm.step
+  |-- build123d --> arm.brep + arm.step
   |-- MJCF compiler --> arm.xml --> MuJoCo smoke test
   `-- metrics + provenance --> evidence.json
 ----
@@ -21,7 +21,7 @@ python -m venv .venv
 pip install -r requirements-dev.txt
 python tools/validate.py
 python tools/catalog.py validate catalogs/reference-motors.catalog.json
-python tools/reference_loop.py --check-determinism
+python tools/run_reference_loop.py --check-determinism
 ----
 
 Generated outputs are written under `generated/` and are not source-controlled.
@@ -30,7 +30,7 @@ Generated outputs are written under `generated/` and are not source-controlled.
 
 The two-link example declares link dimensions in EMES parameters. Both actuator components resolve to a pinned catalog part. The build123d adapter uses the catalog motor `body_diameter` and `body_length` values when building the reference assembly, proving that purchased-part dimensions can participate in CAD generation.
 
-The generated STEP file uses a fixed header timestamp so repeated generation can be checked by SHA-256.
+EMES distinguishes exact geometry reproducibility from exchange-file byte reproducibility. The exact OpenCascade BREP (`arm.brep`) is the geometry determinism artifact. STEP (`arm.step`) is retained as an interoperability artifact with a fixed header timestamp, but its raw SHA-256 is evidence about those specific bytes rather than the canonical geometry identity. CI observed that the STEPCAF serializer can emit different byte streams for repeated exports of the same assembly, so STEP byte equality is deliberately not an acceptance condition.
 
 == Dynamics
 
@@ -44,7 +44,7 @@ This is only a dynamics smoke test. The catalog motor torque-speed curve is not 
 
 * canonical design digest;
 * pinned tool versions and toolchain digest;
-* generated STEP and MJCF hashes;
+* exact BREP, STEP, and MJCF hashes;
 * selected catalog part identities, part digests, masses, dimensions, and torque/speed properties;
 * analytic reach and moving-link mass;
 * executable constraint results for available metrics;
@@ -52,6 +52,18 @@ This is only a dynamics smoke test. The catalog motor torque-speed curve is not 
 * MuJoCo smoke-test state and tip positions.
 
 A missing analysis never becomes an implicit pass.
+
+== Reproducibility gate
+
+Within the pinned toolchain, CI requires repeatability of:
+
+* the exact BREP artifact;
+* MJCF bytes;
+* catalog part digests;
+* analytic metrics and constraint results;
+* the deterministic MuJoCo smoke-test result.
+
+STEP raw bytes are recorded but are not used as the geometry determinism key.
 
 == Catalog import fixture
 
