@@ -1,0 +1,17 @@
+= Canonical IR Normalization
+
+EMES normalizes mechanism quantities before semantic validation, adapter execution, and design hashing. Authoring syntax is therefore not the design identity.
+
+The current canonical boundary deliberately covers only dimensions exercised by the repository. Length, mass, voltage, current, power, energy, capacity, angle, time, temperature, stress, resistance, percent, and dimensionless quantities have explicit accepted units and one canonical engineering unit per dimension.
+
+For example, `350 mm` and `0.35 m` both normalize to `0.35 m` and produce the same `design_digest`. Decimal conversion is used before conversion to float so simple decimal unit conversions do not create different hashes through multiplication noise.
+
+Unknown units fail closed. Parameter values and bounds are compared only after normalization, so a length value cannot silently accept a mass bound merely because both objects contain numbers.
+
+== Frames
+
+The current frame model is intentionally narrow: spatial vectors are expressed in a component-local frame. A connection `axis` must declare `frame`, and that frame must be the connection child component (`b.component`). A directional load must declare the target component as its frame.
+
+This is not a general transform graph. EMES rejects frame names it cannot resolve under this component-local rule rather than pretending to support transformations that are not implemented.
+
+The reference two-link arm therefore declares `J1` in `link1` frame and `J2` in `link2` frame. Existing CAD/MJCF adapters consume the normalized quantities and these explicit local-frame semantics.

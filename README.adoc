@@ -79,6 +79,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/architecture.adoc` -- normative architecture direction.
 * `docs/executable-loop.adoc` -- first CAD/MuJoCo end-to-end slice.
 * `docs/evidence-envelope.adoc` -- shared evidence/provenance envelope and lineage validation.
+* `docs/canonical-normalization.adoc` -- canonical quantity normalization, semantic design digests, and component-local frame rules.
 * `docs/catalogs.adoc` -- purchased-component snapshot and binding model.
 * `docs/real-catalog-maxon.adoc` -- first authoritative manufacturer motor catalog and evidence policy.
 * `docs/real-catalog-molicel.adoc` -- authoritative P45B battery-cell snapshot and executable conditional-rating policy.
