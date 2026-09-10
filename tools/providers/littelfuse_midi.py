@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Littelfuse MIDI HP 70V provider for a hash-pinned manufacturer datasheet."""
+"""Littelfuse MIDI HP 70V provider for a reviewed manufacturer snapshot."""
 
 from __future__ import annotations
 
@@ -49,13 +49,18 @@ def load_snapshot(path: Path) -> dict[str, Any]:
 def verify_snapshot(path: Path) -> dict[str, Any]:
     snapshot = load_snapshot(path)
     upstream = snapshot["upstream"]["datasheet_pdf"]
+    expected = upstream.get("sha256")
+    expected_bytes = upstream.get("bytes")
+    if expected is None or expected_bytes is None:
+        raise RuntimeError(
+            "Littelfuse MIDI raw PDF digest is not pinned; use the reviewed snapshot "
+            "for deterministic normalization and complete raw-byte acquisition separately"
+        )
     pdf = fetch(upstream["uri"])
     if not pdf.startswith(b"%PDF"):
         raise RuntimeError("Littelfuse MIDI datasheet URL did not return a PDF")
     actual = sha256(pdf)
-    expected = upstream["sha256"]
-    expected_bytes = int(upstream["bytes"])
-    if actual != expected or len(pdf) != expected_bytes:
+    if actual != expected or len(pdf) != int(expected_bytes):
         raise RuntimeError(
             "Littelfuse MIDI datasheet changed: "
             f"expected {expected} bytes={expected_bytes}, "
@@ -106,7 +111,7 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
 
     derated_20c = fact(snapshot, "max_allowed_current_20c")
     mounting_torque = fact(snapshot, "mounting_torque_m6")
-    part = {
+    part: dict[str, Any] = {
         "id": "LITTELFUSE_4998040_M_M6",
         "kind": "fuse",
         "identity": {
@@ -148,17 +153,30 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
             {"id": "IF_IN", "kind": "electrical_dc", "properties": {}},
             {"id": "IF_OUT", "kind": "electrical_dc", "properties": {}},
         ],
-        "assets": [
+    }
+
+    source_record: dict[str, Any] = {
+        "id": source_id,
+        "authority": "manufacturer",
+        "format": "datasheet",
+        "uri": upstream["uri"],
+        "retrieved_at": snapshot["captured_at"],
+        "license": "Littelfuse upstream terms; redistribution not asserted",
+    }
+    raw_digest = upstream.get("sha256")
+    if raw_digest is not None:
+        source_record["raw_digest"] = raw_digest
+        part["assets"] = [
             {
                 "id": "ASSET_DATASHEET",
                 "kind": "datasheet",
                 "uri": upstream["uri"],
-                "digest": upstream["sha256"],
+                "digest": raw_digest,
                 "source": source_id,
                 "license": "Littelfuse upstream terms; redistribution not asserted",
             }
-        ],
-    }
+        ]
+
     catalog = {
         "emes_catalog_version": "0.1",
         "catalog": {
@@ -170,17 +188,7 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
                 "kept distinct, and no pulse ampacity is inferred from I2t/time-current data."
             ),
         },
-        "sources": [
-            {
-                "id": source_id,
-                "authority": "manufacturer",
-                "format": "datasheet",
-                "uri": upstream["uri"],
-                "retrieved_at": snapshot["captured_at"],
-                "license": "Littelfuse upstream terms; redistribution not asserted",
-                "raw_digest": upstream["sha256"],
-            }
-        ],
+        "sources": [source_record],
         "parts": [part],
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)
