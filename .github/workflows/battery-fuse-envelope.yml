@@ -1,0 +1,103 @@
+name: battery-fuse-envelope
+
+on:
+  push:
+    paths:
+      - "spec/emes-power-v0.schema.json"
+      - "catalogs/littelfuse-midi70v-40a.catalog.json"
+      - "examples/power-pack-molicel-p45b-fused/mechanism.json"
+      - "tools/battery_known_envelope.py"
+      - ".github/workflows/battery-fuse-envelope.yml"
+  pull_request:
+    paths:
+      - "spec/emes-power-v0.schema.json"
+      - "catalogs/littelfuse-midi70v-40a.catalog.json"
+      - "examples/power-pack-molicel-p45b-fused/mechanism.json"
+      - "tools/battery_known_envelope.py"
+      - ".github/workflows/battery-fuse-envelope.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  explicit-fuse-path:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python tools/catalog.py validate catalogs/littelfuse-midi70v-40a.catalog.json
+      - run: python tools/validate.py examples/power-pack-molicel-p45b-fused/mechanism.json
+      - run: python tools/power.py examples/power-pack-molicel-p45b-fused/mechanism.json --out /tmp/fused-power.json --check-determinism
+      - run: python tools/battery_pulse.py examples/power-pack-molicel-p45b-fused/mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/fused-power.json --out /tmp/fused-pulse.json --check-determinism
+      - run: python tools/battery_known_envelope.py examples/power-pack-molicel-p45b-fused/mechanism.json --power-evidence /tmp/fused-power.json --pulse-evidence /tmp/fused-pulse.json --out /tmp/fused-known.json --check-determinism
+      - run: |
+          python - <<'PY'
+          import json, math
+          e = json.load(open('/tmp/fused-known.json'))
+          by_id = {x['id']: x for x in e['candidates']}
+          metrics = {x['id']: x['value'] for x in e['metrics']}
+          assert e['limiting_candidate'] == 'converter_continuous_output_current'
+          assert math.isclose(by_id['fuse_rated_current']['limit'], 40.0)
+          assert math.isclose(by_id['fuse_rated_current']['scale_factor'], 2.736, rel_tol=1e-12)
+          assert math.isclose(metrics['M_KNOWN_FUSE_VOLTAGE_MARGIN'], 28.0)
+          assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 720.0)
+          print('VALID fused-reference-envelope')
+          PY
+      - run: |
+          python - <<'PY'
+          import copy, json, sys
+          from pathlib import Path
+          sys.path.insert(0, 'tools')
+          from catalog import canonical_digest
+
+          mechanism = json.load(open('examples/power-pack-molicel-p45b-fused/mechanism.json'))
+          base_catalog = json.load(open('catalogs/littelfuse-midi70v-40a.catalog.json'))
+
+          def variant(name, current, voltage):
+              catalog = copy.deepcopy(base_catalog)
+              part = catalog['parts'][0]
+              part['properties']['rated_current']['value'] = current
+              part['properties']['rated_voltage_dc']['value'] = voltage
+              catalog_path = Path(f'/tmp/{name}.catalog.json')
+              catalog_path.write_text(json.dumps(catalog, indent=2) + '\n')
+
+              doc = copy.deepcopy(mechanism)
+              for binding in doc['extensions']['org.emes.catalogs']:
+                  if binding['id'] == 'CAT_LITTELFUSE_MIDI70V':
+                      binding['path'] = str(catalog_path)
+                      binding['digest'] = canonical_digest(catalog)
+              for component in doc['components']:
+                  if component['id'] == 'main_fuse':
+                      component['metadata']['org.emes.catalog_ref']['digest'] = canonical_digest(part)
+              doc_path = Path(f'/tmp/{name}.mechanism.json')
+              doc_path.write_text(json.dumps(doc, indent=2) + '\n')
+
+          variant('fuse15a', 15.0, 70.0)
+          variant('fuse30v', 40.0, 30.0)
+          print('CREATED fuse counterexamples')
+          PY
+      - run: python tools/power.py /tmp/fuse15a.mechanism.json --out /tmp/fuse15a-power.json --check-determinism
+      - run: python tools/battery_pulse.py /tmp/fuse15a.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/fuse15a-power.json --out /tmp/fuse15a-pulse.json --check-determinism
+      - run: python tools/battery_known_envelope.py /tmp/fuse15a.mechanism.json --power-evidence /tmp/fuse15a-power.json --pulse-evidence /tmp/fuse15a-pulse.json --out /tmp/fuse15a-known.json --check-determinism
+      - run: |
+          python - <<'PY'
+          import json, math
+          e = json.load(open('/tmp/fuse15a-known.json'))
+          metrics = {x['id']: x['value'] for x in e['metrics']}
+          assert e['limiting_candidate'] == 'fuse_rated_current'
+          assert math.isclose(metrics['M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT'], 1.026, rel_tol=1e-12)
+          assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 513.0, rel_tol=1e-12)
+          print('VALID fuse-becomes-weakest-link')
+          PY
+      - run: python tools/power.py /tmp/fuse30v.mechanism.json --out /tmp/fuse30v-power.json --check-determinism
+      - run: python tools/battery_pulse.py /tmp/fuse30v.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/fuse30v-power.json --out /tmp/fuse30v-pulse.json --check-determinism
+      - run: |
+          if python tools/battery_known_envelope.py /tmp/fuse30v.mechanism.json --power-evidence /tmp/fuse30v-power.json --pulse-evidence /tmp/fuse30v-pulse.json --out /tmp/fuse30v-known.json; then
+            echo 'expected undervoltage fuse rejection' >&2
+            exit 1
+          fi
+          echo 'VALID fuse-voltage-fail-closed'
