@@ -43,4 +43,23 @@ jobs:
           assert canonical_digest(committed) == canonical_digest(regenerated)
           print('DETERMINISTIC maxon-normalization')
           PY
+      - run: python tools/catalog.py validate catalogs/reference-power.catalog.json
+      - run: python tools/validate.py examples/power-pack/mechanism.json
+      - run: python tools/power.py examples/power-pack/mechanism.json --out generated/power-pack/evidence.json --check-determinism
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source = Path('examples/power-pack/mechanism.json')
+          document = json.loads(source.read_text())
+          for parameter in document['parameters']:
+              if parameter['id'] == 'P_PACK_SERIES':
+                  parameter['value']['value'] = 13.0
+          Path('/tmp/invalid-power.json').write_text(json.dumps(document))
+          PY
+          if python tools/power.py /tmp/invalid-power.json --out /tmp/invalid-evidence.json; then
+            echo 'ERROR: incompatible 13S pack unexpectedly passed 12S BMS validation'
+            exit 1
+          fi
+          echo 'EXPECTED-FAIL incompatible 13S pack rejected'
       - run: python tools/run_reference_loop.py --out-dir generated/two-link-arm --check-determinism
