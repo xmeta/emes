@@ -1,0 +1,96 @@
+{
+  "emes_version": "0.1",
+  "design": {
+    "id": "DESIGN_POWER_SUPPLY",
+    "name": "Reference fixed DC power-supply subsystem",
+    "description": "Synthetic 48 V power supply feeding a continuous DC load."
+  },
+  "requirements": [
+    {"id": "R_SUPPLY_VOLTAGE", "kind": "interface", "statement": "Provide a 48 V DC load bus."},
+    {"id": "R_SUPPLY_LOAD", "kind": "performance", "statement": "Supply a continuous 240 W load within current and power ratings."}
+  ],
+  "parameters": [],
+  "components": [
+    {
+      "id": "psu",
+      "kind": "purchased_part",
+      "metadata": {
+        "org.emes.catalog_ref": {
+          "catalog": "CAT_POWER",
+          "part": "PSU_REF_48V_10A",
+          "digest": "sha256:a70215b8c0b9dfda0dec62ec6f146dca274392c825f822c2ee22c46de6f71d53"
+        }
+      }
+    },
+    {"id": "dc_load", "kind": "other", "metadata": {"org.emes.role": "electrical_load"}}
+  ],
+  "connections": [
+    {
+      "id": "E_PSU_TO_LOAD",
+      "kind": "electrical",
+      "a": {"component": "psu", "port": "IF_DC_OUT"},
+      "b": {"component": "dc_load", "port": "dc_in"}
+    }
+  ],
+  "functional_edges": [
+    {"id": "F_PSU_POWERS_LOAD", "from": "psu", "relation": "supplies-electrical-power-to", "to": "dc_load"}
+  ],
+  "load_cases": [
+    {
+      "id": "LC_POWER",
+      "description": "Reference fixed-supply load",
+      "loads": [
+        {"target": "dc_load", "kind": "other", "value": {"value": 240.0, "unit": "W"}}
+      ]
+    }
+  ],
+  "constraints": [
+    {"id": "C_BUS_VOLTAGE", "metric": "M_BUS_VOLTAGE", "op": "==", "target": {"value": 48.0, "unit": "V"}, "load_case": "LC_POWER"},
+    {"id": "C_SOURCE_CURRENT", "metric": "M_SOURCE_CURRENT_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "A"}, "load_case": "LC_POWER"},
+    {"id": "C_SOURCE_POWER", "metric": "M_SOURCE_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"}
+  ],
+  "objectives": [
+    {"id": "O_SOURCE_MARGIN", "metric": "M_SOURCE_POWER_MARGIN", "direction": "maximize", "weight": 1.0}
+  ],
+  "analyses": [
+    {
+      "id": "A_POWER",
+      "kind": "other",
+      "adapter": "tools/power.py",
+      "fidelity": "analytic",
+      "load_cases": ["LC_POWER"],
+      "produces": [
+        {"id": "M_BUS_VOLTAGE", "unit": "V"},
+        {"id": "M_LOAD_POWER", "unit": "W"},
+        {"id": "M_LOAD_OUTPUT_CURRENT", "unit": "A"},
+        {"id": "M_SOURCE_CONTINUOUS_CURRENT", "unit": "A"},
+        {"id": "M_SOURCE_CONTINUOUS_POWER", "unit": "W"},
+        {"id": "M_SOURCE_CURRENT_MARGIN", "unit": "A"},
+        {"id": "M_SOURCE_POWER_MARGIN", "unit": "W"}
+      ]
+    }
+  ],
+  "traceability": [
+    {"requirement": "R_SUPPLY_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
+    {"requirement": "R_SUPPLY_LOAD", "verified_by": ["C_SOURCE_CURRENT", "C_SOURCE_POWER"]}
+  ],
+  "extensions": {
+    "org.emes.catalogs": [
+      {
+        "id": "CAT_POWER",
+        "path": "catalogs/reference-power.catalog.json",
+        "digest": "sha256:ae2d9cd11b18fc0233f2b96d4ce65eb69f3c43a3cc92eccf5940b4c0096a6ade"
+      }
+    ],
+    "org.emes.power": {
+      "battery_packs": [],
+      "power_paths": [
+        {
+          "id": "PATH_PSU",
+          "source_component": "psu",
+          "load_case": "LC_POWER"
+        }
+      ]
+    }
+  }
+}
