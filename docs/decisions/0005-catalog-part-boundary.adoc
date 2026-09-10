@@ -1,0 +1,79 @@
+= ADR 0005: Catalog-backed purchased components
+:status: accepted
+:date: 2026-09-10
+
+== Context
+
+Real mechanisms contain purchased components such as motors, gearboxes, bearings, sensors, fasteners, controllers, springs, and transmissions. Their dimensions, interfaces, physical properties, and operating envelopes must be available to geometry generation, simulation, selection, and verification.
+
+Binding a design directly to a live vendor web page or API response would make historical designs non-reproducible. Mixing technical data with volatile price and stock data would also cause irrelevant design churn.
+
+== Decision
+
+EMES uses a three-stage purchased-part boundary:
+
+[source,text]
+----
+external provider / file / datasheet
+            |
+            v
+      provider adapter
+            |
+            v
+ normalized catalog snapshot
+            |
+       digest + part digest
+            |
+            v
+ semantic mechanism reference
+----
+
+A selected component binds to an explicit catalog snapshot and part ID. Both the catalog and selected part are content-addressed.
+
+During v0 experimentation this binding lives in the namespaced `org.emes.catalogs` extension and component metadata rather than changing the canonical core schema prematurely. Promotion into core IR requires experience with multiple real catalogs.
+
+== Technical data model
+
+A catalog part may contain:
+
+* manufacturer and manufacturer part number;
+* external classifications such as ECLASS or ETIM identifiers;
+* unit-bearing technical properties;
+* dimensional and mounting interfaces;
+* performance curves and operating envelopes;
+* mass and inertia;
+* electrical, thermal, hydraulic, or pneumatic properties as applicable;
+* CAD/drawing/datasheet assets with digest and license attribution;
+* per-value source references.
+
+For a motor this means that a single `rated torque` scalar is insufficient. The model can retain continuous and peak torque, no-load/rated speed, torque constant, rotor inertia, dimensions, shaft and flange geometry, and torque-speed curves.
+
+== Technical snapshot versus sourcing state
+
+Technical product identity is versioned separately from volatile sourcing state.
+
+Technical snapshot:: manufacturer identity, dimensions, mass, performance, interfaces, datasheet/CAD provenance.
+
+Sourcing state:: seller, currency, price, stock, MOQ, lead time, timestamp, region.
+
+Sourcing state may influence optimization, but it must not silently rewrite a pinned technical design snapshot.
+
+== Provider trust
+
+Every imported source records authority and provenance. Preferred evidence order is manufacturer data, standards-based manufacturer exchange, distributor/aggregator data, then derived extraction. Values extracted from an unstructured datasheet by AI are `derived` evidence and must retain a page/source reference before they can support a verified engineering claim.
+
+== Geometry assets
+
+Vendor STEP or mesh files are imported as attributed assets, not as the semantic source of truth. EMES may use a lightweight parametric envelope for optimization and the vendor CAD asset for packaging/collision checks. Both representations must identify which part snapshot they represent.
+
+== Classification and interoperability
+
+EMES does not invent a universal product taxonomy. Provider adapters may preserve identifiers from ECLASS, ETIM, ISO 13584/ontoML, AutomationML, or other relevant systems. The canonical model keeps mappings optional so licensing or sector-specific dictionaries do not become mandatory runtime dependencies.
+
+== AI selection workflow
+
+An AI or optimizer may search a live provider for candidates, but a candidate becomes part of a reproducible design only after normalization, validation, snapshotting, and digest pinning. Upstream catalog changes therefore appear as explicit update proposals rather than invisible design changes.
+
+== Current implementation
+
+`spec/emes-catalog-v0.schema.json` defines the first snapshot contract. The repository contains a synthetic motor CSV and its normalized catalog solely as a deterministic fixture. Real provider integration is tracked separately and the fixture must not be used for real product-performance claims.

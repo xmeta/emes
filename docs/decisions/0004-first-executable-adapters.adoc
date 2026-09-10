@@ -1,0 +1,35 @@
+= ADR 0004: First executable geometry and dynamics adapters
+:status: accepted
+:date: 2026-09-10
+
+== Decision
+
+The first external-tool EMES vertical slice uses:
+
+* `build123d==0.11.1` for exact parametric solid generation and STEP export.
+* `mujoco==3.13.0` with generated MJCF for a headless rigid-body smoke test.
+
+Both are pinned in `requirements-dev.txt`.
+
+== Rationale
+
+EMES should not implement a geometry kernel or a dynamics solver. build123d provides a local, open Python interface to Open Cascade geometry and exposes deterministic STEP header timestamps. MuJoCo provides a maintained, fast rigid-body engine and compact MJCF representation suitable for CI.
+
+The purpose of these adapters is not to make either backend canonical. They prove that one semantic EMES source can be projected into two real engineering tools and that resulting artifacts can be attributed to the same source digest.
+
+== Determinism
+
+The STEP adapter supplies a fixed export timestamp. MJCF is emitted using deterministic element ordering and numeric formatting. CI regenerates the normalized catalog plus STEP and MJCF artifacts and compares content digests within the pinned toolchain.
+
+MuJoCo numerical results are only expected to be reproducible within the pinned toolchain. Cross-version bitwise identity is not an EMES requirement.
+
+== Scope
+
+This decision does not add FEA, controls, topology synthesis, or a custom EMES language. Those remain separate slices.
+
+== References
+
+* https://build123d.readthedocs.io/en/stable/import_export.html
+* https://github.com/gumyr/build123d
+* https://mujoco.readthedocs.io/en/latest/changelog.html
+* https://github.com/google-deepmind/mujoco

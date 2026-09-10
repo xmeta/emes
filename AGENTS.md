@@ -30,6 +30,9 @@ Classify discoveries:
 - Units, frames, IDs, and references must be explicit.
 - Generated artifacts must be attributable to source and toolchain digests.
 - Adapters do not mutate canonical IR.
+- Catalog-backed purchased parts must bind to explicit snapshots and part digests; never let a live provider silently alter an existing design.
+- Keep volatile sourcing facts such as price, stock, and lead time separate from pinned technical properties.
+- AI-extracted catalog values are derived evidence until attributable source material supports them.
 - Do not create a custom DSL until examples show a concrete need.
 - Prefer existing engineering kernels and standards over reimplementation.
 - Physical fabrication/actuation is outside automatic approval.

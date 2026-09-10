@@ -1,0 +1,132 @@
+= Product Data Standards and Catalog Reuse
+:toc:
+
+Research date: 2026-09-10.
+
+== Purpose
+
+EMES should consume existing product-data ecosystems rather than inventing a new universal parts taxonomy. This note identifies reusable standards and services for motors, bearings, sensors, fasteners, gearboxes, and other purchased components.
+
+== ISO 13584 / PLIB
+
+ISO 13584 defines computer-interpretable representation and exchange of parts-library data. Its stated objective is a neutral mechanism for transferring parts-library information independently of the application using the library. The series also includes supplier identification/provenance and standardized implementation forms such as spreadsheet exchange.
+
+EMES implication:: Treat PLIB/ontoML as an interoperability lineage for normalized part libraries and preserve supplier identity/provenance. Do not require the complete ISO model inside the lightweight v0 runtime.
+
+References:
+
+* https://www.iso.org/obp/ui/#iso:std:iso:13584:-26:ed-1:v1:en
+* https://www.iso.org/obp/ui/#iso:std:iso:ts:13584:-35:ed-1:v1:en
+
+== ECLASS
+
+ECLASS is a cross-industry product/service master-data standard. Its conceptual data model represents classes, properties, values, quantities, units, templates, and identifiers, and is based on ISO 13584-42 and IEC 61360-2. ECLASS also supports machine-processable CSV/XML representations including ontoML-based exchange.
+
+EMES implication:: Preserve ECLASS class/property identifiers when a provider supplies them. Do not copy or fork ECLASS dictionaries without checking the applicable license. Provider-specific mapping belongs in adapters.
+
+References:
+
+* https://eclass.eu/support/technical-specification/data-model/conceptual-data-model
+* https://eclass.eu/support/guides/guides-for-expert-groups/products
+
+== ETIM
+
+ETIM provides supplier-independent classification of technical products using product groups/classes, features, values, and units. Numeric and range features carry units. ETIM now defines the JSON-based ETIM xChange exchange format; version 1.1 is current at the research date. The classification model is published under an Open Data Commons Attribution license.
+
+EMES implication:: ETIM xChange is a strong candidate for a real structured provider adapter because it is already product-oriented and JSON-based. Keep ETIM identifiers as external mappings instead of translating them into a proprietary EMES taxonomy.
+
+References:
+
+* https://www.etim-international.com/classification/
+* https://www.etim-international.com/classification/model-information/
+* https://www.etim-international.com/classification/exchange-format/
+* https://www.etim-international.com/classification/license-info/
+
+== AutomationML
+
+AutomationML (IEC 62714 family) targets engineering-data exchange for production systems. Its component model is intended to combine information needed across functional, mechanical, electrical, and other engineering disciplines.
+
+EMES implication:: AutomationML is relevant for richer mechatronic components and system integration. It is more appropriate as an adapter/interchange target than as the first canonical mechanism format.
+
+Reference:
+
+* https://www.automationml.org/about-automationml/specifications/
+
+== TraceParts
+
+TraceParts exposes a REST API Gateway with JSON responses and endpoints for catalogs, classifications, products, configurators, 3D viewing, and CAD download/content syndication.
+
+EMES implication:: TraceParts is a candidate aggregator adapter, especially for product identity and CAD assets. Technical performance completeness varies by supplier, so a TraceParts record must retain source authority and must not automatically override manufacturer performance data.
+
+References:
+
+* https://developers.traceparts.com/docs/api-related-to-the-product-content
+* https://developers.traceparts.com/docs/syndicate-the-content
+
+== Data layers EMES should retain
+
+[cols="2,4"]
+|===
+|Layer |Examples
+
+|Identity
+|manufacturer, manufacturer part number, GTIN, variant/configuration
+
+|Classification
+|ECLASS, ETIM, ISO 13584/ontoML or provider class identifiers
+
+|Physical properties
+|mass, inertia, material, electrical constants, thermal limits
+
+|Geometry/interface
+|envelope dimensions, shaft, flange, bolt pattern, connector, ports, mounting frames
+
+|Performance
+|continuous/peak ratings, torque-speed curves, efficiency maps, load ratings, duty/thermal envelope
+
+|Assets
+|STEP, mesh, drawing, datasheet; each with digest, source, and license
+
+|Sourcing
+|seller, price, currency, stock, MOQ, lead time, region, observation time
+|===
+
+Technical snapshots and sourcing observations must be separate. Price and stock can change hourly without changing the physical meaning of a motor already selected in a design.
+
+== Import pipeline
+
+[source,text]
+----
+provider API / JSON / CSV / XML / datasheet
+              |
+              v
+        provider-specific parser
+              |
+              v
+        semantic normalization
+        units + identifiers
+              |
+              v
+         schema validation
+              |
+              v
+        immutable snapshot
+      catalog + part digests
+              |
+              v
+        mechanism binding
+----
+
+Provider-specific field names never enter the canonical mechanism model. Raw data should be retained when licensing permits; otherwise retain a URI, retrieval metadata, digest where possible, and transformation provenance.
+
+== Unstructured datasheets
+
+Many motor performance curves and thermal limits exist only in PDF datasheets. AI/OCR extraction can be useful as an ingestion aid but is not manufacturer evidence by itself. Extracted values must retain the original document identity and location, and validation policy should distinguish manufacturer-declared values from derived transcription/extraction.
+
+== Recommended implementation order
+
+. Keep the current synthetic CSV fixture only for contract tests.
+. Import one real motor family from an authoritative manufacturer structured source if available.
+. Add ETIM xChange or another standards-based importer.
+. Add a CAD-asset aggregator such as TraceParts where access/licensing allows.
+. Only after several real catalogs, promote stable catalog-reference fields from the namespaced extension into core EMES IR.

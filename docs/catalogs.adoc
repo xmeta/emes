@@ -1,0 +1,111 @@
+= Catalog-backed Components
+
+== Goal
+
+Purchased components are engineering inputs, not opaque labels. EMES must be able to import and reason over dimensions, interfaces, mass/inertia, ratings, performance curves, and attributed CAD/datasheet assets.
+
+== Binding model
+
+The mechanism currently uses an experimental namespaced binding:
+
+[source,json]
+----
+{
+  "extensions": {
+    "org.emes.catalogs": [
+      {
+        "id": "CAT_MOTORS",
+        "path": "catalogs/reference-motors.catalog.json",
+        "digest": "sha256:..."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "motor_j1",
+      "kind": "actuator",
+      "metadata": {
+        "org.emes.catalog_ref": {
+          "catalog": "CAT_MOTORS",
+          "part": "MOTOR_REF_48V_A",
+          "digest": "sha256:..."
+        }
+      }
+    }
+  ]
+}
+----
+
+The catalog snapshot and selected part are both pinned by canonical SHA-256 digest. A provider refresh cannot silently change an existing design.
+
+== Motor example
+
+The normalized fixture demonstrates fields needed for actual motor selection:
+
+* `mass`
+* `nominal_voltage`
+* `continuous_torque`
+* `peak_torque`
+* `no_load_speed`
+* `rotor_inertia`
+* `torque_constant`
+* `body_diameter`
+* `body_length`
+* shaft dimensions
+* flange/pilot/bolt-circle interface dimensions
+* torque-speed curve
+
+Each unit-bearing property can point to a source record.
+
+== Technical data versus sourcing data
+
+Do not store price, stock, or lead time as immutable motor physics. A later sourcing record should reference the same manufacturer part identity and add seller, price, stock, region, quantity break, lead time, and observation time.
+
+This allows two independent questions:
+
+. Does this part satisfy the engineering design?
+. Is this part economically/procurement-wise attractive right now?
+
+== Import adapters
+
+Provider adapters are boundary code. Examples include:
+
+* manufacturer JSON/CSV/XML feeds;
+* ETIM xChange;
+* ISO 13584/ontoML-compatible sources;
+* distributor APIs;
+* TraceParts or other CAD aggregators;
+* attributed extraction from manufacturer datasheets when no structured source exists.
+
+They all normalize into `emes-catalog-v0` rather than leaking provider field names into mechanism files.
+
+== AI use
+
+An AI designer can query catalog records when choosing a motor. Candidate filtering can use hard constraints such as shaft diameter, continuous torque, peak torque, speed, voltage, mass, and envelope dimensions before expensive simulation.
+
+A typical future loop is:
+
+[source,text]
+----
+required joint envelope
+      |
+      v
+catalog coarse filter
+      |
+      v
+interface compatibility
+      |
+      v
+torque-speed / thermal filter
+      |
+      v
+candidate mechanism variants
+      |
+      v
+simulation + evidence
+      |
+      v
+cost / availability ranking
+----
+
+This lets AI change a catalog-choice design variable without inventing component dimensions or performance.
