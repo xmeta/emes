@@ -3,7 +3,7 @@
   "catalog": {
     "id": "CAT_MOLICEL_P45B",
     "name": "Molicel INR-21700-P45B",
-    "description": "Manufacturer Product Data Sheet v1.4 normalized for EMES; conditional ratings are preserved and upstream bytes are referenced, not redistributed."
+    "description": "Manufacturer Product Data Sheet v1.4 plus hash-pinned official P45B performance-page points normalized for EMES; conditions are preserved and upstream bytes are referenced, not redistributed."
   },
   "sources": [
     {
@@ -11,9 +11,18 @@
       "authority": "manufacturer",
       "format": "datasheet",
       "uri": "https://www.molicel.com/wp-content/uploads/INR21700P45B_1.4_Product-Data-Sheet-of-INR-21700-P45B-80109.pdf",
-      "retrieved_at": "2026-09-10T14:30:00Z",
+      "retrieved_at": "2026-09-10T15:18:00Z",
       "license": "Molicel upstream terms; redistribution not asserted",
       "raw_digest": "sha256:54832eb1684991f097578f02dd9ecfc3ba49cbc8bea40beacd7103092b717e69"
+    },
+    {
+      "id": "SRC_MOLICEL_P45B_PERFORMANCE_PAGE",
+      "authority": "manufacturer",
+      "format": "other",
+      "uri": "https://www.molicel.com/inr-21700-p45b/",
+      "retrieved_at": "2026-09-10T15:18:00Z",
+      "license": "Molicel upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:dba5836104c4072789cd97610491e1378cf597a061e86c245039dfde3a3b41bc"
     }
   ],
   "parts": [
@@ -63,6 +72,24 @@
           "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
           "conditions": [{"parameter": "soc", "op": "==", "value": 50.0, "unit": "%"}]
         },
+        "power_output_10s_soc50": {
+          "value": 168.0,
+          "unit": "W",
+          "source": "SRC_MOLICEL_P45B_PERFORMANCE_PAGE",
+          "conditions": [
+            {"parameter": "duration", "op": "==", "value": 10.0, "unit": "s"},
+            {"parameter": "soc", "op": "==", "value": 50.0, "unit": "%"}
+          ]
+        },
+        "power_output_10s_soc90": {
+          "value": 184.0,
+          "unit": "W",
+          "source": "SRC_MOLICEL_P45B_PERFORMANCE_PAGE",
+          "conditions": [
+            {"parameter": "duration", "op": "==", "value": 10.0, "unit": "s"},
+            {"parameter": "soc", "op": "==", "value": 90.0, "unit": "%"}
+          ]
+        },
         "diameter_max": {"value": 0.02155, "unit": "m", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
         "height_max": {"value": 0.07015, "unit": "m", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
         "mass": {"value": 0.07, "unit": "kg", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"}
@@ -78,6 +105,14 @@
           "uri": "https://www.molicel.com/wp-content/uploads/INR21700P45B_1.4_Product-Data-Sheet-of-INR-21700-P45B-80109.pdf",
           "digest": "sha256:54832eb1684991f097578f02dd9ecfc3ba49cbc8bea40beacd7103092b717e69",
           "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
+          "license": "Molicel upstream terms; redistribution not asserted"
+        },
+        {
+          "id": "ASSET_PERFORMANCE_PAGE",
+          "kind": "other",
+          "uri": "https://www.molicel.com/inr-21700-p45b/",
+          "digest": "sha256:dba5836104c4072789cd97610491e1378cf597a061e86c245039dfde3a3b41bc",
+          "source": "SRC_MOLICEL_P45B_PERFORMANCE_PAGE",
           "license": "Molicel upstream terms; redistribution not asserted"
         }
       ]
