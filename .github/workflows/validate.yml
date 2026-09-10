@@ -56,15 +56,18 @@ jobs:
           part = committed['parts'][0]
           props = part['properties']
           assert props['continuous_discharge_current']['conditions'] == [
-              {'parameter': 'cutoff_temperature', 'op': '==', 'value': 80.0, 'unit': 'degC'}
+              {'parameter': 'cell_discharge_cutoff_temperature', 'op': '<=', 'value': 80.0, 'unit': 'degC'}
           ]
           assert props['maximum_charge_current']['conditions'] == [
-              {'parameter': 'cutoff_temperature', 'op': '==', 'value': 70.0, 'unit': 'degC'}
+              {'parameter': 'cell_charge_cutoff_temperature', 'op': '<=', 'value': 70.0, 'unit': 'degC'}
           ]
           assert props['ac_impedance_typical']['conditions'][0]['value'] == 30.0
           assert props['dc_impedance_typical']['conditions'][0]['value'] == 50.0
-          print('DETERMINISTIC molicel-normalization with conditional ratings')
+          print('MOLICEL_CATALOG_DIGEST=' + canonical_digest(committed))
+          print('MOLICEL_PART_DIGEST=' + canonical_digest(part))
+          print('DETERMINISTIC molicel-normalization with executable conditional ratings')
           PY
+      - run: python tools/catalog.py validate catalogs/reference-bms-thermal.catalog.json
       - run: python tools/catalog.py validate catalogs/reference-power.catalog.json
       - run: python tools/validate.py examples/power-pack/mechanism.json
       - run: python tools/power.py examples/power-pack/mechanism.json --out generated/power-pack/evidence.json --check-determinism
