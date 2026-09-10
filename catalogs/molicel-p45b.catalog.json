@@ -39,13 +39,13 @@
           "value": 13.5,
           "unit": "A",
           "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
-          "conditions": [{"parameter": "cutoff_temperature", "op": "==", "value": 70.0, "unit": "degC"}]
+          "conditions": [{"parameter": "cell_charge_cutoff_temperature", "op": "<=", "value": 70.0, "unit": "degC"}]
         },
         "continuous_discharge_current": {
           "value": 45.0,
           "unit": "A",
           "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
-          "conditions": [{"parameter": "cutoff_temperature", "op": "==", "value": 80.0, "unit": "degC"}]
+          "conditions": [{"parameter": "cell_discharge_cutoff_temperature", "op": "<=", "value": 80.0, "unit": "degC"}]
         },
         "charge_temperature_min": {"value": 0.0, "unit": "degC", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
         "charge_temperature_max": {"value": 60.0, "unit": "degC", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
