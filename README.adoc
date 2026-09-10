@@ -66,6 +66,8 @@ The same P45B example has a separate source-conditioned battery-sag analysis. `t
 
 The same fuse snapshot keeps its manufacturer `38 A at 20 degC` maximum-allowed-current point separate from the 40 A nominal rating. `examples/power-pack-molicel-p45b-fused/known-envelope-20c.json` explicitly requests that source condition; only an exact 20 degC context adds the 38 A candidate. Unsupported temperatures are rejected rather than interpolated, extrapolated, or silently substituted with nominal current.
 
+`examples/power-pack-molicel-p45b-connected/mechanism.json` adds a reviewed Anderson Power Products SB50 pack-side connector assembly using 992G4 housings and 5900 contacts. The IEC 50 A / 250 V configuration is represented as an assembly-level catalog part, not as a bare-housing rating. `tools/battery_connector_envelope.py` composes the connector with parent weakest-known evidence: the reference connector scale is 3.42 and its voltage margin above the 42 V pack maximum is 208 V, so the converter remains limiting at 1.44 / 720 W. A 10 A connector counterexample becomes the weakest link at 0.684 / 342 W; a 30 V connector is rejected. Conductor thermal ampacity and crimp/process quality remain separate unresolved evidence problems.
+
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
 == Documents
@@ -80,6 +82,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/battery-sag.adoc` -- source-conditioned first-order battery resistance/voltage-drop analysis and its limits.
 * `docs/battery-pulse.adoc` -- exact source-conditioned short-duration cell-power analysis.
 * `docs/battery-known-envelope.adoc` -- weakest-known battery-path envelope using native-rating load-scale comparison and exact fuse ambient conditions.
+* `docs/battery-connector-envelope.adoc` -- pack-side connector assembly evidence and composition with the parent weakest-known envelope.
 * `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
 * `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
 * `docs/research/product-data-standards.adoc` -- parts-library/product-data standards and provider strategy.
@@ -93,3 +96,4 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `examples/power-pack/mechanism.json` -- synthetic 21700 battery-powered subsystem.
 * `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls and source-conditioned analyses.
 * `examples/power-pack-molicel-p45b-fused/mechanism.json` -- P45B battery example with an explicit reviewed Littelfuse DC fuse participating in weakest-link evaluation.
+* `examples/power-pack-molicel-p45b-connected/mechanism.json` -- P45B battery example with explicit fuse and reviewed Anderson SB50 connector assembly in the pack-side path.
