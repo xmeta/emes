@@ -1,0 +1,27 @@
+name: molicel-performance-provider
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools/providers/molicel_performance.py"
+      - "catalogs/sources/molicel-p45b.source.json"
+      - ".github/workflows/molicel-performance-provider.yml"
+  pull_request:
+    paths:
+      - "tools/providers/molicel_performance.py"
+      - "catalogs/sources/molicel-p45b.source.json"
+      - ".github/workflows/molicel-performance-provider.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-performance-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/providers/molicel_performance.py catalogs/sources/molicel-p45b.source.json
