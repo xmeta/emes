@@ -1,0 +1,41 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_ANDERSON_SB50",
+    "name": "Anderson Power Products SB50 wire-to-wire connector assembly",
+    "description": "Reviewed manufacturer SB50 IEC configuration normalized for EMES as a mated wire-to-wire assembly using 992G4 housings and 5900 contacts; 50 A and 250 V AC/DC ratings are retained with tested-configuration facts."
+  },
+  "sources": [
+    {
+      "id": "SRC_ANDERSON_SB50",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.andersonpower.com/content/dam/app/ecommerce/product-pdfs/DS-SB50.pdf",
+      "retrieved_at": "2026-09-10T17:28:00Z",
+      "license": "Anderson Power Products upstream terms; redistribution not asserted"
+    }
+  ],
+  "parts": [
+    {
+      "id": "ANDERSON_SB50_992G4_5900_WTW",
+      "kind": "connector",
+      "identity": {
+        "manufacturer": "Anderson Power Products",
+        "part_number": "992G4 + 5900 wire-to-wire mated assembly"
+      },
+      "properties": {
+        "rated_current": {"value": 50.0, "unit": "A", "source": "SRC_ANDERSON_SB50"},
+        "rated_voltage_dc": {"value": 250.0, "unit": "V", "source": "SRC_ANDERSON_SB50"},
+        "wire_cross_section_tested": {"value": 16.0, "unit": "mm^2", "source": "SRC_ANDERSON_SB50"},
+        "contact_series_tested": {"value": "5900/1307", "unit": "1", "source": "SRC_ANDERSON_SB50"},
+        "operating_temperature_min": {"value": -20.0, "unit": "degC", "source": "SRC_ANDERSON_SB50"},
+        "operating_temperature_max": {"value": 105.0, "unit": "degC", "source": "SRC_ANDERSON_SB50"},
+        "mating_cycles_no_load": {"value": 10000.0, "unit": "1", "source": "SRC_ANDERSON_SB50"}
+      },
+      "interfaces": [
+        {"id": "IF_IN", "kind": "electrical_dc", "properties": {}},
+        {"id": "IF_OUT", "kind": "electrical_dc", "properties": {}}
+      ]
+    }
+  ]
+}
