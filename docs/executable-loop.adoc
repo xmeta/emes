@@ -1,0 +1,72 @@
+= First Executable Engineering Loop
+
+Issue #3 establishes the first external-tool vertical slice:
+
+[source,text]
+----
+EMES mechanism.json
+  |-- semantic validation
+  |-- catalog resolution
+  |-- build123d --> arm.brep + arm.step
+  |-- MJCF compiler --> arm.xml --> MuJoCo smoke test
+  `-- metrics + provenance --> evidence.json
+----
+
+== Run locally
+
+[source,shell]
+----
+python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements-dev.txt
+python tools/validate.py
+python tools/catalog.py validate catalogs/reference-motors.catalog.json
+python tools/run_reference_loop.py --check-determinism
+----
+
+Generated outputs are written under `generated/` and are not source-controlled.
+
+== Geometry
+
+The two-link example declares link dimensions in EMES parameters. Both actuator components resolve to a pinned catalog part. The build123d adapter uses the catalog motor `body_diameter` and `body_length` values when building the reference assembly, proving that purchased-part dimensions can participate in CAD generation.
+
+EMES distinguishes exact geometry reproducibility from exchange-file byte reproducibility. The exact OpenCascade BREP (`arm.brep`) is the geometry determinism artifact. STEP (`arm.step`) is retained as an interoperability artifact with a fixed header timestamp, but its raw SHA-256 is evidence about those specific bytes rather than the canonical geometry identity. CI observed that the STEPCAF serializer can emit different byte streams for repeated exports of the same assembly, so STEP byte equality is deliberately not an acceptance condition.
+
+== Dynamics
+
+The MJCF projection uses the same link lengths, component masses, joint axes, joint limits, and `LC_FULL` five-kilogram payload from the EMES source. MuJoCo loads the generated model, initializes both degrees of freedom, performs ten steps, and rejects non-finite state.
+
+This is only a dynamics smoke test. The catalog motor torque-speed curve is not yet coupled to a MuJoCo actuator model; that is a later analysis refinement, not a blocker for proving source-to-simulator execution.
+
+== Evidence
+
+`evidence.json` records:
+
+* canonical design digest;
+* pinned tool versions and toolchain digest;
+* exact BREP, STEP, and MJCF hashes;
+* selected catalog part identities, part digests, masses, dimensions, and torque/speed properties;
+* analytic reach and moving-link mass;
+* executable constraint results for available metrics;
+* explicit `not_evaluated` for the stress constraint because FEA is not implemented in this slice;
+* MuJoCo smoke-test state and tip positions.
+
+A missing analysis never becomes an implicit pass.
+
+== Reproducibility gate
+
+Within the pinned toolchain, CI requires repeatability of:
+
+* the exact BREP artifact;
+* MJCF bytes;
+* catalog part digests;
+* analytic metrics and constraint results;
+* the deterministic MuJoCo smoke-test result.
+
+STEP raw bytes are recorded but are not used as the geometry determinism key.
+
+== Catalog import fixture
+
+`tools/catalog.py import-motor-csv` converts the repository's synthetic motor CSV into the normalized catalog snapshot schema. CI verifies that re-importing the raw fixture produces the same canonical catalog digest as the committed normalized snapshot.
+
+The synthetic values exist only to exercise the import contract. Real manufacturer data ingestion is tracked separately.

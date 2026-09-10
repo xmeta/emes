@@ -6,21 +6,9 @@
     "description": "Minimal EMES vertical-slice example."
   },
   "requirements": [
-    {
-      "id": "REQ_REACH",
-      "kind": "performance",
-      "statement": "Reach at least 0.65 m."
-    },
-    {
-      "id": "REQ_PAYLOAD",
-      "kind": "performance",
-      "statement": "Carry a 5 kg payload in the full-extension load case."
-    },
-    {
-      "id": "REQ_MASS",
-      "kind": "performance",
-      "statement": "Total moving-link mass shall not exceed 3 kg."
-    }
+    {"id": "REQ_REACH", "kind": "performance", "statement": "Reach at least 0.65 m."},
+    {"id": "REQ_PAYLOAD", "kind": "performance", "statement": "Carry a 5 kg payload in the full-extension load case."},
+    {"id": "REQ_MASS", "kind": "performance", "statement": "Total moving-link mass shall not exceed 3 kg."}
   ],
   "design_intent": [
     {
@@ -43,30 +31,56 @@
       "value": {"value": 0.32, "unit": "m"},
       "lower": {"value": 0.2, "unit": "m"},
       "upper": {"value": 0.45, "unit": "m"}
-    }
+    },
+    {"id": "P_LINK_WIDTH", "role": "fixed", "value": {"value": 0.04, "unit": "m"}},
+    {"id": "P_LINK_THICKNESS", "role": "fixed", "value": {"value": 0.02, "unit": "m"}},
+    {"id": "P_BASE_X", "role": "fixed", "value": {"value": 0.08, "unit": "m"}},
+    {"id": "P_BASE_Y", "role": "fixed", "value": {"value": 0.1, "unit": "m"}},
+    {"id": "P_BASE_Z", "role": "fixed", "value": {"value": 0.04, "unit": "m"}}
   ],
   "components": [
     {
       "id": "base",
       "kind": "body",
-      "mass": {"value": 3.0, "unit": "kg"}
+      "mass": {"value": 3.0, "unit": "kg"},
+      "parameters": ["P_BASE_X", "P_BASE_Y", "P_BASE_Z"]
     },
     {
       "id": "link1",
       "kind": "link",
       "material": "Al6061-T6",
       "mass": {"value": 1.1, "unit": "kg"},
-      "parameters": ["P_L1"]
+      "parameters": ["P_L1", "P_LINK_WIDTH", "P_LINK_THICKNESS"]
     },
     {
       "id": "link2",
       "kind": "link",
       "material": "Al6061-T6",
       "mass": {"value": 0.8, "unit": "kg"},
-      "parameters": ["P_L2"]
+      "parameters": ["P_L2", "P_LINK_WIDTH", "P_LINK_THICKNESS"]
     },
-    {"id": "motor_j1", "kind": "actuator"},
-    {"id": "motor_j2", "kind": "actuator"},
+    {
+      "id": "motor_j1",
+      "kind": "actuator",
+      "metadata": {
+        "org.emes.catalog_ref": {
+          "catalog": "CAT_MOTORS",
+          "part": "MOTOR_REF_48V_A",
+          "digest": "sha256:a152edd19d8e76be374a43f7f016d28431fd8cbcf7eacb7ed6b3cda563177d05"
+        }
+      }
+    },
+    {
+      "id": "motor_j2",
+      "kind": "actuator",
+      "metadata": {
+        "org.emes.catalog_ref": {
+          "catalog": "CAT_MOTORS",
+          "part": "MOTOR_REF_48V_A",
+          "digest": "sha256:a152edd19d8e76be374a43f7f016d28431fd8cbcf7eacb7ed6b3cda563177d05"
+        }
+      }
+    },
     {"id": "belt_j2", "kind": "transmission"}
   ],
   "connections": [
@@ -97,39 +111,20 @@
     }
   ],
   "functional_edges": [
-    {
-      "id": "F1",
-      "from": "motor_j2",
-      "relation": "transmits_power_through",
-      "to": "belt_j2"
-    },
-    {
-      "id": "F2",
-      "from": "belt_j2",
-      "relation": "drives",
-      "to": "J2"
-    }
+    {"id": "F1", "from": "motor_j2", "relation": "transmits_power_through", "to": "belt_j2"},
+    {"id": "F2", "from": "belt_j2", "relation": "drives", "to": "J2"}
   ],
   "load_cases": [
     {
       "id": "LC_FULL",
       "description": "Five-kilogram payload at full extension.",
       "loads": [
-        {
-          "target": "link2",
-          "kind": "mass",
-          "value": {"value": 5.0, "unit": "kg"}
-        }
+        {"target": "link2", "kind": "mass", "value": {"value": 5.0, "unit": "kg"}}
       ]
     }
   ],
   "constraints": [
-    {
-      "id": "C_REACH",
-      "metric": "M_REACH",
-      "op": ">=",
-      "target": {"value": 0.65, "unit": "m"}
-    },
+    {"id": "C_REACH", "metric": "M_REACH", "op": ">=", "target": {"value": 0.65, "unit": "m"}},
     {
       "id": "C_PAYLOAD_STRESS",
       "metric": "M_MAX_STRESS",
@@ -137,20 +132,10 @@
       "target": {"value": 138, "unit": "MPa"},
       "load_case": "LC_FULL"
     },
-    {
-      "id": "C_MOVING_MASS",
-      "metric": "M_MOVING_MASS",
-      "op": "<=",
-      "target": {"value": 3.0, "unit": "kg"}
-    }
+    {"id": "C_MOVING_MASS", "metric": "M_MOVING_MASS", "op": "<=", "target": {"value": 3.0, "unit": "kg"}}
   ],
   "objectives": [
-    {
-      "id": "O_MASS",
-      "metric": "M_MOVING_MASS",
-      "direction": "minimize",
-      "weight": 1.0
-    }
+    {"id": "O_MASS", "metric": "M_MOVING_MASS", "direction": "minimize", "weight": 1.0}
   ],
   "analyses": [
     {
@@ -159,16 +144,8 @@
       "adapter": "emes.reference.two_link",
       "fidelity": "analytic",
       "produces": [
-        {
-          "id": "M_REACH",
-          "unit": "m",
-          "description": "Maximum planar reach."
-        },
-        {
-          "id": "M_MOVING_MASS",
-          "unit": "kg",
-          "description": "Mass of link1 plus link2."
-        }
+        {"id": "M_REACH", "unit": "m", "description": "Maximum planar reach."},
+        {"id": "M_MOVING_MASS", "unit": "kg", "description": "Mass of link1 plus link2."}
       ]
     },
     {
@@ -178,11 +155,7 @@
       "fidelity": "low",
       "load_cases": ["LC_FULL"],
       "produces": [
-        {
-          "id": "M_MAX_STRESS",
-          "unit": "MPa",
-          "description": "Maximum von Mises stress."
-        }
+        {"id": "M_MAX_STRESS", "unit": "MPa", "description": "Maximum von Mises stress."}
       ]
     }
   ],
@@ -190,5 +163,14 @@
     {"requirement": "REQ_REACH", "verified_by": ["C_REACH"]},
     {"requirement": "REQ_PAYLOAD", "verified_by": ["C_PAYLOAD_STRESS"]},
     {"requirement": "REQ_MASS", "verified_by": ["C_MOVING_MASS"]}
-  ]
+  ],
+  "extensions": {
+    "org.emes.catalogs": [
+      {
+        "id": "CAT_MOTORS",
+        "path": "catalogs/reference-motors.catalog.json",
+        "digest": "sha256:8e9a06154f5d855e0f74d410b1f2b9c7ba053e0c662355646f0abdb1f53b9e5e"
+      }
+    ]
+  }
 }

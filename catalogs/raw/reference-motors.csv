@@ -1,0 +1,2 @@
+part_id,manufacturer,part_number,mass_kg,nominal_voltage_v,continuous_torque_nm,peak_torque_nm,no_load_speed_rpm,rotor_inertia_kg_m2,torque_constant_nm_a,body_diameter_m,body_length_m,shaft_diameter_m,shaft_length_m,pilot_diameter_m,bolt_circle_diameter_m,hole_count
+MOTOR_REF_48V_A,EMES Fixture,EMES-M48-A,1.2,48,2.0,6.0,4000,0.00011,0.1,0.08,0.12,0.014,0.03,0.05,0.065,4

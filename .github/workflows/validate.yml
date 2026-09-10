@@ -19,3 +19,16 @@ jobs:
           cache-dependency-path: requirements-dev.txt
       - run: pip install -r requirements-dev.txt
       - run: python tools/validate.py
+      - run: python tools/catalog.py validate catalogs/reference-motors.catalog.json
+      - run: python tools/catalog.py import-motor-csv catalogs/raw/reference-motors.csv /tmp/reference-motors.catalog.json
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.catalog import canonical_digest
+          committed = json.loads(Path('catalogs/reference-motors.catalog.json').read_text())
+          regenerated = json.loads(Path('/tmp/reference-motors.catalog.json').read_text())
+          assert canonical_digest(committed) == canonical_digest(regenerated)
+          print('DETERMINISTIC catalog-import')
+          PY
+      - run: python tools/run_reference_loop.py --out-dir generated/two-link-arm --check-determinism
