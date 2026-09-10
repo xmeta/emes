@@ -1,0 +1,57 @@
+= Source-Conditioned Battery Pulse-Power Analysis
+
+== Scope
+
+`tools/battery_pulse.py` evaluates a narrow battery-cell pulse-power envelope from exact manufacturer points already normalized into the EMES catalog.
+
+The current P45B source provides two 10-second points on Molicel's hash-pinned official performance page:
+
+* 168 W at 50% SOC;
+* 184 W at 90% SOC.
+
+The adapter does not interpolate between those points and does not extrapolate them to other pulse durations.
+
+== Analysis request
+
+Pulse context is kept in a small structured analysis request rather than silently embedded in adapter code.
+
+`examples/power-pack-molicel-p45b/pulse-10s-soc50.json` declares:
+
+* pack ID;
+* candidate catalog properties;
+* duration = 10 s;
+* SOC = 50%;
+* the minimum allowed cell-envelope power margin.
+
+The evidence records the mechanism digest, analysis-request digest, input power-evidence digest, selected cell-part digest, exact source point, condition checks, and derived metrics.
+
+== Exact point selection
+
+Every candidate property is checked against the requested context. Exactly one source-conditioned point must match.
+
+For the reference request, the 168 W / 10 s / 50% SOC point matches and the 184 W / 10 s / 90% SOC point does not.
+
+Changing only SOC to 90% selects the 184 W point. Changing SOC to 40%, or duration to 5 s, produces no valid point and the analysis fails.
+
+This fail-closed behavior prevents an AI or optimizer from silently inventing unsupported interpolation.
+
+== Pack composition
+
+For an `S` by `P` pack, this slice uses an ideal cell-power sum:
+
+[stem]
++++++
+P_{cell-envelope} = P_{cell,point} S P
++++++
+
+The reference 10S2P pack therefore has a 3360 W ideal cell envelope at the 168 W cell point.
+
+The comparison load is the battery-side nominal-point input power reconstructed from deterministic `power.py` evidence. For the current 500 W converter-output load, that input is approximately 526.316 W, leaving an ideal cell-envelope margin of approximately 2833.684 W.
+
+== Interpretation boundary
+
+This metric is deliberately named a _cell envelope_. It is not a system-level pulse rating.
+
+The calculation does not yet clamp the pulse envelope by BMS, fuse, interconnect, conductor, connector, contactor, converter, temperature rise, imbalance, or aging limits. Those limits can only reduce effective capability and remain separate Issue #15 work.
+
+Passing this analysis is not fabrication, charging, or energization approval.
