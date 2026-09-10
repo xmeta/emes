@@ -1,0 +1,52 @@
+{
+  "provider": "molicel",
+  "manufacturer": "Molicel",
+  "part_number": "INR-21700-P45B",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-10T14:30:00Z",
+  "capture_method": "reviewed transcription from manufacturer Product Data Sheet v1.4; upstream bytes hash-pinned by provider CI",
+  "upstream": {
+    "datasheet_pdf": {
+      "uri": "https://www.molicel.com/wp-content/uploads/INR21700P45B_1.4_Product-Data-Sheet-of-INR-21700-P45B-80109.pdf",
+      "edition": "Product Data Sheet v1.4",
+      "pages": 1,
+      "bytes": 400272,
+      "sha256": "sha256:54832eb1684991f097578f02dd9ecfc3ba49cbc8bea40beacd7103092b717e69",
+      "redistribution": "not_asserted"
+    },
+    "product_page": {
+      "uri": "https://www.molicel.com/product/inr-21700-p45b/",
+      "role": "auxiliary-current-observation-not-snapshot-authority"
+    }
+  },
+  "facts": {
+    "form_factor": {"source": "datasheet_pdf", "locator": "Physical Characteristics / Shape", "value": "21700 cylindrical", "unit": "1"},
+    "chemistry_family": {"source": "datasheet_pdf", "locator": "Product title / model prefix", "value": "INR lithium-ion rechargeable", "unit": "1"},
+    "nominal_capacity_typical": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Capacity / Typical", "value": 4.5, "unit": "A*h"},
+    "nominal_capacity_minimum": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Capacity / Minimum", "value": 4.3, "unit": "A*h"},
+    "nominal_energy_typical": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Capacity / Typical", "value": 16.2, "unit": "W*h"},
+    "nominal_energy_minimum": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Capacity / Minimum", "value": 15.5, "unit": "W*h"},
+    "nominal_voltage": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Cell Voltage / Nominal", "value": 3.6, "unit": "V"},
+    "max_charge_voltage": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Cell Voltage / Charge", "value": 4.2, "unit": "V"},
+    "min_discharge_voltage": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Cell Voltage / Discharge", "value": 2.5, "unit": "V"},
+    "standard_charge_current": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Charge Current / Standard", "value": 4.5, "unit": "A"},
+    "maximum_charge_current": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Charge Current / Maximum", "value": 13.5, "unit": "A", "conditions": [{"parameter": "cutoff_temperature", "op": "==", "value": 70.0, "unit": "degC"}]},
+    "continuous_discharge_current": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Discharge Current / Continuous", "value": 45.0, "unit": "A", "conditions": [{"parameter": "cutoff_temperature", "op": "==", "value": 80.0, "unit": "degC"}]},
+    "charge_temperature_min": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Temperature / Charge", "value": 0.0, "unit": "degC"},
+    "charge_temperature_max": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Temperature / Charge", "value": 60.0, "unit": "degC"},
+    "discharge_temperature_min": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Temperature / Discharge", "value": -40.0, "unit": "degC"},
+    "discharge_temperature_max": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Temperature / Discharge", "value": 60.0, "unit": "degC"},
+    "ac_impedance_typical": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Typical Impedance / AC", "value": 0.007, "unit": "ohm", "conditions": [{"parameter": "soc", "op": "==", "value": 30.0, "unit": "%"}]},
+    "dc_impedance_typical": {"source": "datasheet_pdf", "locator": "Cell Characteristics / Typical Impedance / DC", "value": 0.015, "unit": "ohm", "conditions": [{"parameter": "soc", "op": "==", "value": 50.0, "unit": "%"}]},
+    "diameter_max": {"source": "datasheet_pdf", "locator": "Physical Characteristics / Diameter", "value": 21.55, "unit": "mm"},
+    "height_max": {"source": "datasheet_pdf", "locator": "Physical Characteristics / Height", "value": 70.15, "unit": "mm"},
+    "mass_max": {"source": "datasheet_pdf", "locator": "Physical Characteristics / Weight", "value": 70.0, "unit": "g"}
+  },
+  "notes": [
+    "The manufacturer Product Data Sheet v1.4 is the snapshot authority for normalized technical properties.",
+    "Continuous discharge current is conditional on an 80 degC cut-off and must not be represented as an unconditional 45 A capability.",
+    "Maximum charge current is conditional on a 70 degC cut-off and must not be represented as an unconditional 13.5 A capability.",
+    "Typical AC impedance is stated at 30% SOC and typical DC impedance at 50% SOC; those conditions are preserved.",
+    "The upstream PDF is referenced and content-addressed; redistribution rights are not asserted."
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_MOLICEL_P45B",
+    "name": "Molicel INR-21700-P45B",
+    "description": "Manufacturer Product Data Sheet v1.4 normalized for EMES; conditional ratings are preserved and upstream bytes are referenced, not redistributed."
+  },
+  "sources": [
+    {
+      "id": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.molicel.com/wp-content/uploads/INR21700P45B_1.4_Product-Data-Sheet-of-INR-21700-P45B-80109.pdf",
+      "retrieved_at": "2026-09-10T14:30:00Z",
+      "license": "Molicel upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:54832eb1684991f097578f02dd9ecfc3ba49cbc8bea40beacd7103092b717e69"
+    }
+  ],
+  "parts": [
+    {
+      "id": "MOLICEL_INR_21700_P45B",
+      "kind": "battery_cell",
+      "identity": {
+        "manufacturer": "Molicel",
+        "part_number": "INR-21700-P45B"
+      },
+      "properties": {
+        "form_factor": {"value": "21700 cylindrical", "unit": "1", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "chemistry_family": {"value": "INR lithium-ion rechargeable", "unit": "1", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "nominal_capacity": {"value": 4.5, "unit": "A*h", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "minimum_capacity": {"value": 4.3, "unit": "A*h", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "nominal_energy": {"value": 16.2, "unit": "W*h", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "minimum_energy": {"value": 15.5, "unit": "W*h", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "nominal_voltage": {"value": 3.6, "unit": "V", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "max_charge_voltage": {"value": 4.2, "unit": "V", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "min_discharge_voltage": {"value": 2.5, "unit": "V", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "standard_charge_current": {"value": 4.5, "unit": "A", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "maximum_charge_current": {
+          "value": 13.5,
+          "unit": "A",
+          "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
+          "conditions": [{"parameter": "cutoff_temperature", "op": "==", "value": 70.0, "unit": "degC"}]
+        },
+        "continuous_discharge_current": {
+          "value": 45.0,
+          "unit": "A",
+          "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
+          "conditions": [{"parameter": "cutoff_temperature", "op": "==", "value": 80.0, "unit": "degC"}]
+        },
+        "charge_temperature_min": {"value": 0.0, "unit": "degC", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "charge_temperature_max": {"value": 60.0, "unit": "degC", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "discharge_temperature_min": {"value": -40.0, "unit": "degC", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "discharge_temperature_max": {"value": 60.0, "unit": "degC", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "ac_impedance_typical": {
+          "value": 0.007,
+          "unit": "ohm",
+          "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
+          "conditions": [{"parameter": "soc", "op": "==", "value": 30.0, "unit": "%"}]
+        },
+        "dc_impedance_typical": {
+          "value": 0.015,
+          "unit": "ohm",
+          "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
+          "conditions": [{"parameter": "soc", "op": "==", "value": 50.0, "unit": "%"}]
+        },
+        "diameter_max": {"value": 0.02155, "unit": "m", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "height_max": {"value": 0.07015, "unit": "m", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"},
+        "mass": {"value": 0.07, "unit": "kg", "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4"}
+      },
+      "interfaces": [
+        {"id": "IF_POSITIVE_TERMINAL", "kind": "electrical_terminal", "properties": {}},
+        {"id": "IF_NEGATIVE_TERMINAL", "kind": "electrical_terminal", "properties": {}}
+      ],
+      "assets": [
+        {
+          "id": "ASSET_DATASHEET",
+          "kind": "datasheet",
+          "uri": "https://www.molicel.com/wp-content/uploads/INR21700P45B_1.4_Product-Data-Sheet-of-INR-21700-P45B-80109.pdf",
+          "digest": "sha256:54832eb1684991f097578f02dd9ecfc3ba49cbc8bea40beacd7103092b717e69",
+          "source": "SRC_MOLICEL_P45B_DATASHEET_V1_4",
+          "license": "Molicel upstream terms; redistribution not asserted"
+        }
+      ]
+    }
+  ]
+}

@@ -43,6 +43,28 @@ jobs:
           assert canonical_digest(committed) == canonical_digest(regenerated)
           print('DETERMINISTIC maxon-normalization')
           PY
+      - run: python tools/catalog.py validate catalogs/molicel-p45b.catalog.json
+      - run: python tools/providers/molicel.py normalize catalogs/sources/molicel-p45b.source.json /tmp/molicel-p45b.catalog.json
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from tools.catalog import canonical_digest
+          committed = json.loads(Path('catalogs/molicel-p45b.catalog.json').read_text())
+          regenerated = json.loads(Path('/tmp/molicel-p45b.catalog.json').read_text())
+          assert canonical_digest(committed) == canonical_digest(regenerated)
+          part = committed['parts'][0]
+          props = part['properties']
+          assert props['continuous_discharge_current']['conditions'] == [
+              {'parameter': 'cutoff_temperature', 'op': '==', 'value': 80.0, 'unit': 'degC'}
+          ]
+          assert props['maximum_charge_current']['conditions'] == [
+              {'parameter': 'cutoff_temperature', 'op': '==', 'value': 70.0, 'unit': 'degC'}
+          ]
+          assert props['ac_impedance_typical']['conditions'][0]['value'] == 30.0
+          assert props['dc_impedance_typical']['conditions'][0]['value'] == 50.0
+          print('DETERMINISTIC molicel-normalization with conditional ratings')
+          PY
       - run: python tools/catalog.py validate catalogs/reference-power.catalog.json
       - run: python tools/validate.py examples/power-pack/mechanism.json
       - run: python tools/power.py examples/power-pack/mechanism.json --out generated/power-pack/evidence.json --check-determinism

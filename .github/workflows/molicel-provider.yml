@@ -1,0 +1,29 @@
+name: molicel-provider
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools/providers/molicel.py"
+      - "catalogs/sources/molicel-p45b.source.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - ".github/workflows/molicel-provider.yml"
+  pull_request:
+    paths:
+      - "tools/providers/molicel.py"
+      - "catalogs/sources/molicel-p45b.source.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - ".github/workflows/molicel-provider.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  authoritative-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python tools/providers/molicel.py verify-snapshot catalogs/sources/molicel-p45b.source.json
