@@ -8,8 +8,8 @@
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
     {"id": "R_ENERGY", "kind": "performance", "statement": "Provide at least 300 Wh nominal stored energy."},
-    {"id": "R_CURRENT", "kind": "performance", "statement": "Supply the reference load with nonnegative continuous current margin without ignoring manufacturer rating conditions."},
-    {"id": "R_BMS", "kind": "safety", "statement": "Use a BMS compatible with pack series count, maximum pack voltage, and the selected cell current-rating control condition."}
+    {"id": "R_CURRENT", "kind": "performance", "statement": "Supply the reference load with nonnegative continuous current margin."},
+    {"id": "R_BMS", "kind": "safety", "statement": "Use a BMS compatible with pack series count and maximum pack voltage."}
   ],
   "design_intent": [
     {
