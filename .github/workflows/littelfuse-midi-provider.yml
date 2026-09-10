@@ -19,11 +19,23 @@ permissions:
   contents: read
 
 jobs:
-  authoritative-source:
+  reviewed-snapshot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python tools/providers/littelfuse_midi.py verify-snapshot catalogs/sources/littelfuse-midi70v-40a.source.json
+      - run: python tools/providers/littelfuse_midi.py normalize catalogs/sources/littelfuse-midi70v-40a.source.json /tmp/littelfuse.catalog.json
+      - run: cmp catalogs/littelfuse-midi70v-40a.catalog.json /tmp/littelfuse.catalog.json
+      - run: python tools/catalog.py validate catalogs/littelfuse-midi70v-40a.catalog.json
+      - run: |
+          python - <<'PY'
+          import json
+          source = json.load(open('catalogs/sources/littelfuse-midi70v-40a.source.json'))
+          upstream = source['upstream']['datasheet_pdf']
+          assert upstream['integrity_status'] == 'raw_bytes_not_pinned'
+          assert upstream['sha256'] is None
+          assert upstream['bytes'] is None
+          print('VALID explicit-unpinned-raw-source-state')
+          PY
