@@ -33,6 +33,7 @@ Classify discoveries:
 - Catalog-backed purchased parts must bind to explicit snapshots and part digests; never let a live provider silently alter an existing design.
 - Keep volatile sourcing facts such as price, stock, and lead time separate from pinned technical properties.
 - AI-extracted catalog values are derived evidence until attributable source material supports them.
+- A catalog rating and its stated operating conditions are one engineering fact; consumers must not silently treat a conditional rating as unconditional.
 - Battery-pack current capability is limited by the weakest applicable cell, BMS, protection, interconnect, and converter constraint; never multiply cell capability while ignoring downstream limits.
 - Passing analytic battery sizing is not fabrication, charging, or energization approval; physical battery work requires explicit safety evidence and human approval.
 - Do not create a custom DSL until examples show a concrete need.
