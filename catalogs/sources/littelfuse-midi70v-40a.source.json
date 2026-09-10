@@ -4,14 +4,15 @@
   "part_number": "4998040.M-M6",
   "snapshot_version": "0.1",
   "captured_at": "2026-09-11T00:00:00Z",
-  "capture_method": "reviewed transcription from Littelfuse MIDI High Performance Series 70V-SF36 manufacturer datasheet; upstream PDF bytes are hash-pinned by provider CI",
+  "capture_method": "reviewed transcription from Littelfuse MIDI High Performance Series 70V-SF36 manufacturer datasheet; raw PDF byte acquisition is currently blocked from GitHub Actions and the remote workstation connector",
   "upstream": {
     "datasheet_pdf": {
       "uri": "https://www.littelfuse.cn/assetdocs/littelfuse-datasheet-4998-midihp70v?assetguid=b72fcd7a-c66d-4916-844c-ac55ebed196c",
       "edition": "MIDI High Performance Series Bolt-down Fuses – Rated 70V-SF36, revised 11/07/2024",
-      "bytes": 0,
-      "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
-      "redistribution": "not_asserted"
+      "bytes": null,
+      "sha256": null,
+      "redistribution": "not_asserted",
+      "integrity_status": "raw_bytes_not_pinned"
     },
     "product_page": {
       "uri": "https://www.littelfuse.com/products/fuses-overcurrent-protection/fuses/automotive-fuses/bolt-down-fuses/midi/midi-70v",
@@ -30,10 +31,10 @@
     "typical_mass": {"source": "datasheet_pdf", "locator": "Specifications / Typical Weight per Fuse", "value": 0.0035, "unit": "kg"}
   },
   "notes": [
-    "The Littelfuse manufacturer datasheet is the authoritative snapshot source for this record.",
+    "The Littelfuse manufacturer datasheet is the authoritative source for the transcribed facts.",
     "The 4998040.M_ family row covers the 40 A variants; the selected 4998040.M-M6 ordering code is the two-M6-hole variant.",
     "The 20 C 38 A derating value is preserved as a conditioned fact and must not be applied at other ambient temperatures without explicit source-conditioned evaluation.",
     "The time-current curve and I2t value are not converted into an inferred 10-second pulse ampacity in this slice.",
-    "The upstream PDF is referenced and content-addressed; redistribution rights are not asserted."
+    "GitHub Actions returned HTTP 403 for the manufacturer PDF even with browser-compatible headers, and the authorized remote-workstation connector was unavailable; raw-byte hashing is therefore an explicit follow-up rather than a fabricated digest."
   ]
 }
