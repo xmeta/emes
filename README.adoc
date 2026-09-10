@@ -50,9 +50,11 @@ EMES JSON
 
 The catalog layer supports deterministic import and pinned part binding. A synthetic motor fixture exercises the generic import contract, while `catalogs/maxon-496661.catalog.json` exercises the same architecture with an attributable real manufacturer motor snapshot. The maxon record is regenerated offline from a reviewed source snapshot and independently checked against hash-pinned manufacturer PDF/CAD assets.
 
-The current power-system slice adds composable electrical components. A catalog-backed 21700-format cell can be combined by explicit series/parallel counts into a battery pack, constrained by a BMS, passed through a DC/DC converter, and evaluated against electrical load, energy, current, voltage, and mass constraints.
+The power-system layer adds composable electrical components. A catalog-backed 21700-format cell can be combined by explicit series/parallel counts into a battery pack, constrained by a BMS, passed through a DC/DC converter, and evaluated against electrical load, energy, current, voltage, and mass constraints. Fixed DC power supplies are also executable sources.
 
-`catalogs/molicel-p45b.catalog.json` adds the first authoritative manufacturer battery-cell snapshot. It is normalized from the hash-pinned Molicel INR-21700-P45B Product Data Sheet v1.4 and preserves rating conditions such as the 80 degC cut-off on the 45 A continuous-discharge value rather than flattening them into unconditional limits. The existing executable pack example intentionally remains synthetic until thermal/SOC condition handling is executable.
+`catalogs/molicel-p45b.catalog.json` is the first authoritative manufacturer battery-cell snapshot. It is normalized from the hash-pinned Molicel INR-21700-P45B Product Data Sheet v1.4. Manufacturer cut-off facts are transformed into explicit protection-control conditions rather than flattened into unconditional current limits.
+
+`examples/power-pack-molicel-p45b/mechanism.json` binds that real cell record to synthetic BMS/converter fixtures. The power evaluator accepts the continuous-discharge rating only when the selected BMS exposes a compatible cell cut-off control and records that check in deterministic evidence. This is an executable sizing/traceability check, not a thermal model, certification, or permission to fabricate or energize a battery pack.
 
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
@@ -62,7 +64,7 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/executable-loop.adoc` -- first CAD/MuJoCo end-to-end slice.
 * `docs/catalogs.adoc` -- purchased-component snapshot and binding model.
 * `docs/real-catalog-maxon.adoc` -- first authoritative manufacturer motor catalog and evidence policy.
-* `docs/real-catalog-molicel.adoc` -- authoritative P45B battery-cell snapshot and conditional-rating policy.
+* `docs/real-catalog-molicel.adoc` -- authoritative P45B battery-cell snapshot and executable conditional-rating policy.
 * `docs/power-systems.adoc` -- electrical power components and series/parallel battery-pack composition.
 * `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
 * `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
@@ -71,4 +73,5 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `spec/emes-ir-v0.schema.json` -- initial mechanism structural contract.
 * `spec/emes-catalog-v0.schema.json` -- initial purchased-component catalog contract.
 * `examples/two-link-arm/mechanism.json` -- reference mechanical mechanism.
-* `examples/power-pack/mechanism.json` -- reference 21700 battery-powered subsystem.
+* `examples/power-pack/mechanism.json` -- synthetic 21700 battery-powered subsystem.
+* `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls.
