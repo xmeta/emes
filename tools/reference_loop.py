@@ -21,7 +21,7 @@ import numpy as np
 
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
-from validate import canonical_digest, load_json, validate_semantics
+from validate import canonical_digest, load_json, summarize_verification, validate_semantics
 
 FIXED_STEP_TIMESTAMP = datetime(2000, 1, 1, tzinfo=timezone.utc)
 
@@ -362,7 +362,13 @@ def selected_part_record(component_id: str, part: dict[str, Any]) -> dict[str, A
     }
 
 
-def run_bundle(source: Path, out_dir: Path, load_case: str, repo_root: Path) -> dict[str, Any]:
+def run_bundle(
+    source: Path,
+    out_dir: Path,
+    load_case: str,
+    repo_root: Path,
+    required_constraints: list[str] | None = None,
+) -> dict[str, Any]:
     document = load_json(source)
     validate_semantics(document)
     selected_parts = resolve_catalog_parts(
@@ -393,6 +399,7 @@ def run_bundle(source: Path, out_dir: Path, load_case: str, repo_root: Path) -> 
     }
     toolchain_record = toolchain()
     toolchain_digest = digest_json(toolchain_record)
+    constraint_results = evaluate_constraints(document, metrics)
     evidence = {
         "emes_evidence_version": "0.1",
         "design_id": document["design"]["id"],
@@ -432,7 +439,10 @@ def run_bundle(source: Path, out_dir: Path, load_case: str, repo_root: Path) -> 
             }
             for metric_id, (value, unit) in metrics.items()
         ],
-        "constraint_results": evaluate_constraints(document, metrics),
+        "verification": summarize_verification(
+            constraint_results, required_constraints
+        ),
+        "constraint_results": constraint_results,
         "geometry": step,
         "dynamics_smoke": smoke,
     }
@@ -448,9 +458,12 @@ def check_determinism(
     load_case: str,
     repo_root: Path,
     first: dict[str, Any],
+    required_constraints: list[str] | None = None,
 ) -> None:
     with tempfile.TemporaryDirectory(prefix="emes-determinism-") as temp_dir:
-        second = run_bundle(source, Path(temp_dir), load_case, repo_root)
+        second = run_bundle(
+            source, Path(temp_dir), load_case, repo_root, required_constraints
+        )
     first_hashes = {item["kind"]: item["sha256"] for item in first["artifacts"]}
     second_hashes = {item["kind"]: item["sha256"] for item in second["artifacts"]}
     if first_hashes != second_hashes:
@@ -469,11 +482,21 @@ def main() -> int:
     parser.add_argument("--load-case", default="LC_FULL")
     parser.add_argument("--repo-root", type=Path, default=Path("."))
     parser.add_argument("--check-determinism", action="store_true")
+    parser.add_argument("--require-constraint", action="append", default=None)
     args = parser.parse_args()
 
-    evidence = run_bundle(args.source, args.out_dir, args.load_case, args.repo_root)
+    evidence = run_bundle(
+        args.source, args.out_dir, args.load_case, args.repo_root, args.require_constraint
+    )
     if args.check_determinism:
-        check_determinism(args.source, args.out_dir, args.load_case, args.repo_root, evidence)
+        check_determinism(
+            args.source,
+            args.out_dir,
+            args.load_case,
+            args.repo_root,
+            evidence,
+            args.require_constraint,
+        )
 
     print(f"VALID executable-loop design={evidence['design_digest']}")
     for artifact in evidence["artifacts"]:

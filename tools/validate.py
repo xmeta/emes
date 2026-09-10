@@ -160,6 +160,58 @@ def validate_semantics(document: dict[str, Any]) -> None:
         )
 
 
+def summarize_verification(
+    constraint_results: list[dict[str, Any]],
+    required_constraint_ids: list[str] | None = None,
+    *,
+    execution_status: str = "succeeded",
+) -> dict[str, Any]:
+    if execution_status not in {"succeeded", "failed"}:
+        raise ValueError(f"unsupported execution status {execution_status!r}")
+
+    by_id = {item["id"]: item for item in constraint_results}
+    if len(by_id) != len(constraint_results):
+        raise ValueError("duplicate constraint result id")
+
+    required = list(by_id) if required_constraint_ids is None else required_constraint_ids
+    if len(set(required)) != len(required):
+        raise ValueError("duplicate required constraint id")
+
+    statuses = {
+        constraint_id: by_id.get(constraint_id, {}).get("status", "missing")
+        for constraint_id in required
+    }
+    failed = sorted(
+        constraint_id for constraint_id, status in statuses.items() if status == "fail"
+    )
+    incomplete = sorted(
+        constraint_id
+        for constraint_id, status in statuses.items()
+        if status not in {"pass", "fail"}
+    )
+
+    if execution_status == "failed":
+        verification_status = "incomplete"
+        decision = "not_decidable"
+    else:
+        verification_status = "incomplete" if incomplete else "complete"
+        if failed:
+            decision = "rejected"
+        elif incomplete:
+            decision = "not_decidable"
+        else:
+            decision = "accepted"
+
+    return {
+        "execution_status": execution_status,
+        "verification_status": verification_status,
+        "design_decision": decision,
+        "required_constraints": required,
+        "failed_constraints": failed,
+        "incomplete_constraints": incomplete,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
