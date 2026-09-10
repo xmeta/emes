@@ -13,110 +13,26 @@
     {"id": "R_FUSE", "kind": "safety", "statement": "Represent a DC-rated series fuse explicitly and require its DC voltage rating to cover maximum pack voltage."}
   ],
   "design_intent": [
-    {
-      "id": "DI_REAL_CELL_CONDITIONS",
-      "statement": "The P45B continuous-discharge rating is usable only when a selected control component satisfies every normalized manufacturer rating condition.",
-      "protects": ["R_CURRENT", "R_BMS"]
-    },
-    {
-      "id": "DI_FUSE_EXPLICIT",
-      "statement": "Treat the fuse as a first-class power-path component; use nominal rated current only as a conservative known-limit cap and do not infer a 10-second ampacity from sparse time-current or I2t data.",
-      "protects": ["R_CURRENT", "R_FUSE"]
-    },
-    {
-      "id": "DI_COMPOSE_CELLS",
-      "statement": "Represent repeated cylindrical cells by series/parallel composition rather than duplicating cell records.",
-      "protects": ["R_ENERGY"]
-    }
+    {"id": "DI_REAL_CELL_CONDITIONS", "statement": "The P45B continuous-discharge rating is usable only when a selected control component satisfies every normalized manufacturer rating condition.", "protects": ["R_CURRENT", "R_BMS"]},
+    {"id": "DI_FUSE_EXPLICIT", "statement": "Treat the fuse as a first-class power-path component; use nominal rated current only as a conservative known-limit cap and do not infer a 10-second ampacity from sparse time-current or I2t data.", "protects": ["R_CURRENT", "R_FUSE"]},
+    {"id": "DI_COMPOSE_CELLS", "statement": "Represent repeated cylindrical cells by series/parallel composition rather than duplicating cell records.", "protects": ["R_ENERGY"]}
   ],
   "parameters": [
-    {
-      "id": "P_PACK_SERIES",
-      "role": "design_variable",
-      "value": {"value": 10.0, "unit": "1"},
-      "lower": {"value": 1.0, "unit": "1"},
-      "upper": {"value": 20.0, "unit": "1"}
-    },
-    {
-      "id": "P_PACK_PARALLEL",
-      "role": "design_variable",
-      "value": {"value": 2.0, "unit": "1"},
-      "lower": {"value": 1.0, "unit": "1"},
-      "upper": {"value": 10.0, "unit": "1"}
-    }
+    {"id": "P_PACK_SERIES", "role": "design_variable", "value": {"value": 10.0, "unit": "1"}, "lower": {"value": 1.0, "unit": "1"}, "upper": {"value": 20.0, "unit": "1"}},
+    {"id": "P_PACK_PARALLEL", "role": "design_variable", "value": {"value": 2.0, "unit": "1"}, "lower": {"value": 1.0, "unit": "1"}, "upper": {"value": 10.0, "unit": "1"}}
   ],
   "components": [
-    {
-      "id": "cell_model",
-      "kind": "purchased_part",
-      "metadata": {
-        "org.emes.catalog_ref": {
-          "catalog": "CAT_MOLICEL",
-          "part": "MOLICEL_INR_21700_P45B",
-          "digest": "sha256:b98c1e3f071b945fbbd3bfc8f44fb0faa17b17ec01017e1716ae72e6d7e6bff6"
-        }
-      }
-    },
-    {
-      "id": "bms",
-      "kind": "purchased_part",
-      "metadata": {
-        "org.emes.catalog_ref": {
-          "catalog": "CAT_BMS_THERMAL",
-          "part": "BMS_REF_12S_30A_THERMAL",
-          "digest": "sha256:320f52a55b882a21a86c456ef768d5b78dcd553f3d2210ea0d2697c70e243966"
-        }
-      }
-    },
-    {
-      "id": "battery_pack",
-      "kind": "other",
-      "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL"],
-      "metadata": {"org.emes.role": "battery_pack_assembly"}
-    },
-    {
-      "id": "main_fuse",
-      "kind": "purchased_part",
-      "metadata": {
-        "org.emes.catalog_ref": {
-          "catalog": "CAT_LITTELFUSE_MIDI70V",
-          "part": "LITTELFUSE_4998040_M_M6",
-          "digest": "sha256:8dea4164629aaee0d4bd4a658bb61c82568b51c62c572097547ffeee4ccbc169"
-        }
-      }
-    },
-    {
-      "id": "dc_converter",
-      "kind": "purchased_part",
-      "metadata": {
-        "org.emes.catalog_ref": {
-          "catalog": "CAT_POWER",
-          "part": "DCDC_REF_25_50V_TO_36V_20A",
-          "digest": "sha256:71785ddca5367b924235f7e1e9fbd8de313f0e97dc8e3e7fb03f5553929b695d"
-        }
-      }
-    },
+    {"id": "cell_model", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_MOLICEL", "part": "MOLICEL_INR_21700_P45B", "digest": "sha256:b98c1e3f071b945fbbd3bfc8f44fb0faa17b17ec01017e1716ae72e6d7e6bff6"}}},
+    {"id": "bms", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_BMS_THERMAL", "part": "BMS_REF_12S_30A_THERMAL", "digest": "sha256:320f52a55b882a21a86c456ef768d5b78dcd553f3d2210ea0d2697c70e243966"}}},
+    {"id": "battery_pack", "kind": "other", "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL"], "metadata": {"org.emes.role": "battery_pack_assembly"}},
+    {"id": "main_fuse", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_MIDI70V", "part": "LITTELFUSE_4998040_M_M6", "digest": "sha256:8dea4164629aaee0d4bd4a658bb61c82568b51c62c572097547ffeee4ccbc169"}}},
+    {"id": "dc_converter", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_POWER", "part": "DCDC_REF_25_50V_TO_36V_20A", "digest": "sha256:71785ddca5367b924235f7e1e9fbd8de313f0e97dc8e3e7fb03f5553929b695d"}}},
     {"id": "dc_bus_load", "kind": "other", "metadata": {"org.emes.role": "electrical_load"}}
   ],
   "connections": [
-    {
-      "id": "E_PACK_TO_FUSE",
-      "kind": "electrical",
-      "a": {"component": "battery_pack", "port": "dc_out"},
-      "b": {"component": "main_fuse", "port": "IF_IN"}
-    },
-    {
-      "id": "E_FUSE_TO_CONVERTER",
-      "kind": "electrical",
-      "a": {"component": "main_fuse", "port": "IF_OUT"},
-      "b": {"component": "dc_converter", "port": "IF_DC_IN"}
-    },
-    {
-      "id": "E_CONVERTER_TO_LOAD",
-      "kind": "electrical",
-      "a": {"component": "dc_converter", "port": "IF_DC_OUT"},
-      "b": {"component": "dc_bus_load", "port": "dc_in"}
-    }
+    {"id": "E_PACK_TO_FUSE", "kind": "electrical", "a": {"component": "battery_pack", "port": "dc_out"}, "b": {"component": "main_fuse", "port": "IF_IN"}},
+    {"id": "E_FUSE_TO_CONVERTER", "kind": "electrical", "a": {"component": "main_fuse", "port": "IF_OUT"}, "b": {"component": "dc_converter", "port": "IF_DC_IN"}},
+    {"id": "E_CONVERTER_TO_LOAD", "kind": "electrical", "a": {"component": "dc_converter", "port": "IF_DC_OUT"}, "b": {"component": "dc_bus_load", "port": "dc_in"}}
   ],
   "functional_edges": [
     {"id": "F_CELL_COMPOSES_PACK", "from": "cell_model", "relation": "repeated-series-parallel-member-of", "to": "battery_pack"},
@@ -127,13 +43,7 @@
     {"id": "F_CONVERTER_POWERS_LOAD", "from": "dc_converter", "relation": "supplies-electrical-power-to", "to": "dc_bus_load"}
   ],
   "load_cases": [
-    {
-      "id": "LC_POWER",
-      "description": "Reference continuous electrical load; not a physical battery safety certification load case.",
-      "loads": [
-        {"target": "dc_bus_load", "kind": "other", "value": {"value": 500.0, "unit": "W"}}
-      ]
-    }
+    {"id": "LC_POWER", "description": "Reference continuous electrical load; not a physical battery safety certification load case.", "loads": [{"target": "dc_bus_load", "kind": "other", "value": {"value": 500.0, "unit": "W"}}]}
   ],
   "constraints": [
     {"id": "C_BUS_VOLTAGE", "metric": "M_CONVERTER_OUTPUT_VOLTAGE", "op": "==", "target": {"value": 36.0, "unit": "V"}, "load_case": "LC_POWER"},
@@ -141,37 +51,34 @@
     {"id": "C_CURRENT_MARGIN", "metric": "M_PACK_CURRENT_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "A"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_SERIES", "metric": "M_BMS_SERIES_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "1"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_VOLTAGE", "metric": "M_BMS_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
-    {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"}
+    {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"},
+    {"id": "C_FUSE_VOLTAGE", "metric": "M_KNOWN_FUSE_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"}
   ],
   "objectives": [
     {"id": "O_PACK_MASS", "metric": "M_PACK_TOTAL_MASS", "direction": "minimize", "weight": 1.0}
   ],
   "analyses": [
     {
-      "id": "A_POWER",
-      "kind": "other",
-      "adapter": "tools/power.py",
-      "fidelity": "analytic",
-      "load_cases": ["LC_POWER"],
+      "id": "A_POWER", "kind": "other", "adapter": "tools/power.py", "fidelity": "analytic", "load_cases": ["LC_POWER"],
       "produces": [
-        {"id": "M_PACK_CELL_COUNT", "unit": "1"},
-        {"id": "M_PACK_NOMINAL_VOLTAGE", "unit": "V"},
-        {"id": "M_PACK_MAX_VOLTAGE", "unit": "V"},
-        {"id": "M_PACK_MIN_VOLTAGE", "unit": "V"},
-        {"id": "M_PACK_CAPACITY", "unit": "A*h"},
-        {"id": "M_PACK_NOMINAL_ENERGY", "unit": "W*h"},
-        {"id": "M_PACK_CONTINUOUS_CURRENT", "unit": "A"},
-        {"id": "M_PACK_CONTINUOUS_POWER", "unit": "W"},
-        {"id": "M_PACK_CELL_MASS", "unit": "kg"},
-        {"id": "M_PACK_TOTAL_MASS", "unit": "kg"},
-        {"id": "M_LOAD_POWER", "unit": "W"},
-        {"id": "M_LOAD_EQUIV_PACK_CURRENT", "unit": "A"},
-        {"id": "M_PACK_CURRENT_MARGIN", "unit": "A"},
-        {"id": "M_BMS_SERIES_MARGIN", "unit": "1"},
-        {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"},
-        {"id": "M_CONVERTER_OUTPUT_VOLTAGE", "unit": "V"},
-        {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"},
-        {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}
+        {"id": "M_PACK_CELL_COUNT", "unit": "1"}, {"id": "M_PACK_NOMINAL_VOLTAGE", "unit": "V"}, {"id": "M_PACK_MAX_VOLTAGE", "unit": "V"}, {"id": "M_PACK_MIN_VOLTAGE", "unit": "V"},
+        {"id": "M_PACK_CAPACITY", "unit": "A*h"}, {"id": "M_PACK_NOMINAL_ENERGY", "unit": "W*h"}, {"id": "M_PACK_CONTINUOUS_CURRENT", "unit": "A"}, {"id": "M_PACK_CONTINUOUS_POWER", "unit": "W"},
+        {"id": "M_PACK_CELL_MASS", "unit": "kg"}, {"id": "M_PACK_TOTAL_MASS", "unit": "kg"}, {"id": "M_LOAD_POWER", "unit": "W"}, {"id": "M_LOAD_EQUIV_PACK_CURRENT", "unit": "A"},
+        {"id": "M_PACK_CURRENT_MARGIN", "unit": "A"}, {"id": "M_BMS_SERIES_MARGIN", "unit": "1"}, {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"}, {"id": "M_CONVERTER_OUTPUT_VOLTAGE", "unit": "V"},
+        {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"}, {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}
+      ]
+    },
+    {
+      "id": "A_KNOWN_POWER_ENVELOPE", "kind": "analytic", "adapter": "tools/battery_known_envelope.py", "fidelity": "analytic", "load_cases": ["LC_POWER"],
+      "produces": [
+        {"id": "M_KNOWN_CELL_PULSE_LOAD_SCALE", "unit": "1"},
+        {"id": "M_KNOWN_BMS_CONTINUOUS_LOAD_SCALE", "unit": "1"},
+        {"id": "M_KNOWN_CONVERTER_CONTINUOUS_LOAD_SCALE", "unit": "1"},
+        {"id": "M_KNOWN_FUSE_RATED_LOAD_SCALE", "unit": "1"},
+        {"id": "M_KNOWN_FUSE_VOLTAGE_MARGIN", "unit": "V"},
+        {"id": "M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT", "unit": "1"},
+        {"id": "M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE", "unit": "W"},
+        {"id": "M_KNOWN_COMPONENT_INPUT_POWER_ENVELOPE", "unit": "W"}
       ]
     }
   ],
@@ -179,51 +86,22 @@
     {"requirement": "R_BUS_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
     {"requirement": "R_ENERGY", "verified_by": ["C_ENERGY"]},
     {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER"]},
-    {"requirement": "R_BMS", "verified_by": ["C_BMS_SERIES", "C_BMS_VOLTAGE"]}
+    {"requirement": "R_BMS", "verified_by": ["C_BMS_SERIES", "C_BMS_VOLTAGE"]},
+    {"requirement": "R_FUSE", "verified_by": ["C_FUSE_VOLTAGE"]}
   ],
   "extensions": {
     "org.emes.catalogs": [
-      {
-        "id": "CAT_MOLICEL",
-        "path": "catalogs/molicel-p45b.catalog.json",
-        "digest": "sha256:bce19e9220c1d77091310da16dd91d64f3689cae80277e356a66a45ad0847b56"
-      },
-      {
-        "id": "CAT_BMS_THERMAL",
-        "path": "catalogs/reference-bms-thermal.catalog.json",
-        "digest": "sha256:06fab8fbcbab3691d4a870213277fc183bcf2d16bf688d80dd43376b54874f32"
-      },
-      {
-        "id": "CAT_POWER",
-        "path": "catalogs/reference-power.catalog.json",
-        "digest": "sha256:ae2d9cd11b18fc0233f2b96d4ce65eb69f3c43a3cc92eccf5940b4c0096a6ade"
-      },
-      {
-        "id": "CAT_LITTELFUSE_MIDI70V",
-        "path": "catalogs/littelfuse-midi70v-40a.catalog.json",
-        "digest": "sha256:a0163dbfe1b5f06227225481d565fb722c4f8c586bea89de8d5dca0ae09966a0"
-      }
+      {"id": "CAT_MOLICEL", "path": "catalogs/molicel-p45b.catalog.json", "digest": "sha256:bce19e9220c1d77091310da16dd91d64f3689cae80277e356a66a45ad0847b56"},
+      {"id": "CAT_BMS_THERMAL", "path": "catalogs/reference-bms-thermal.catalog.json", "digest": "sha256:06fab8fbcbab3691d4a870213277fc183bcf2d16bf688d80dd43376b54874f32"},
+      {"id": "CAT_POWER", "path": "catalogs/reference-power.catalog.json", "digest": "sha256:ae2d9cd11b18fc0233f2b96d4ce65eb69f3c43a3cc92eccf5940b4c0096a6ade"},
+      {"id": "CAT_LITTELFUSE_MIDI70V", "path": "catalogs/littelfuse-midi70v-40a.catalog.json", "digest": "sha256:a0163dbfe1b5f06227225481d565fb722c4f8c586bea89de8d5dca0ae09966a0"}
     ],
     "org.emes.power": {
       "battery_packs": [
-        {
-          "id": "PACK_MAIN",
-          "component": "battery_pack",
-          "cell_component": "cell_model",
-          "bms_component": "bms",
-          "series_parameter": "P_PACK_SERIES",
-          "parallel_parameter": "P_PACK_PARALLEL",
-          "overhead_mass": {"value": 0.25, "unit": "kg"}
-        }
+        {"id": "PACK_MAIN", "component": "battery_pack", "cell_component": "cell_model", "bms_component": "bms", "series_parameter": "P_PACK_SERIES", "parallel_parameter": "P_PACK_PARALLEL", "overhead_mass": {"value": 0.25, "unit": "kg"}}
       ],
       "power_paths": [
-        {
-          "id": "PATH_MAIN",
-          "source_pack": "PACK_MAIN",
-          "fuse_component": "main_fuse",
-          "converter_component": "dc_converter",
-          "load_case": "LC_POWER"
-        }
+        {"id": "PATH_MAIN", "source_pack": "PACK_MAIN", "fuse_component": "main_fuse", "converter_component": "dc_converter", "load_case": "LC_POWER"}
       ]
     }
   }
