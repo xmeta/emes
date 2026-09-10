@@ -30,7 +30,7 @@
         "contact_series_tested": {"value": "5900/1307", "unit": "1", "source": "SRC_ANDERSON_SB50"},
         "operating_temperature_min": {"value": -20.0, "unit": "degC", "source": "SRC_ANDERSON_SB50"},
         "operating_temperature_max": {"value": 105.0, "unit": "degC", "source": "SRC_ANDERSON_SB50"},
-        "mating_cycles_no_load": {"value": 10000.0, "unit": "1", "source": "SRC_ANDERSON_SB50"}
+        "mating_cycles_no_load": {"value": 5000.0, "unit": "1", "source": "SRC_ANDERSON_SB50"}
       },
       "interfaces": [
         {"id": "IF_IN", "kind": "electrical_dc", "properties": {}},
