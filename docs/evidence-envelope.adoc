@@ -1,0 +1,25 @@
+= Common Evidence Envelope
+
+EMES evidence producers share one machine-validated envelope while keeping domain payloads domain-specific.
+
+Every evidence document contains:
+
+* `emes_evidence_version` -- common format version;
+* `producer.id` and `producer.version` -- the adapter that created the evidence;
+* `design_id` and `design_digest` -- the source design identity;
+* `runtime` and `runtime_digest` -- Python and relevant package versions for the actual execution;
+* `inputs` -- role-labelled digests for upstream evidence, analysis requests, or artifacts;
+* `metrics` and `constraint_results` -- common result collections;
+* `verification` -- execution, completeness, and design-decision state from the active producer scope.
+
+The JSON contract is `spec/emes-evidence-v0.schema.json`. `tools/evidence.py` validates both producer output and upstream evidence before a consumer uses it.
+
+== Lineage
+
+Battery analyses use role-labelled `inputs` rather than adapter-specific top-level digest names. For example, pulse evidence records the exact power-evidence digest under role `power`; known-envelope evidence records both `power` and `pulse`; connector evidence records `power` and `known_envelope`.
+
+Consumers validate the common schema, expected producer identity, design identity, and relevant input digest before reading domain payloads. A malformed envelope, wrong producer, changed runtime record, duplicate input role, or mismatched parent digest fails closed.
+
+== Verification scope
+
+`verification.design_decision` is scoped to the constraints evaluated by that producer. A producer with no design-acceptance constraints records `not_decidable` rather than claiming the whole mechanism is accepted. Domain analyses may still complete successfully and provide usable evidence without becoming verification authority for unrelated requirements.

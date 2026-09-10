@@ -12,6 +12,8 @@ on:
       - "tools/providers/anderson_sb50.py"
       - "tools/battery_connector_envelope.py"
       - ".github/workflows/battery-connector-envelope.yml"
+      - "tools/evidence.py"
+      - "spec/emes-evidence-v0.schema.json"
       - "requirements-dev.txt"
       - "tools/catalog.py"
       - "tools/power.py"
@@ -36,6 +38,8 @@ on:
       - "tools/providers/anderson_sb50.py"
       - "tools/battery_connector_envelope.py"
       - ".github/workflows/battery-connector-envelope.yml"
+      - "tools/evidence.py"
+      - "spec/emes-evidence-v0.schema.json"
       - "requirements-dev.txt"
       - "tools/catalog.py"
       - "tools/power.py"
@@ -158,7 +162,7 @@ jobs:
           python - <<'PY'
           import json
           e = json.load(open('/tmp/connected-known.json'))
-          e['input_power_evidence_digest'] = 'sha256:' + '0' * 64
+          next(item for item in e['inputs'] if item['role'] == 'power')['digest'] = 'sha256:' + '0' * 64
           json.dump(e, open('/tmp/tampered-known.json', 'w'), indent=2)
           PY
           if python tools/battery_connector_envelope.py examples/power-pack-molicel-p45b-connected/mechanism.json --power-evidence /tmp/connected-power.json --known-envelope-evidence /tmp/tampered-known.json --out /tmp/tampered-path.json; then

@@ -10,6 +10,8 @@ on:
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/reference-power.catalog.json"
       - ".github/workflows/battery-known-envelope.yml"
+      - "tools/evidence.py"
+      - "spec/emes-evidence-v0.schema.json"
       - "requirements-dev.txt"
       - "tools/catalog.py"
       - "tools/power.py"
@@ -27,6 +29,8 @@ on:
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - "catalogs/reference-power.catalog.json"
       - ".github/workflows/battery-known-envelope.yml"
+      - "tools/evidence.py"
+      - "spec/emes-evidence-v0.schema.json"
       - "requirements-dev.txt"
       - "tools/catalog.py"
       - "tools/power.py"
@@ -81,7 +85,7 @@ jobs:
           import json
           from pathlib import Path
           evidence = json.loads(Path('/tmp/pulse.json').read_text())
-          evidence['input_power_evidence_digest'] = 'sha256:' + '0' * 64
+          next(item for item in evidence['inputs'] if item['role'] == 'power')['digest'] = 'sha256:' + '0' * 64
           Path('/tmp/tampered-pulse.json').write_text(json.dumps(evidence))
           PY
           if python tools/battery_known_envelope.py examples/power-pack-molicel-p45b/mechanism.json --power-evidence /tmp/power.json --pulse-evidence /tmp/tampered-pulse.json --out /tmp/invalid.json; then

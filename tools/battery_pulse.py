@@ -14,8 +14,9 @@ import jsonschema
 
 from catalog import canonical_digest as catalog_digest
 from catalog import resolve_catalog_parts
+from evidence import envelope_fields, input_record, validate_evidence
 from power import OPERATORS, quantity_value
-from validate import canonical_digest, load_json, validate_semantics
+from validate import canonical_digest, load_json, summarize_verification, validate_semantics
 
 
 def evidence_metric(power_evidence: dict[str, Any], metric_id: str, unit: str) -> float:
@@ -90,6 +91,7 @@ def evaluate(
     repo_root: Path,
 ) -> dict[str, Any]:
     design_digest = canonical_digest(document)
+    validate_evidence(power_evidence, repo_root, expected_producer="power")
     if power_evidence.get("design_digest") != design_digest:
         raise ValueError("power evidence design digest does not match mechanism")
 
@@ -144,13 +146,30 @@ def evaluate(
         {"id": "M_PACK_CELL_ENVELOPE_PULSE_POWER_MARGIN", "value": margin, "unit": "W", "method": "analytic"},
     ]
 
+    constraint_result = {
+        "id": config["constraint"]["id"],
+        "metric": "M_PACK_CELL_ENVELOPE_PULSE_POWER_MARGIN",
+        "status": "pass" if passed else "fail",
+        "value": margin,
+        "unit": "W",
+        "op": op,
+        "target": target,
+    }
     return {
-        "emes_battery_pulse_evidence_version": "0.1",
+        **envelope_fields(
+            producer_id="battery_pulse",
+            design_id=document["design"]["id"],
+            design_digest=design_digest,
+            inputs=[
+                input_record("power", canonical_digest(power_evidence)),
+                input_record("analysis_request", canonical_digest(config), "analysis_request"),
+            ],
+            metrics=metrics,
+            constraint_results=[constraint_result],
+            verification=summarize_verification([constraint_result]),
+        ),
         "analysis_id": config["analysis_id"],
-        "design_id": document["design"]["id"],
-        "design_digest": design_digest,
         "analysis_request_digest": canonical_digest(config),
-        "input_power_evidence_digest": canonical_digest(power_evidence),
         "method": "exact_source_conditioned_cell_power_point_with_ideal_pack_sum",
         "limitations": [
             "Selects only an exact source-conditioned manufacturer pulse-power point; no SOC or duration interpolation is performed.",
@@ -169,16 +188,7 @@ def evaluate(
         "context": config["context"],
         "selected_power_point": selected_point,
         "candidate_results": [record for _, record in evaluated],
-        "metrics": metrics,
-        "constraint_result": {
-            "id": config["constraint"]["id"],
-            "metric": "M_PACK_CELL_ENVELOPE_PULSE_POWER_MARGIN",
-            "status": "pass" if passed else "fail",
-            "value": margin,
-            "unit": "W",
-            "op": op,
-            "target": target,
-        },
+        "constraint_result": constraint_result,
     }
 
 
@@ -204,6 +214,7 @@ def run(
 
     power_evidence = load_json(power_evidence_path)
     result = evaluate(document, config, power_evidence, repo_root)
+    validate_evidence(result, repo_root, expected_producer="battery_pulse")
     if result["constraint_result"]["status"] == "fail":
         raise RuntimeError(f"battery pulse constraint failed: {result['constraint_result']['id']}")
 

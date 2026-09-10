@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://emes.dev/schema/emes-evidence-v0.schema.json",
+  "title": "EMES evidence envelope v0",
+  "type": "object",
+  "required": [
+    "emes_evidence_version",
+    "producer",
+    "design_id",
+    "design_digest",
+    "runtime",
+    "runtime_digest",
+    "inputs",
+    "metrics",
+    "constraint_results",
+    "verification"
+  ],
+  "properties": {
+    "emes_evidence_version": {"const": "0.1"},
+    "producer": {
+      "type": "object",
+      "required": ["id", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "design_id": {"type": "string", "minLength": 1},
+    "design_digest": {"$ref": "#/$defs/digest"},
+    "runtime": {"$ref": "#/$defs/runtime"},
+    "runtime_digest": {"$ref": "#/$defs/digest"},
+    "inputs": {"type": "array", "items": {"$ref": "#/$defs/input"}},
+    "metrics": {"type": "array", "items": {"$ref": "#/$defs/metric"}},
+    "constraint_results": {"type": "array", "items": {"$ref": "#/$defs/constraint"}},
+    "verification": {"$ref": "#/$defs/verification"}
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["python", "packages"],
+      "properties": {
+        "python": {"type": "string", "minLength": 1},
+        "packages": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "required": ["role", "kind", "digest"],
+      "properties": {
+        "role": {"type": "string", "minLength": 1},
+        "kind": {"enum": ["evidence", "analysis_request", "artifact"]},
+        "digest": {"$ref": "#/$defs/digest"}
+      },
+      "additionalProperties": false
+    },
+    "metric": {
+      "type": "object",
+      "required": ["id", "value", "unit", "method"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "value": {"type": "number"},
+        "unit": {"type": "string", "minLength": 1},
+        "method": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "constraint": {
+      "type": "object",
+      "required": ["id", "status"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["pass", "fail", "not_evaluated"]}
+      },
+      "additionalProperties": true
+    },
+    "verification": {
+      "type": "object",
+      "required": [
+        "execution_status",
+        "verification_status",
+        "design_decision",
+        "required_constraints",
+        "failed_constraints",
+        "incomplete_constraints"
+      ],
+      "properties": {
+        "execution_status": {"enum": ["succeeded", "failed"]},
+        "verification_status": {"enum": ["complete", "incomplete"]},
+        "design_decision": {"enum": ["accepted", "rejected", "not_decidable"]},
+        "required_constraints": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "failed_constraints": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "incomplete_constraints": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      },
+      "additionalProperties": false
+    }
+  }
+}

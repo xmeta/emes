@@ -14,6 +14,13 @@ import jsonschema
 
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
+from evidence import (
+    envelope_fields,
+    input_record,
+    no_design_decision,
+    require_input_digest,
+    validate_evidence,
+)
 from power import OPERATORS, quantity_value
 from validate import canonical_digest, load_json
 
@@ -131,12 +138,13 @@ def evaluate(
     config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     design_digest = canonical_digest(document)
+    validate_evidence(power_evidence, repo_root, expected_producer="power")
+    validate_evidence(pulse_evidence, repo_root, expected_producer="battery_pulse")
     if power_evidence.get("design_digest") != design_digest:
         raise ValueError("power evidence design digest does not match mechanism")
     if pulse_evidence.get("design_digest") != design_digest:
         raise ValueError("pulse evidence design digest does not match mechanism")
-    if pulse_evidence.get("input_power_evidence_digest") != canonical_digest(power_evidence):
-        raise ValueError("pulse evidence is not derived from the supplied power evidence")
+    require_input_digest(pulse_evidence, "power", canonical_digest(power_evidence))
 
     topology = power_evidence.get("power_topology", {})
     if topology.get("source_kind") != "battery_pack":
@@ -401,16 +409,27 @@ def evaluate(
             "The reviewed Littelfuse manufacturer snapshot is reproducible, but the upstream PDF raw-byte digest is not yet pinned because automated source acquisition is blocked; physical safety approval therefore remains out of scope.",
         )
 
+    inputs = [
+        input_record("power", canonical_digest(power_evidence)),
+        input_record("pulse", canonical_digest(pulse_evidence)),
+    ]
+    if config is not None:
+        inputs.append(
+            input_record("analysis_request", canonical_digest(config), "analysis_request")
+        )
     result: dict[str, Any] = {
-        "emes_known_power_envelope_evidence_version": "0.1",
-        "design_id": document["design"]["id"],
-        "design_digest": design_digest,
-        "input_power_evidence_digest": canonical_digest(power_evidence),
-        "input_pulse_evidence_digest": canonical_digest(pulse_evidence),
+        **envelope_fields(
+            producer_id="battery_known_envelope",
+            design_id=document["design"]["id"],
+            design_digest=design_digest,
+            inputs=inputs,
+            metrics=metrics,
+            constraint_results=[],
+            verification=no_design_decision(),
+        ),
         "method": "minimum_cross_domain_native_rating_load_scale",
         "limiting_candidate": limiting["id"],
         "candidates": candidates,
-        "metrics": metrics,
         "limitations": limitations,
     }
     if config is not None:
@@ -447,6 +466,7 @@ def run(
         validator_cls(schema).validate(config)
 
     result = evaluate(document, power_evidence, pulse_evidence, repo_root, config)
+    validate_evidence(result, repo_root, expected_producer="battery_known_envelope")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return result

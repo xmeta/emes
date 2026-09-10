@@ -12,6 +12,13 @@ from typing import Any
 
 from catalog import canonical_digest as catalog_digest
 from catalog import property_number, resolve_catalog_parts
+from evidence import (
+    envelope_fields,
+    input_record,
+    no_design_decision,
+    require_input_digest,
+    validate_evidence,
+)
 from validate import canonical_digest, load_json
 
 
@@ -52,12 +59,15 @@ def evaluate(
     repo_root: Path,
 ) -> dict[str, Any]:
     design_digest = canonical_digest(document)
+    validate_evidence(power_evidence, repo_root, expected_producer="power")
+    validate_evidence(
+        known_evidence, repo_root, expected_producer="battery_known_envelope"
+    )
     if power_evidence.get("design_digest") != design_digest:
         raise ValueError("power evidence design digest does not match mechanism")
     if known_evidence.get("design_digest") != design_digest:
         raise ValueError("known-envelope evidence design digest does not match mechanism")
-    if known_evidence.get("input_power_evidence_digest") != canonical_digest(power_evidence):
-        raise ValueError("known-envelope evidence is not derived from the supplied power evidence")
+    require_input_digest(known_evidence, "power", canonical_digest(power_evidence))
 
     topology = power_evidence.get("power_topology", {})
     if topology.get("source_kind") != "battery_pack":
@@ -149,43 +159,50 @@ def evaluate(
     final_scale = float(limiting["scale_factor"])
     final_output_w = reference_output_w * final_scale
 
+    metrics = [
+        {
+            "id": "M_KNOWN_CONNECTOR_RATED_LOAD_SCALE",
+            "value": min_connector_scale,
+            "unit": "1",
+            "method": "minimum_connector_rated_current_over_max_pack_current",
+        },
+        {
+            "id": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN",
+            "value": min_voltage_margin,
+            "unit": "V",
+            "method": "minimum_connector_rated_dc_voltage_minus_pack_max_voltage",
+        },
+        {
+            "id": "M_KNOWN_PATH_LOAD_SCALE_LIMIT",
+            "value": final_scale,
+            "unit": "1",
+            "method": "minimum_parent_and_connector_load_scale",
+        },
+        {
+            "id": "M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE",
+            "value": final_output_w,
+            "unit": "W",
+            "method": "reference_output_load_scaled_by_weakest_known_path_limit",
+        },
+    ]
     return {
-        "emes_connector_envelope_evidence_version": "0.1",
-        "design_id": document["design"]["id"],
-        "design_digest": design_digest,
+        **envelope_fields(
+            producer_id="battery_connector_envelope",
+            design_id=document["design"]["id"],
+            design_digest=design_digest,
+            inputs=[
+                input_record("power", canonical_digest(power_evidence)),
+                input_record("known_envelope", canonical_digest(known_evidence)),
+            ],
+            metrics=metrics,
+            constraint_results=[],
+            verification=no_design_decision(),
+        ),
         "path_id": path_id,
-        "input_power_evidence_digest": canonical_digest(power_evidence),
-        "input_known_envelope_evidence_digest": canonical_digest(known_evidence),
         "method": "minimum_parent_and_pack_connector_native_rating_load_scale",
         "limiting_candidate": limiting["id"],
         "connectors": connector_records,
         "candidates": candidates,
-        "metrics": [
-            {
-                "id": "M_KNOWN_CONNECTOR_RATED_LOAD_SCALE",
-                "value": min_connector_scale,
-                "unit": "1",
-                "method": "minimum_connector_rated_current_over_max_pack_current",
-            },
-            {
-                "id": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN",
-                "value": min_voltage_margin,
-                "unit": "V",
-                "method": "minimum_connector_rated_dc_voltage_minus_pack_max_voltage",
-            },
-            {
-                "id": "M_KNOWN_PATH_LOAD_SCALE_LIMIT",
-                "value": final_scale,
-                "unit": "1",
-                "method": "minimum_parent_and_connector_load_scale",
-            },
-            {
-                "id": "M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE",
-                "value": final_output_w,
-                "unit": "W",
-                "method": "reference_output_load_scaled_by_weakest_known_path_limit",
-            },
-        ],
         "limitations": [
             "Connector current is evaluated against the maximum pack-side current over the modeled battery voltage range; no arbitrary voltage is used to manufacture a power rating.",
             "The selected SB50 rating is tied to the reviewed manufacturer assembly configuration recorded in the catalog snapshot; it is not a rating for a bare housing in isolation.",
@@ -207,6 +224,9 @@ def run(
         load_json(power_evidence_path),
         load_json(known_evidence_path),
         repo_root,
+    )
+    validate_evidence(
+        result, repo_root, expected_producer="battery_connector_envelope"
     )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
