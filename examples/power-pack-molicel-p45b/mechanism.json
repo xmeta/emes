@@ -3,7 +3,7 @@
   "design": {
     "id": "DESIGN_POWER_PACK_MOLICEL_P45B",
     "name": "Molicel P45B battery-powered DC subsystem",
-    "description": "Authoritative Molicel P45B 10S2P cell selection with synthetic BMS/converter fixtures to exercise conditional-rating enforcement."
+    "description": "Authoritative Molicel P45B 10S2P cell selection with synthetic BMS/converter fixtures, executable conditional-current checks, and a source-conditioned first-order voltage-drop analysis."
   },
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
@@ -16,6 +16,11 @@
       "id": "DI_REAL_CELL_CONDITIONS",
       "statement": "The P45B continuous-discharge rating is usable only when a selected control component satisfies every normalized manufacturer rating condition.",
       "protects": ["R_CURRENT", "R_BMS"]
+    },
+    {
+      "id": "DI_SAG_SOURCE_CONDITION",
+      "statement": "Use a P45B impedance value only at a design analysis point that satisfies the source-stated SOC condition; do not interpolate unsupported SOC values.",
+      "protects": ["R_CURRENT"]
     },
     {
       "id": "DI_COMPOSE_CELLS",
@@ -37,6 +42,11 @@
       "value": {"value": 2.0, "unit": "1"},
       "lower": {"value": 1.0, "unit": "1"},
       "upper": {"value": 10.0, "unit": "1"}
+    },
+    {
+      "id": "P_SAG_SOC",
+      "role": "fixed",
+      "value": {"value": 50.0, "unit": "%"}
     }
   ],
   "components": [
@@ -65,7 +75,7 @@
     {
       "id": "battery_pack",
       "kind": "other",
-      "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL"],
+      "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL", "P_SAG_SOC"],
       "metadata": {"org.emes.role": "battery_pack_assembly"}
     },
     {
@@ -148,6 +158,21 @@
         {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"},
         {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}
       ]
+    },
+    {
+      "id": "A_BATTERY_SAG",
+      "kind": "analytic",
+      "adapter": "tools/battery_sag.py",
+      "fidelity": "analytic",
+      "load_cases": ["LC_POWER"],
+      "produces": [
+        {"id": "M_SAG_REFERENCE_PACK_CURRENT", "unit": "A"},
+        {"id": "M_SAG_REFERENCE_CELL_CURRENT", "unit": "A"},
+        {"id": "M_CELL_DC_IMPEDANCE_TYPICAL", "unit": "ohm"},
+        {"id": "M_PACK_REFERENCE_DC_RESISTANCE", "unit": "ohm"},
+        {"id": "M_PACK_REFERENCE_RESISTIVE_DROP", "unit": "V"},
+        {"id": "M_PACK_REFERENCE_SAG_FRACTION", "unit": "1"}
+      ]
     }
   ],
   "traceability": [
@@ -194,6 +219,13 @@
           "load_case": "LC_POWER"
         }
       ]
+    },
+    "org.emes.battery_sag": {
+      "pack_id": "PACK_MAIN",
+      "impedance_property": "dc_impedance_typical",
+      "condition_bindings": {
+        "soc": "P_SAG_SOC"
+      }
     }
   }
 }

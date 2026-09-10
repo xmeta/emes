@@ -56,6 +56,8 @@ The power-system layer adds composable electrical components. A catalog-backed 2
 
 `examples/power-pack-molicel-p45b/mechanism.json` binds that real cell record to synthetic BMS/converter fixtures. The power evaluator accepts the continuous-discharge rating only when the selected BMS exposes a compatible cell cut-off control and records that check in deterministic evidence. This is an executable sizing/traceability check, not a thermal model, certification, or permission to fabricate or energize a battery pack.
 
+The same P45B example now has a separate source-conditioned battery-sag analysis. `tools/battery_sag.py` reuses the power evidence instead of recomputing the load path, applies the P45B typical DC-impedance value only at its stated 50% SOC condition, and derives first-order series/parallel pack resistance and resistive voltage drop. Unsupported SOC values are rejected rather than interpolated. The adapter deliberately does not infer loaded terminal voltage without an attributable OCV-vs-SOC model.
+
 A custom EMES language remains intentionally deferred until concrete examples prove it is necessary.
 
 == Documents
@@ -66,12 +68,14 @@ A custom EMES language remains intentionally deferred until concrete examples pr
 * `docs/real-catalog-maxon.adoc` -- first authoritative manufacturer motor catalog and evidence policy.
 * `docs/real-catalog-molicel.adoc` -- authoritative P45B battery-cell snapshot and executable conditional-rating policy.
 * `docs/power-systems.adoc` -- electrical power components and series/parallel battery-pack composition.
+* `docs/battery-sag.adoc` -- source-conditioned first-order battery resistance/voltage-drop analysis and its limits.
 * `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
 * `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
 * `docs/research/product-data-standards.adoc` -- parts-library/product-data standards and provider strategy.
 * `docs/decisions/` -- architecture decisions.
 * `spec/emes-ir-v0.schema.json` -- initial mechanism structural contract.
 * `spec/emes-catalog-v0.schema.json` -- initial purchased-component catalog contract.
+* `spec/emes-battery-sag-v0.schema.json` -- battery-sag analysis extension contract.
 * `examples/two-link-arm/mechanism.json` -- reference mechanical mechanism.
 * `examples/power-pack/mechanism.json` -- synthetic 21700 battery-powered subsystem.
-* `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls.
+* `examples/power-pack-molicel-p45b/mechanism.json` -- authoritative P45B cell with explicit synthetic protection controls and source-conditioned sag analysis.

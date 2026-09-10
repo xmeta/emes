@@ -75,9 +75,11 @@ jobs:
       - run: python tools/power.py examples/power-supply/mechanism.json --out generated/power-supply/evidence.json --check-determinism
       - run: python tools/validate.py examples/power-pack-molicel-p45b/mechanism.json
       - run: python tools/power.py examples/power-pack-molicel-p45b/mechanism.json --out generated/power-pack-molicel-p45b/evidence.json --check-determinism
+      - run: python tools/battery_sag.py examples/power-pack-molicel-p45b/mechanism.json --power-evidence generated/power-pack-molicel-p45b/evidence.json --out generated/power-pack-molicel-p45b/sag-evidence.json --check-determinism
       - run: |
           python - <<'PY'
           import json
+          import math
           from pathlib import Path
           evidence = json.loads(Path('generated/power-pack-molicel-p45b/evidence.json').read_text())
           checks = evidence['rating_condition_results']
@@ -95,8 +97,42 @@ jobs:
           metrics = {item['id']: item['value'] for item in evidence['metrics']}
           assert metrics['M_PACK_CONTINUOUS_CURRENT'] == 30.0
           assert metrics['M_PACK_NOMINAL_ENERGY'] == 324.0
-          print('VERIFIED real-cell conditional rating and BMS clamp')
+
+          sag = json.loads(Path('generated/power-pack-molicel-p45b/sag-evidence.json').read_text())
+          assert sag['method'] == 'first_order_resistive_drop_at_nominal_point'
+          assert len(sag['condition_results']) == 1
+          soc = sag['condition_results'][0]
+          assert soc['condition_parameter'] == 'soc'
+          assert soc['design_parameter'] == 'P_SAG_SOC'
+          assert soc['design_value'] == 50.0
+          assert soc['condition_value'] == 50.0
+          assert soc['status'] == 'pass'
+          sag_metrics = {item['id']: item['value'] for item in sag['metrics']}
+          assert math.isclose(sag_metrics['M_SAG_REFERENCE_PACK_CURRENT'], 14.619883040935674)
+          assert math.isclose(sag_metrics['M_SAG_REFERENCE_CELL_CURRENT'], 7.309941520467837)
+          assert math.isclose(sag_metrics['M_CELL_DC_IMPEDANCE_TYPICAL'], 0.015)
+          assert math.isclose(sag_metrics['M_PACK_REFERENCE_DC_RESISTANCE'], 0.075)
+          assert math.isclose(sag_metrics['M_PACK_REFERENCE_RESISTIVE_DROP'], 1.0964912280701755)
+          assert math.isclose(sag_metrics['M_PACK_REFERENCE_SAG_FRACTION'], 0.030458089668615986)
+          print('VERIFIED real-cell conditional rating, BMS clamp, and 50% SOC resistive-drop evidence')
           PY
+      - run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          source = Path('examples/power-pack-molicel-p45b/mechanism.json')
+          mechanism = json.loads(source.read_text())
+          for parameter in mechanism['parameters']:
+              if parameter['id'] == 'P_SAG_SOC':
+                  parameter['value']['value'] = 40.0
+          Path('/tmp/p45b-sag-soc40.json').write_text(json.dumps(mechanism))
+          PY
+          python tools/power.py /tmp/p45b-sag-soc40.json --out /tmp/p45b-power-soc40.json
+          if python tools/battery_sag.py /tmp/p45b-sag-soc40.json --power-evidence /tmp/p45b-power-soc40.json --out /tmp/p45b-sag-soc40-evidence.json; then
+            echo 'ERROR: 50% SOC impedance unexpectedly accepted at 40% SOC'
+            exit 1
+          fi
+          echo 'EXPECTED-FAIL source-conditioned impedance rejected at unsupported 40% SOC'
       - run: |
           python - <<'PY'
           import json
