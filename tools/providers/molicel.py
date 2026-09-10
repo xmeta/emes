@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Molicel provider adapter for a hash-pinned INR-21700-P45B datasheet."""
+"""Molicel provider adapter for hash-pinned INR-21700-P45B sources."""
 
 from __future__ import annotations
 
@@ -127,42 +127,44 @@ def q(
 
 def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
     snapshot = load_snapshot(snapshot_path)
-    upstream = snapshot["upstream"]["datasheet_pdf"]
-    source_id = "SRC_MOLICEL_P45B_DATASHEET_V1_4"
+    datasheet = snapshot["upstream"]["datasheet_pdf"]
+    performance_page = snapshot["upstream"]["performance_page"]
+    datasheet_source = "SRC_MOLICEL_P45B_DATASHEET_V1_4"
+    performance_source = "SRC_MOLICEL_P45B_PERFORMANCE_PAGE"
 
     part = {
         "id": "MOLICEL_INR_21700_P45B",
         "kind": "battery_cell",
         "identity": {"manufacturer": "Molicel", "part_number": "INR-21700-P45B"},
         "properties": {
-            "form_factor": q(scalar(snapshot, "form_factor"), "1", source_id),
-            "chemistry_family": q(scalar(snapshot, "chemistry_family"), "1", source_id),
+            "form_factor": q(scalar(snapshot, "form_factor"), "1", datasheet_source),
+            "chemistry_family": q(scalar(snapshot, "chemistry_family"), "1", datasheet_source),
             "nominal_capacity": q(
-                number(snapshot, "nominal_capacity_typical", "A*h"), "A*h", source_id
+                number(snapshot, "nominal_capacity_typical", "A*h"), "A*h", datasheet_source
             ),
             "minimum_capacity": q(
-                number(snapshot, "nominal_capacity_minimum", "A*h"), "A*h", source_id
+                number(snapshot, "nominal_capacity_minimum", "A*h"), "A*h", datasheet_source
             ),
             "nominal_energy": q(
-                number(snapshot, "nominal_energy_typical", "W*h"), "W*h", source_id
+                number(snapshot, "nominal_energy_typical", "W*h"), "W*h", datasheet_source
             ),
             "minimum_energy": q(
-                number(snapshot, "nominal_energy_minimum", "W*h"), "W*h", source_id
+                number(snapshot, "nominal_energy_minimum", "W*h"), "W*h", datasheet_source
             ),
-            "nominal_voltage": q(number(snapshot, "nominal_voltage", "V"), "V", source_id),
+            "nominal_voltage": q(number(snapshot, "nominal_voltage", "V"), "V", datasheet_source),
             "max_charge_voltage": q(
-                number(snapshot, "max_charge_voltage", "V"), "V", source_id
+                number(snapshot, "max_charge_voltage", "V"), "V", datasheet_source
             ),
             "min_discharge_voltage": q(
-                number(snapshot, "min_discharge_voltage", "V"), "V", source_id
+                number(snapshot, "min_discharge_voltage", "V"), "V", datasheet_source
             ),
             "standard_charge_current": q(
-                number(snapshot, "standard_charge_current", "A"), "A", source_id
+                number(snapshot, "standard_charge_current", "A"), "A", datasheet_source
             ),
             "maximum_charge_current": q(
                 number(snapshot, "maximum_charge_current", "A"),
                 "A",
-                source_id,
+                datasheet_source,
                 rating_conditions=normalized_rating_conditions(
                     snapshot, "maximum_charge_current"
                 ),
@@ -170,42 +172,54 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
             "continuous_discharge_current": q(
                 number(snapshot, "continuous_discharge_current", "A"),
                 "A",
-                source_id,
+                datasheet_source,
                 rating_conditions=normalized_rating_conditions(
                     snapshot, "continuous_discharge_current"
                 ),
             ),
             "charge_temperature_min": q(
-                number(snapshot, "charge_temperature_min", "degC"), "degC", source_id
+                number(snapshot, "charge_temperature_min", "degC"), "degC", datasheet_source
             ),
             "charge_temperature_max": q(
-                number(snapshot, "charge_temperature_max", "degC"), "degC", source_id
+                number(snapshot, "charge_temperature_max", "degC"), "degC", datasheet_source
             ),
             "discharge_temperature_min": q(
-                number(snapshot, "discharge_temperature_min", "degC"), "degC", source_id
+                number(snapshot, "discharge_temperature_min", "degC"), "degC", datasheet_source
             ),
             "discharge_temperature_max": q(
-                number(snapshot, "discharge_temperature_max", "degC"), "degC", source_id
+                number(snapshot, "discharge_temperature_max", "degC"), "degC", datasheet_source
             ),
             "ac_impedance_typical": q(
                 number(snapshot, "ac_impedance_typical", "ohm"),
                 "ohm",
-                source_id,
+                datasheet_source,
                 rating_conditions=conditions(snapshot, "ac_impedance_typical"),
             ),
             "dc_impedance_typical": q(
                 number(snapshot, "dc_impedance_typical", "ohm"),
                 "ohm",
-                source_id,
+                datasheet_source,
                 rating_conditions=conditions(snapshot, "dc_impedance_typical"),
             ),
+            "power_output_10s_soc50": q(
+                number(snapshot, "power_output_10s_soc50", "W"),
+                "W",
+                performance_source,
+                rating_conditions=conditions(snapshot, "power_output_10s_soc50"),
+            ),
+            "power_output_10s_soc90": q(
+                number(snapshot, "power_output_10s_soc90", "W"),
+                "W",
+                performance_source,
+                rating_conditions=conditions(snapshot, "power_output_10s_soc90"),
+            ),
             "diameter_max": q(
-                number(snapshot, "diameter_max", "mm") * 1e-3, "m", source_id
+                number(snapshot, "diameter_max", "mm") * 1e-3, "m", datasheet_source
             ),
             "height_max": q(
-                number(snapshot, "height_max", "mm") * 1e-3, "m", source_id
+                number(snapshot, "height_max", "mm") * 1e-3, "m", datasheet_source
             ),
-            "mass": q(number(snapshot, "mass_max", "g") * 1e-3, "kg", source_id),
+            "mass": q(number(snapshot, "mass_max", "g") * 1e-3, "kg", datasheet_source),
         },
         "interfaces": [
             {
@@ -223,11 +237,19 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
             {
                 "id": "ASSET_DATASHEET",
                 "kind": "datasheet",
-                "uri": upstream["uri"],
-                "digest": upstream["sha256"],
-                "source": source_id,
+                "uri": datasheet["uri"],
+                "digest": datasheet["sha256"],
+                "source": datasheet_source,
                 "license": "Molicel upstream terms; redistribution not asserted",
-            }
+            },
+            {
+                "id": "ASSET_PERFORMANCE_PAGE",
+                "kind": "other",
+                "uri": performance_page["uri"],
+                "digest": performance_page["sha256"],
+                "source": performance_source,
+                "license": "Molicel upstream terms; redistribution not asserted",
+            },
         ],
     }
 
@@ -237,21 +259,30 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
             "id": "CAT_MOLICEL_P45B",
             "name": "Molicel INR-21700-P45B",
             "description": (
-                "Manufacturer Product Data Sheet v1.4 normalized for EMES; "
-                "conditional ratings are preserved and upstream bytes are referenced, "
-                "not redistributed."
+                "Manufacturer Product Data Sheet v1.4 plus hash-pinned official "
+                "P45B performance-page points normalized for EMES; conditions are "
+                "preserved and upstream bytes are referenced, not redistributed."
             ),
         },
         "sources": [
             {
-                "id": source_id,
+                "id": datasheet_source,
                 "authority": "manufacturer",
                 "format": "datasheet",
-                "uri": upstream["uri"],
+                "uri": datasheet["uri"],
                 "retrieved_at": snapshot["captured_at"],
                 "license": "Molicel upstream terms; redistribution not asserted",
-                "raw_digest": upstream["sha256"],
-            }
+                "raw_digest": datasheet["sha256"],
+            },
+            {
+                "id": performance_source,
+                "authority": "manufacturer",
+                "format": "other",
+                "uri": performance_page["uri"],
+                "retrieved_at": snapshot["captured_at"],
+                "license": "Molicel upstream terms; redistribution not asserted",
+                "raw_digest": performance_page["sha256"],
+            },
         ],
         "parts": [part],
     }

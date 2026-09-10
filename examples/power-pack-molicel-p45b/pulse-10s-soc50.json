@@ -1,0 +1,17 @@
+{
+  "analysis_id": "A_BATTERY_PULSE_10S_SOC50",
+  "pack_id": "PACK_MAIN",
+  "power_properties": [
+    "power_output_10s_soc50",
+    "power_output_10s_soc90"
+  ],
+  "context": {
+    "duration": {"value": 10.0, "unit": "s"},
+    "soc": {"value": 50.0, "unit": "%"}
+  },
+  "constraint": {
+    "id": "C_PULSE_CELL_ENVELOPE_MARGIN",
+    "op": ">=",
+    "target": {"value": 0.0, "unit": "W"}
+  }
+}
