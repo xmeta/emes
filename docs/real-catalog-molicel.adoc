@@ -1,0 +1,49 @@
+= Authoritative Molicel INR-21700-P45B Catalog
+
+== Purpose
+
+This catalog slice replaces a purely synthetic cell record with an attributable manufacturer cell snapshot without yet claiming that EMES can safely size or approve a physical battery pack from that rating alone.
+
+The snapshot authority is Molicel Product Data Sheet v1.4 for `INR-21700-P45B`:
+
+* upstream: `https://www.molicel.com/wp-content/uploads/INR21700P45B_1.4_Product-Data-Sheet-of-INR-21700-P45B-80109.pdf`
+* pinned bytes: `400272`
+* SHA-256: `54832eb1684991f097578f02dd9ecfc3ba49cbc8bea40beacd7103092b717e69`
+
+The PDF is referenced and content-addressed but is not redistributed by this repository.
+
+== Normalized properties
+
+The manufacturer snapshot records, among other values:
+
+* nominal voltage: 3.6 V;
+* charge voltage: 4.2 V;
+* discharge voltage: 2.5 V;
+* typical capacity: 4.5 Ah / 16.2 Wh;
+* minimum capacity: 4.3 Ah / 15.5 Wh;
+* standard charge current: 4.5 A;
+* maximum charge current: 13.5 A with a 70 degC cut-off;
+* continuous discharge current: 45 A with an 80 degC cut-off;
+* charge temperature range: 0 degC to 60 degC;
+* discharge temperature range: -40 degC to 60 degC;
+* typical AC impedance: 7 mOhm at 30% SOC;
+* typical DC impedance: 15 mOhm at 50% SOC;
+* maximum diameter: 21.55 mm;
+* maximum height: 70.15 mm;
+* maximum mass: 70 g.
+
+== Conditional-rating invariant
+
+A value and the conditions under which the manufacturer states that value are one engineering fact.
+
+Therefore `continuous_discharge_current = 45 A` is stored together with `cutoff_temperature == 80 degC`. Likewise the 13.5 A maximum charge current and the impedance values retain their stated cut-off or SOC conditions.
+
+The generic catalog schema now supports explicit `conditions` on a property value. Normal CI asserts that the Molicel catalog can be deterministically regenerated from the reviewed source snapshot and that these conditions survive normalization.
+
+== Execution boundary
+
+The existing Phase-1 battery-pack evaluator still uses the synthetic reference cell. It does not yet consume the P45B 45 A rating because it has no thermal/SOC condition-evaluation semantics.
+
+This is deliberate. Importing a real value is not permission to flatten a conditional manufacturer rating into an unconditional design limit.
+
+A later slice may bind this real cell to a power design only after the applicable operating conditions and derating logic are executable.
