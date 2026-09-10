@@ -32,6 +32,8 @@ requirements + design intent
 The canonical source records requirements, topology, parameters, interfaces, load cases, objectives, constraints, and analysis intent.
 Generated CAD, simulation models, solver decks, reports, and BOMs remain reproducible projections.
 
+A key architectural boundary is the separation between the semantic design graph and the evidence graph: AI may propose changes to the design, while registered tools and measurements produce the evidence used to accept or reject those changes.
+
 == Current status
 
 Phase 1 architecture is being established under Issue #1.
@@ -42,7 +44,8 @@ A custom EMES language is intentionally deferred until concrete examples prove i
 == Documents
 
 * `docs/architecture.adoc` -- normative architecture direction.
-* `docs/research/prior-art.adoc` -- related research, standards, and reusable tools.
+* `docs/research/prior-art.adoc` -- broad related research, standards, and reusable tools.
+* `docs/research/gbdl-fbs-units-provenance.adoc` -- closest graph-based design-language lineage and semantic reuse analysis.
 * `docs/decisions/` -- architecture decisions.
 * `spec/emes-ir-v0.schema.json` -- initial executable structural contract.
 * `examples/two-link-arm/mechanism.json` -- minimal example.
