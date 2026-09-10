@@ -10,7 +10,11 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
-USER_AGENT = "EMES/0.1 (+https://github.com/xmeta/emes)"
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/152.0.0.0 Safari/537.36"
+)
 
 
 def fetch(url: str) -> bytes:
@@ -18,7 +22,9 @@ def fetch(url: str) -> bytes:
         url,
         headers={
             "User-Agent": USER_AGENT,
-            "Accept": "application/pdf,*/*",
+            "Accept": "application/pdf,application/octet-stream;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Referer": "https://www.littelfuse.com/",
         },
     )
     with urllib.request.urlopen(request, timeout=45) as response:
