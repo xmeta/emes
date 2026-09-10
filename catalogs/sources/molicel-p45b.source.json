@@ -10,7 +10,8 @@
       "uri": "https://www.molicel.com/wp-content/uploads/INR21700P45B_1.4_Product-Data-Sheet-of-INR-21700-P45B-80109.pdf",
       "edition": "Product Data Sheet v1.4",
       "pages": 1,
-      "sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 400272,
+      "sha256": "sha256:54832eb1684991f097578f02dd9ecfc3ba49cbc8bea40beacd7103092b717e69",
       "redistribution": "not_asserted"
     },
     "product_page": {
