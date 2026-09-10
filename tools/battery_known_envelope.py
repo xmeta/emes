@@ -36,6 +36,15 @@ def positive_ratio(limit: float, demand: float, context: str) -> float:
     return limit / demand
 
 
+def matching_power_path(document: dict[str, Any], path_id: str) -> dict[str, Any]:
+    extension = document.get("extensions", {}).get("org.emes.power", {})
+    paths = extension.get("power_paths", []) if isinstance(extension, dict) else []
+    matches = [item for item in paths if item.get("id") == path_id]
+    if len(matches) != 1:
+        raise ValueError(f"mechanism must provide exactly one power path {path_id}")
+    return matches[0]
+
+
 def evaluate(
     document: dict[str, Any],
     power_evidence: dict[str, Any],
@@ -64,6 +73,14 @@ def evaluate(
     if not isinstance(bms_component, str) or not isinstance(converter_component, str):
         raise ValueError("power topology must expose BMS and converter components")
 
+    path_id = topology.get("path_id")
+    if not isinstance(path_id, str):
+        raise ValueError("power topology must expose a path id")
+    power_path = matching_power_path(document, path_id)
+    fuse_component = power_path.get("fuse_component")
+    if fuse_component is not None and not isinstance(fuse_component, str):
+        raise ValueError("fuse_component must be a component id")
+
     selected = resolve_catalog_parts(
         document,
         repo_root=repo_root,
@@ -78,6 +95,14 @@ def evaluate(
     if converter.get("kind") != "power_converter":
         raise ValueError(f"{converter_component}: expected power_converter catalog part")
 
+    fuse: dict[str, Any] | None = None
+    if fuse_component is not None:
+        if fuse_component not in selected:
+            raise ValueError(f"{fuse_component}: fuse must be catalog-backed")
+        fuse = selected[fuse_component]
+        if fuse.get("kind") != "fuse":
+            raise ValueError(f"{fuse_component}: expected fuse catalog part")
+
     cell_envelope_w = evidence_metric(
         pulse_evidence, "M_PACK_CELL_ENVELOPE_PULSE_POWER", "W"
     )
@@ -87,6 +112,7 @@ def evaluate(
     pack_current_a = evidence_metric(power_evidence, "M_LOAD_EQUIV_PACK_CURRENT", "A")
     output_current_a = evidence_metric(power_evidence, "M_CONVERTER_OUTPUT_CURRENT", "A")
     output_power_w = evidence_metric(power_evidence, "M_LOAD_POWER", "W")
+    pack_max_voltage_v = evidence_metric(power_evidence, "M_PACK_MAX_VOLTAGE", "V")
 
     bms_continuous_a = property_number(bms, "continuous_discharge_current", "A")
     converter_continuous_a = property_number(
@@ -135,6 +161,33 @@ def evaluate(
             ),
         },
     ]
+
+    fuse_voltage_margin_v: float | None = None
+    if fuse is not None and fuse_component is not None:
+        fuse_rated_a = property_number(fuse, "rated_current", "A")
+        fuse_rated_voltage_v = property_number(fuse, "rated_voltage_dc", "V")
+        fuse_voltage_margin_v = fuse_rated_voltage_v - pack_max_voltage_v
+        if fuse_voltage_margin_v < 0:
+            raise ValueError(
+                "fuse DC voltage rating is below maximum pack voltage: "
+                f"pack={pack_max_voltage_v:g}V fuse={fuse_rated_voltage_v:g}V"
+            )
+        candidates.append(
+            {
+                "id": "fuse_rated_current",
+                "component": fuse_component,
+                "part": fuse["id"],
+                "part_digest": catalog_digest(fuse),
+                "rating_kind": "nominal_rated_current_used_as_conservative_10s_cap",
+                "limit": fuse_rated_a,
+                "demand": pack_current_a,
+                "unit": "A",
+                "scale_factor": positive_ratio(
+                    fuse_rated_a, pack_current_a, "fuse nominal rated current"
+                ),
+            }
+        )
+
     limiting = min(candidates, key=lambda item: item["scale_factor"])
     scale = float(limiting["scale_factor"])
     output_envelope_w = output_power_w * scale
@@ -159,25 +212,64 @@ def evaluate(
             "unit": "1",
             "method": "native_rating_ratio",
         },
-        {
-            "id": "M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT",
-            "value": scale,
-            "unit": "1",
-            "method": "minimum_native_rating_ratio",
-        },
-        {
-            "id": "M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE",
-            "value": output_envelope_w,
-            "unit": "W",
-            "method": "reference_load_scaled_by_weakest_known_limit",
-        },
-        {
-            "id": "M_KNOWN_COMPONENT_INPUT_POWER_ENVELOPE",
-            "value": input_envelope_w,
-            "unit": "W",
-            "method": "reference_input_scaled_by_weakest_known_limit",
-        },
     ]
+    if fuse is not None and fuse_voltage_margin_v is not None:
+        fuse_candidate = next(item for item in candidates if item["id"] == "fuse_rated_current")
+        metrics.extend(
+            [
+                {
+                    "id": "M_KNOWN_FUSE_RATED_LOAD_SCALE",
+                    "value": fuse_candidate["scale_factor"],
+                    "unit": "1",
+                    "method": "native_rating_ratio",
+                },
+                {
+                    "id": "M_KNOWN_FUSE_VOLTAGE_MARGIN",
+                    "value": fuse_voltage_margin_v,
+                    "unit": "V",
+                    "method": "rated_dc_voltage_minus_pack_max_voltage",
+                },
+            ]
+        )
+    metrics.extend(
+        [
+            {
+                "id": "M_KNOWN_COMPONENT_LOAD_SCALE_LIMIT",
+                "value": scale,
+                "unit": "1",
+                "method": "minimum_native_rating_ratio",
+            },
+            {
+                "id": "M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE",
+                "value": output_envelope_w,
+                "unit": "W",
+                "method": "reference_load_scaled_by_weakest_known_limit",
+            },
+            {
+                "id": "M_KNOWN_COMPONENT_INPUT_POWER_ENVELOPE",
+                "value": input_envelope_w,
+                "unit": "W",
+                "method": "reference_input_scaled_by_weakest_known_limit",
+            },
+        ]
+    )
+
+    limitations = [
+        "Cross-domain limits are compared through dimensionless load-scale factors rather than by inventing a common rating unit.",
+        "BMS and converter continuous-current ratings are conservative caps for the 10 s pulse context; they are not treated as pulse ratings.",
+        "The current BMS and converter records are synthetic architecture fixtures, not physical product recommendations.",
+        "Interconnect, conductor, connector, contactor, temperature rise, cell imbalance, aging, and enclosure limits are not yet included.",
+        "The result is a weakest-known-component envelope, not a complete system pulse rating or approval to fabricate, charge, or energize a pack.",
+    ]
+    if fuse is not None:
+        limitations.insert(
+            3,
+            "Fuse nominal rated current is used only as a conservative cap; time-current/I2t data and source-conditioned ambient derating are not converted into an inferred 10 s pulse ampacity.",
+        )
+        limitations.insert(
+            4,
+            "The reviewed Littelfuse manufacturer snapshot is reproducible, but the upstream PDF raw-byte digest is not yet pinned because automated source acquisition is blocked; physical safety approval therefore remains out of scope.",
+        )
 
     return {
         "emes_known_power_envelope_evidence_version": "0.1",
@@ -189,13 +281,7 @@ def evaluate(
         "limiting_candidate": limiting["id"],
         "candidates": candidates,
         "metrics": metrics,
-        "limitations": [
-            "Cross-domain limits are compared through dimensionless load-scale factors rather than by inventing a common rating unit.",
-            "BMS and converter continuous-current ratings are conservative caps for the 10 s pulse context; they are not treated as pulse ratings.",
-            "The current BMS and converter records are synthetic architecture fixtures, not physical product recommendations.",
-            "Fuse, interconnect, conductor, connector, contactor, temperature rise, cell imbalance, aging, and enclosure limits are not yet included.",
-            "The result is a weakest-known-component envelope, not a complete system pulse rating or approval to fabricate, charge, or energize a pack.",
-        ],
+        "limitations": limitations,
     }
 
 
