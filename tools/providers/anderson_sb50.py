@@ -92,7 +92,7 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
                 source_id,
             ),
             "mating_cycles_no_load": q(
-                number(snapshot, "mating_cycles_no_load_silver", "1"),
+                number(snapshot, "mating_cycles_iec", "1"),
                 "1",
                 source_id,
             ),
