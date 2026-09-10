@@ -26,6 +26,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - run: pip install jsonschema==4.26.0
       - run: python tools/providers/littelfuse_midi.py normalize catalogs/sources/littelfuse-midi70v-40a.source.json /tmp/littelfuse.catalog.json
       - run: |
           python - <<'PY'
