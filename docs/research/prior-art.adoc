@@ -1,0 +1,383 @@
+= Prior Art and Reusable Ideas
+:toc:
+:toclevels: 2
+
+== Scope
+
+Research date: 2026-09-10.
+
+This note asks a narrow question: which existing languages, tools, standards, and research already solve parts of EMES, and what should EMES reuse rather than reinvent?
+
+== 1. Closest product-level precedent: Zoo / KCL / Zookeeper
+
+Zoo's KCL is a programming language for parametric CAD.
+KCL is the source of truth for Zoo models, uses plain-text files suitable for Git, and supports reusable parametric design.
+Zoo's Zookeeper agent can create and edit KCL from natural-language prompts, images, and sketches.
+
+This is the closest current precedent to "AI edits CAD-as-code."
+
+Useful ideas for EMES:
+
+* text source as the canonical editable form;
+* GUI and AI actions both lower to the same textual representation;
+* parametric code under version control;
+* language tooling/LSP;
+* AI operates on source rather than opaque binary CAD.
+
+Gap relative to EMES:
+
+KCL's primary semantic domain is CAD geometry.
+EMES aims to sit above geometry and encode requirements, design intent, mechanism topology, physics projections, verification evidence, objectives, and manufacturing semantics.
+
+Sources:
+
+* https://zoo.dev/docs/kcl
+* https://zoo.dev/docs/faq
+* https://github.com/kittycad/modeling-app
+* https://github.com/KittyCAD/kcl-lsp
+
+== 2. FeatureScript: deterministic parametric CAD
+
+Onshape FeatureScript is a language built specifically for parametric CAD.
+Onshape documents determinism as a core principle: model regeneration should produce the same result independently of external state, time, or randomness.
+
+Useful ideas for EMES:
+
+* deterministic regeneration;
+* domain-specific types for geometry;
+* feature calls as inspectable program structure;
+* no uncontrolled side effects in the modeling core.
+
+Gap:
+
+FeatureScript is primarily a CAD feature language embedded in Onshape, not a general mechanism engineering IR or evidence system.
+
+Sources:
+
+* https://cad.onshape.com/FsDoc/index.html
+* https://cad.onshape.com/FsDoc/intro.html
+
+== 3. CadQuery and build123d: open CAD-as-code backends
+
+CadQuery and build123d expose Open Cascade BREP modeling through Python.
+Both provide precise parametric geometry without requiring GUI-driven authoring.
+
+CadQuery is particularly relevant because CAD-Recode uses executable CadQuery Python as its learned CAD representation and reports that off-the-shelf LLMs can interpret and edit the resulting code.
+
+build123d is attractive as a backend because its API is intentionally Pythonic, typed, composable, and based on Open Cascade.
+
+EMES implication:
+
+Do not build a geometry kernel.
+Define a geometry adapter and initially target one of these tools.
+
+Sources:
+
+* https://github.com/CadQuery/cadquery
+* https://cadquery.readthedocs.io/en/stable/
+* https://github.com/gumyr/build123d
+* https://build123d.readthedocs.io/en/stable/
+
+== 4. OpenSCAD and FreeCAD Python
+
+OpenSCAD established a mature text-first constructive-solid-geometry workflow.
+FreeCAD is a general open-source parametric CAD system with a broad Python API.
+
+Useful ideas:
+
+* scriptable and reproducible geometry;
+* CLI automation;
+* broad import/export ecosystem.
+
+EMES implication:
+
+Both are useful adapters, but neither should define EMES semantics.
+
+Sources:
+
+* https://openscad.org/documentation.html
+* https://github.com/FreeCAD/FreeCAD
+
+== 5. Modelica: physical semantics beyond CAD
+
+Modelica is an object-oriented, equation-based language for cyber-physical systems.
+It supports acausal component connections and multiple physical domains including mechanical, electrical, hydraulic, thermal, and control systems.
+The Modelica Standard Library includes 3D MultiBody components for mechanisms, robots, and vehicles.
+
+This is highly relevant to EMES because it demonstrates that reusable engineering semantics should not be reduced to geometry.
+
+Useful ideas:
+
+* component interfaces;
+* acausal physical connections;
+* reusable domain libraries;
+* explicit equations and physical quantities;
+* multi-domain composition.
+
+EMES implication:
+
+Modelica should be a first-class compilation/export target for multi-domain behavior rather than something EMES attempts to replace.
+
+Sources:
+
+* https://modelica.org/language/
+* https://specification.modelica.org/maint/3.7/MLS.html
+* https://github.com/modelica/ModelicaStandardLibrary
+
+== 6. SysML v2 and KerML: system semantics and requirements
+
+SysML v2 is a formal systems-modeling language with textual and graphical forms, semantic foundations, libraries, and requirements-oriented modeling.
+
+Useful ideas:
+
+* explicit system structure;
+* requirements as first-class model elements;
+* typed relationships;
+* machine-readable semantics;
+* separation of system intent from tool-specific artifacts.
+
+Gap:
+
+SysML is intentionally broad and can impose substantial modeling overhead for a small mechanical-design loop.
+
+EMES implication:
+
+Borrow concepts and eventually support import/export, but keep the EMES core narrower and executable for mechanism development.
+
+Sources:
+
+* https://www.omg.org/spec/SysML/2.0/Language/PDF
+* https://www.omg.org/sysml/specifications.htm
+
+== 7. URDF, SDFormat, and MJCF
+
+URDF represents robot geometry and organization in the ROS ecosystem.
+SDFormat represents simulation models with links, joints, inertia, collision, sensors, and richer dynamics.
+MJCF is MuJoCo's structured modeling language.
+
+Useful ideas:
+
+* explicit bodies, joints, inertia, collision geometry, actuators;
+* stable simulator-facing formats;
+* machine-readable kinematic trees/graphs.
+
+Gap:
+
+These are runtime/simulation descriptions, not complete engineering source models.
+They generally do not capture design rationale, manufacturing intent, requirement traceability, design-variable permissions, or evidence lineage.
+
+EMES implication:
+
+Treat them as generated projections of the canonical mechanism IR.
+
+Sources:
+
+* https://docs.ros.org/en/rolling/Tutorials/Intermediate/URDF/URDF-Main.html
+* https://sdformat.org/spec/
+* https://mujoco.readthedocs.io/en/latest/XMLreference.html
+
+== 8. OpenMDAO and GEMSEO: multidisciplinary optimization
+
+NASA's OpenMDAO provides infrastructure for multidisciplinary design analysis and optimization, including design variables, objectives, constraints, coupled models, and efficient derivative computation.
+GEMSEO similarly composes engineering disciplines into executable MDO scenarios and offers optimization, DOE, uncertainty, and surrogate-model capabilities.
+
+Useful ideas:
+
+* explicit design variables, constraints, and objectives;
+* graph of coupled analysis disciplines;
+* optimization driver separated from component models;
+* reuse of external analysis tools.
+
+EMES implication:
+
+EMES should expose a clean optimizer interface and optionally integrate these frameworks.
+It should not implement an MDO framework inside the core.
+
+Sources:
+
+* https://software.nasa.gov/software/LEW-18550-1
+* https://doi.org/10.1007/s00158-019-02211-z
+* https://openmdao.org/
+* https://gemseo.org/
+
+== 9. FMI: simulation interoperability
+
+The Functional Mock-up Interface is a standard for exchanging dynamic simulation models and performing model exchange, co-simulation, and scheduled execution.
+
+Useful idea:
+
+Use a standard boundary when coupling external dynamic models rather than defining a proprietary simulator protocol.
+
+Source:
+
+* https://fmi-standard.org/
+
+== 10. RoboGrammar: mechanism topology as a graph grammar
+
+RoboGrammar represents robot designs as graphs and uses a graph grammar to generate a large design space.
+Its grammar constrains generated designs to fabricable structures and a graph heuristic search explores candidates.
+
+This is a direct precedent for EMES Phase 2 topology synthesis.
+
+Reusable ideas:
+
+* typed design graph;
+* grammar rules as legal structural mutations;
+* construction rules can encode manufacturability;
+* topology search and controller optimization can be separated.
+
+Source:
+
+* https://people.csail.mit.edu/jiex/papers/robogrammar/
+
+== 11. RoboMorph and LLM-driven morphology evolution
+
+RoboMorph (ICRA 2026) uses an LLM-guided evolutionary loop:
+
+. LLM generates a robot design in a structured grammar.
+. The design compiles to MuJoCo XML.
+. A controller is trained/evaluated.
+. Fitness is measured.
+. Strong designs become context for later generations.
+
+This is extremely close to the desired EMES outer loop, but its target domain is robot morphology and locomotion rather than general mechanical engineering.
+
+EMES implication:
+
+Adopt the design/compile/evaluate/evolve pattern, but generalize the design representation and replace task reward alone with requirement traceability and multi-fidelity engineering evidence.
+
+Source:
+
+* https://github.com/kevinxqiu/robomorph
+
+== 12. RoboMoRe and recent robot co-design research
+
+RoboMoRe uses an LLM inside morphology/reward co-optimization.
+Recent morphology-control work also emphasizes the expense and bias of evaluating each morphology with controller training.
+
+Reusable idea:
+
+The evaluation budget itself is part of the architecture.
+Cheap filters and staged fidelity are necessary before expensive control training or high-fidelity simulation.
+
+Sources:
+
+* https://arxiv.org/abs/2506.00276
+* https://arxiv.org/abs/2608.23100
+
+== 13. LLM + FEM closed-loop mechanical design
+
+Jadhav and Barati Farimani (2026) describe an LLM agent coupled to FEM that iteratively generates, evaluates, and refines structural designs from quantitative feedback.
+Their reported experiments on 2D trusses are relevant because the LLM is treated as a proposal mechanism while FEM supplies external engineering feedback.
+
+Reusable idea:
+
+Keep numerical engineering evaluation outside the LLM and return structured failure metrics to the proposer.
+
+Source:
+
+* https://doi.org/10.1080/09544828.2026.2624356
+
+== 14. CAD-Recode, Text2CAD, and LLM4CAD
+
+Recent CAD-generation research demonstrates several representation choices:
+
+CAD-Recode::
+Point cloud -> executable CadQuery Python. The code representation is interpretable and editable by general-purpose LLMs.
+
+Text2CAD::
+Natural-language descriptions -> sequential parametric CAD operations.
+
+LLM4CAD::
+Explores multimodal LLM generation of 3D CAD representations.
+
+Reusable ideas:
+
+* programmatic representations are better AI interfaces than opaque meshes;
+* sequential parametric construction preserves editability;
+* AI-facing representations should be syntactically and semantically checkable.
+
+Sources:
+
+* https://openaccess.thecvf.com/content/ICCV2025/html/Rukhovich_CAD-Recode_Reverse_Engineering_CAD_Code_from_Point_Clouds_ICCV_2025_paper.html
+* https://arxiv.org/abs/2409.17106
+* https://doi.org/10.1115/1.4067085
+
+== 15. Project Chrono
+
+Project Chrono is an open-source multiphysics and multibody dynamics engine supporting mechanisms composed of rigid bodies, joints, motors, springs, dampers, collision, FEA, and other domains.
+
+EMES implication:
+
+Chrono is a strong future adapter for mechanisms that exceed ordinary robot simulators, especially vehicles, contact-rich mechanisms, and coupled multibody/FEA problems.
+
+Source:
+
+* https://projectchrono.org/
+
+== 16. Synthesis: what is actually novel enough to build
+
+The research suggests that none of the individual subproblems should be reinvented:
+
+[cols="2,2,3"]
+|===
+|Problem |Existing strong solution |EMES role
+
+|Parametric CAD as code
+|KCL, FeatureScript, CadQuery, build123d
+|Adapter, not new kernel
+
+|System requirements/semantics
+|SysML v2
+|Narrow executable subset + interoperability
+
+|Physical multi-domain modeling
+|Modelica
+|Compilation/projection target
+
+|Robot simulation format
+|URDF, SDF, MJCF
+|Generated projection
+
+|Multibody/multiphysics
+|MuJoCo, Chrono, Modelica tools
+|Analysis adapters
+
+|MDO
+|OpenMDAO, GEMSEO
+|Optimization adapter
+
+|Topology generation
+|RoboGrammar
+|Future graph-grammar search
+
+|AI CAD editing
+|Zookeeper, CAD-Recode, Text2CAD
+|Use code/IR-friendly lessons
+
+|AI engineering iteration
+|RoboMorph, LLM+FEM research
+|Generalize into evidence-driven loop
+|===
+
+The strongest architectural gap for EMES is therefore:
+
+[quote]
+____
+A backend-neutral, version-controlled semantic mechanism IR that connects requirements and design intent to topology, parametric realization, multi-fidelity analysis, manufacturing evidence, and AI/optimizer iteration.
+____
+
+That is substantially broader than "AI CAD", while remaining narrow enough to build.
+
+== 17. Recommended concepts to adopt immediately
+
+. *Typed graph topology* from RoboGrammar and robot description formats.
+. *Text source of truth* from KCL/FeatureScript/CAD-as-code.
+. *Deterministic regeneration* from FeatureScript.
+. *Acausal physical composition* as an interoperability target via Modelica.
+. *Design variable / constraint / objective separation* from MDO.
+. *Compile-to-existing-tools* instead of replacing CAD and solvers.
+. *Evidence outside the LLM* from simulation-driven design loops.
+. *Staged evaluation cost* before expensive simulation/training.
+. *Stable IDs and hashes* for Git-friendly traceability.
+. *Human fabrication gate* after digital verification.

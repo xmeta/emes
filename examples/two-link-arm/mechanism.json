@@ -1,0 +1,194 @@
+{
+  "emes_version": "0.1",
+  "design": {
+    "id": "arm2",
+    "name": "Two-link reference arm",
+    "description": "Minimal EMES vertical-slice example."
+  },
+  "requirements": [
+    {
+      "id": "REQ_REACH",
+      "kind": "performance",
+      "statement": "Reach at least 0.65 m."
+    },
+    {
+      "id": "REQ_PAYLOAD",
+      "kind": "performance",
+      "statement": "Carry a 5 kg payload in the full-extension load case."
+    },
+    {
+      "id": "REQ_MASS",
+      "kind": "performance",
+      "statement": "Total moving-link mass shall not exceed 3 kg."
+    }
+  ],
+  "design_intent": [
+    {
+      "id": "INTENT_REMOTE_J2",
+      "statement": "Keep the J2 actuator on the base side to reduce moving inertia.",
+      "protects": ["REQ_PAYLOAD"]
+    }
+  ],
+  "parameters": [
+    {
+      "id": "P_L1",
+      "role": "design_variable",
+      "value": {"value": 0.35, "unit": "m"},
+      "lower": {"value": 0.25, "unit": "m"},
+      "upper": {"value": 0.5, "unit": "m"}
+    },
+    {
+      "id": "P_L2",
+      "role": "design_variable",
+      "value": {"value": 0.32, "unit": "m"},
+      "lower": {"value": 0.2, "unit": "m"},
+      "upper": {"value": 0.45, "unit": "m"}
+    }
+  ],
+  "components": [
+    {
+      "id": "base",
+      "kind": "body",
+      "mass": {"value": 3.0, "unit": "kg"}
+    },
+    {
+      "id": "link1",
+      "kind": "link",
+      "material": "Al6061-T6",
+      "mass": {"value": 1.1, "unit": "kg"},
+      "parameters": ["P_L1"]
+    },
+    {
+      "id": "link2",
+      "kind": "link",
+      "material": "Al6061-T6",
+      "mass": {"value": 0.8, "unit": "kg"},
+      "parameters": ["P_L2"]
+    },
+    {"id": "motor_j1", "kind": "actuator"},
+    {"id": "motor_j2", "kind": "actuator"},
+    {"id": "belt_j2", "kind": "transmission"}
+  ],
+  "connections": [
+    {
+      "id": "J1",
+      "kind": "revolute",
+      "a": {"component": "base"},
+      "b": {"component": "link1"},
+      "axis": [0, 0, 1],
+      "lower": {"value": -2.0944, "unit": "rad"},
+      "upper": {"value": 2.0944, "unit": "rad"}
+    },
+    {
+      "id": "J2",
+      "kind": "revolute",
+      "a": {"component": "link1"},
+      "b": {"component": "link2"},
+      "axis": [0, 0, 1],
+      "lower": {"value": -2.61799, "unit": "rad"},
+      "upper": {"value": 2.61799, "unit": "rad"}
+    },
+    {
+      "id": "DRIVE_J2",
+      "kind": "belt",
+      "a": {"component": "motor_j2"},
+      "b": {"component": "link2"},
+      "ratio": 2.5
+    }
+  ],
+  "functional_edges": [
+    {
+      "id": "F1",
+      "from": "motor_j2",
+      "relation": "transmits_power_through",
+      "to": "belt_j2"
+    },
+    {
+      "id": "F2",
+      "from": "belt_j2",
+      "relation": "drives",
+      "to": "J2"
+    }
+  ],
+  "load_cases": [
+    {
+      "id": "LC_FULL",
+      "description": "Five-kilogram payload at full extension.",
+      "loads": [
+        {
+          "target": "link2",
+          "kind": "mass",
+          "value": {"value": 5.0, "unit": "kg"}
+        }
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "id": "C_REACH",
+      "metric": "M_REACH",
+      "op": ">=",
+      "target": {"value": 0.65, "unit": "m"}
+    },
+    {
+      "id": "C_PAYLOAD_STRESS",
+      "metric": "M_MAX_STRESS",
+      "op": "<=",
+      "target": {"value": 138, "unit": "MPa"},
+      "load_case": "LC_FULL"
+    },
+    {
+      "id": "C_MOVING_MASS",
+      "metric": "M_MOVING_MASS",
+      "op": "<=",
+      "target": {"value": 3.0, "unit": "kg"}
+    }
+  ],
+  "objectives": [
+    {
+      "id": "O_MASS",
+      "metric": "M_MOVING_MASS",
+      "direction": "minimize",
+      "weight": 1.0
+    }
+  ],
+  "analyses": [
+    {
+      "id": "A_GEOMETRY",
+      "kind": "analytic",
+      "adapter": "emes.reference.two_link",
+      "fidelity": "analytic",
+      "produces": [
+        {
+          "id": "M_REACH",
+          "unit": "m",
+          "description": "Maximum planar reach."
+        },
+        {
+          "id": "M_MOVING_MASS",
+          "unit": "kg",
+          "description": "Mass of link1 plus link2."
+        }
+      ]
+    },
+    {
+      "id": "A_STRESS",
+      "kind": "fea",
+      "adapter": "future.structural",
+      "fidelity": "low",
+      "load_cases": ["LC_FULL"],
+      "produces": [
+        {
+          "id": "M_MAX_STRESS",
+          "unit": "MPa",
+          "description": "Maximum von Mises stress."
+        }
+      ]
+    }
+  ],
+  "traceability": [
+    {"requirement": "REQ_REACH", "verified_by": ["C_REACH"]},
+    {"requirement": "REQ_PAYLOAD", "verified_by": ["C_PAYLOAD_STRESS"]},
+    {"requirement": "REQ_MASS", "verified_by": ["C_MOVING_MASS"]}
+  ]
+}

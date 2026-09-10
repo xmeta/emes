@@ -1,0 +1,36 @@
+= ADR-0001: Canonical IR before a custom DSL
+
+== Status
+
+Accepted.
+
+== Context
+
+EMES requires a representation that AI agents, deterministic tooling, and multiple engineering backends can all consume.
+A custom language could eventually improve authoring ergonomics, but designing syntax before the semantics have been exercised would create avoidable lock-in.
+
+== Decision
+
+Phase 1 uses JSON as the canonical interchange representation, validated by JSON Schema.
+
+Authoring frontends may later include YAML, TOML, GUI tools, natural language, or an EMES-specific DSL.
+They must lower to the same canonical semantic model.
+
+Canonical normalization will use explicit units, stable IDs, resolved references, and deterministic ordering before hashing.
+
+== Consequences
+
+Positive:
+
+* immediate tooling;
+* executable schema;
+* straightforward CI;
+* language-neutral interchange;
+* no parser implementation needed for Phase 1.
+
+Negative:
+
+* JSON is verbose for human authors;
+* expressions and reusable abstractions are awkward.
+
+The verbosity is acceptable until real examples establish the requirements for a dedicated language.
