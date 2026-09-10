@@ -90,6 +90,7 @@
       "a": {"component": "base"},
       "b": {"component": "link1"},
       "axis": [0, 0, 1],
+      "frame": "link1",
       "lower": {"value": -2.0944, "unit": "rad"},
       "upper": {"value": 2.0944, "unit": "rad"}
     },
@@ -99,6 +100,7 @@
       "a": {"component": "link1"},
       "b": {"component": "link2"},
       "axis": [0, 0, 1],
+      "frame": "link2",
       "lower": {"value": -2.61799, "unit": "rad"},
       "upper": {"value": 2.61799, "unit": "rad"}
     },

@@ -22,7 +22,7 @@ from evidence import (
     validate_evidence,
 )
 from power import OPERATORS, quantity_value
-from validate import canonical_digest, load_json
+from validate import canonical_digest, load_json, validate_semantics
 
 
 def evidence_metric(evidence: dict[str, Any], metric_id: str, unit: str) -> float:
@@ -454,6 +454,7 @@ def run(
     analysis_request_path: Path | None = None,
 ) -> dict[str, Any]:
     document = load_json(source)
+    validate_semantics(document)
     power_evidence = load_json(power_evidence_path)
     pulse_evidence = load_json(pulse_evidence_path)
 

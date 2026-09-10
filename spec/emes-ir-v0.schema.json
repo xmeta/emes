@@ -208,6 +208,9 @@
         "lower": {"$ref": "#/$defs/quantity"},
         "upper": {"$ref": "#/$defs/quantity"},
         "ratio": {"type": "number"}
+      },
+      "dependentRequired": {
+        "axis": ["frame"]
       }
     },
     "functional_edge": {
@@ -236,6 +239,9 @@
           "items": {"type": "number"}
         },
         "frame": {"$ref": "#/$defs/id"}
+      },
+      "dependentRequired": {
+        "direction": ["frame"]
       }
     },
     "load_case": {

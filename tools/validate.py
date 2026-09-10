@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -17,9 +19,69 @@ def load_json(path: Path) -> dict[str, Any]:
         return json.load(handle)
 
 
+# Current canonical engineering units. Spatial/mechanical quantities use SI;
+# domain-native units already used by executable adapters remain explicit.
+_UNIT_NORMALIZATION: dict[str, tuple[str, str, str]] = {
+    "1": ("dimensionless", "1", "1"),
+    "%": ("percent", "%", "1"),
+    "m": ("length", "m", "1"),
+    "cm": ("length", "m", "0.01"),
+    "mm": ("length", "m", "0.001"),
+    "kg": ("mass", "kg", "1"),
+    "g": ("mass", "kg", "0.001"),
+    "V": ("voltage", "V", "1"),
+    "mV": ("voltage", "V", "0.001"),
+    "A": ("current", "A", "1"),
+    "mA": ("current", "A", "0.001"),
+    "W": ("power", "W", "1"),
+    "kW": ("power", "W", "1000"),
+    "W*h": ("energy", "W*h", "1"),
+    "kW*h": ("energy", "W*h", "1000"),
+    "A*h": ("capacity", "A*h", "1"),
+    "mA*h": ("capacity", "A*h", "0.001"),
+    "rad": ("angle", "rad", "1"),
+    "s": ("time", "s", "1"),
+    "ms": ("time", "s", "0.001"),
+    "degC": ("temperature", "degC", "1"),
+    "MPa": ("stress", "MPa", "1"),
+    "kPa": ("stress", "MPa", "0.001"),
+    "Pa": ("stress", "MPa", "0.000001"),
+    "ohm": ("resistance", "ohm", "1"),
+}
+
+
+def normalize_quantity(item: dict[str, Any]) -> dict[str, Any]:
+    unit = item["unit"]
+    if unit not in _UNIT_NORMALIZATION:
+        raise ValueError(f"unsupported quantity unit {unit!r}")
+    _, canonical_unit, factor = _UNIT_NORMALIZATION[unit]
+    normalized = copy.deepcopy(item)
+    normalized["value"] = float(Decimal(str(item["value"])) * Decimal(factor))
+    normalized["unit"] = canonical_unit
+    return normalized
+
+
+def normalize_document(document: dict[str, Any]) -> dict[str, Any]:
+    def walk(value: Any) -> Any:
+        if isinstance(value, dict):
+            if (
+                "value" in value
+                and "unit" in value
+                and isinstance(value["value"], (int, float))
+                and isinstance(value["unit"], str)
+            ):
+                return {key: walk(item) for key, item in normalize_quantity(value).items()}
+            return {key: walk(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [walk(item) for item in value]
+        return copy.deepcopy(value)
+
+    return walk(document)
+
+
 def canonical_digest(document: dict[str, Any]) -> str:
     payload = json.dumps(
-        document,
+        normalize_document(document),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
@@ -67,6 +129,9 @@ def require_ref(ref: str, ids: dict[str, str], context: str) -> None:
 
 
 def validate_semantics(document: dict[str, Any]) -> None:
+    normalized = normalize_document(document)
+    document.clear()
+    document.update(normalized)
     ids = collect_ids(document)
 
     parameter_ids = {item["id"] for item in document.get("parameters", [])}
@@ -104,12 +169,27 @@ def validate_semantics(document: dict[str, Any]) -> None:
         for ref in component.get("parameters", []):
             if ref not in parameter_ids:
                 raise ValueError(f"{component['id']}: unknown parameter {ref!r}")
+        geometry = component.get("geometry")
+        if isinstance(geometry, dict) and "frame" in geometry:
+            if geometry["frame"] != component["id"]:
+                raise ValueError(
+                    f"{component['id']}: geometry frame must be the component-local frame"
+                )
 
     for connection in document.get("connections", []):
         for side in ("a", "b"):
             ref = connection[side]["component"]
             if ref not in component_ids:
                 raise ValueError(f"{connection['id']}: endpoint {side} references {ref!r}")
+        if "axis" in connection:
+            frame = connection.get("frame")
+            if frame is None:
+                raise ValueError(f"{connection['id']}: axis requires an explicit frame")
+            child = connection["b"]["component"]
+            if frame != child:
+                raise ValueError(
+                    f"{connection['id']}: axis frame must be child component {child!r}"
+                )
 
     for edge in document.get("functional_edges", []):
         require_ref(edge["from"], ids, edge["id"])
@@ -120,6 +200,20 @@ def validate_semantics(document: dict[str, Any]) -> None:
             if load["target"] not in component_ids:
                 raise ValueError(
                     f"{load_case['id']}: load target {load['target']!r} is not a component"
+                )
+            if "direction" in load:
+                frame = load.get("frame")
+                if frame is None:
+                    raise ValueError(
+                        f"{load_case['id']}: directional load requires an explicit frame"
+                    )
+                if frame != load["target"]:
+                    raise ValueError(
+                        f"{load_case['id']}: load frame must be target component {load['target']!r}"
+                    )
+            elif "frame" in load and load["frame"] != load["target"]:
+                raise ValueError(
+                    f"{load_case['id']}: load frame must be target component {load['target']!r}"
                 )
 
     for constraint in document.get("constraints", []):

@@ -19,7 +19,7 @@ from evidence import (
     require_input_digest,
     validate_evidence,
 )
-from validate import canonical_digest, load_json
+from validate import canonical_digest, load_json, validate_semantics
 
 
 def evidence_metric(evidence: dict[str, Any], metric_id: str, unit: str) -> float:
@@ -219,8 +219,10 @@ def run(
     out: Path,
     repo_root: Path,
 ) -> dict[str, Any]:
+    document = load_json(source)
+    validate_semantics(document)
     result = evaluate(
-        load_json(source),
+        document,
         load_json(power_evidence_path),
         load_json(known_evidence_path),
         repo_root,
