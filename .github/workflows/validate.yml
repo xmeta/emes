@@ -113,6 +113,7 @@ jobs:
       - run: python tools/catalog.py validate catalogs/reference-power.catalog.json
       - run: python tools/validate.py examples/power-pack/mechanism.json
       - run: python tools/power.py examples/power-pack/mechanism.json --out generated/power-pack/evidence.json --check-determinism
+      - run: python tools/check_design_iteration.py
       - run: python tools/validate.py examples/power-supply/mechanism.json
       - run: python tools/power.py examples/power-supply/mechanism.json --out generated/power-supply/evidence.json --check-determinism
       - run: python tools/validate.py examples/power-pack-molicel-p45b/mechanism.json
