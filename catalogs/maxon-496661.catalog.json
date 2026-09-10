@@ -1,0 +1,111 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_MAXON_496661",
+    "name": "maxon EC-i 40 100 W part 496661",
+    "description": "Authoritative-source snapshot normalized for EMES; upstream files are referenced, not redistributed."
+  },
+  "sources": [
+    {
+      "id": "SRC_MAXON_PRODUCT",
+      "authority": "manufacturer",
+      "format": "other",
+      "uri": "https://www.maxongroup.com/maxon/view/product/motor/ecmotor/EC-i/496661",
+      "retrieved_at": "2026-09-10T13:34:37Z",
+      "license": "maxon upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:4b96d5792c92ada66c7eb0050d16d5ffeb745a588a1f195b621397d96ca511ba"
+    },
+    {
+      "id": "SRC_MAXON_CATALOG_2025",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.maxongroup.com/medias/sys_master/root/9406692261918/Cataloge-Page-EN-310.pdf",
+      "retrieved_at": "2026-09-10T13:34:37Z",
+      "license": "maxon upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:3273ff843a2d643417cf5d200d57c5218370e224abdb8315918a84013d9d8b71"
+    },
+    {
+      "id": "SRC_MAXON_CAD_2017",
+      "authority": "manufacturer",
+      "format": "other",
+      "uri": "https://www.maxongroup.com/medias/sys_master/root/8824729010206/496660-ec-i40-100w.zip",
+      "retrieved_at": "2026-09-10T13:34:37Z",
+      "license": "maxon upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:0385dda8d05d7b03b51df7efb8531fe39a0e246716eefcaeb165340a29f80c95"
+    },
+    {
+      "id": "SRC_EMES_MAXON_SNAPSHOT",
+      "authority": "derived",
+      "format": "json",
+      "path": "catalogs/sources/maxon-496661.source.json",
+      "retrieved_at": "2026-09-10T13:34:37Z",
+      "license": "EMES factual metadata; upstream rights remain with maxon",
+      "raw_digest": "sha256:88702a9514eb336df7177497961ba77af254c02b20970cd7f5b2340080eceb09"
+    }
+  ],
+  "parts": [
+    {
+      "id": "MAXON_496661",
+      "kind": "motor",
+      "identity": {
+        "manufacturer": "maxon",
+        "part_number": "496661"
+      },
+      "properties": {
+        "mass": {"value": 0.39, "unit": "kg", "source": "SRC_MAXON_PRODUCT"},
+        "nominal_voltage": {"value": 36.0, "unit": "V", "source": "SRC_MAXON_PRODUCT"},
+        "continuous_torque": {"value": 0.208, "unit": "N*m", "source": "SRC_MAXON_PRODUCT"},
+        "stall_torque": {"value": 1.92, "unit": "N*m", "source": "SRC_MAXON_PRODUCT"},
+        "continuous_current": {"value": 2.74, "unit": "A", "source": "SRC_MAXON_PRODUCT"},
+        "stall_current": {"value": 42.8, "unit": "A", "source": "SRC_MAXON_PRODUCT"},
+        "no_load_speed": {"value": 476.47488579445195, "unit": "rad/s", "source": "SRC_MAXON_PRODUCT"},
+        "nominal_speed": {"value": 413.6430327226561, "unit": "rad/s", "source": "SRC_MAXON_PRODUCT"},
+        "max_speed": {"value": 837.7580409572781, "unit": "rad/s", "source": "SRC_MAXON_PRODUCT"},
+        "max_efficiency": {"value": 0.87, "unit": "1", "source": "SRC_MAXON_PRODUCT"},
+        "rotor_inertia": {"value": 4.4e-06, "unit": "kg*m^2", "source": "SRC_MAXON_PRODUCT"},
+        "torque_constant": {"value": 0.07490000000000001, "unit": "N*m/A", "source": "SRC_MAXON_PRODUCT"},
+        "speed_constant": {"value": 13.29940890019679, "unit": "rad/s/V", "source": "SRC_MAXON_PRODUCT"},
+        "terminal_resistance": {"value": 0.84, "unit": "ohm", "source": "SRC_MAXON_PRODUCT"},
+        "terminal_inductance": {"value": 0.000675, "unit": "H", "source": "SRC_MAXON_PRODUCT"},
+        "mechanical_time_constant": {"value": 0.0006580000000000001, "unit": "s", "source": "SRC_MAXON_PRODUCT"},
+        "body_diameter": {"value": 0.04, "unit": "m", "source": "SRC_MAXON_CATALOG_2025", "tolerance": 0.00025},
+        "body_length_max": {"value": 0.056, "unit": "m", "source": "SRC_MAXON_CATALOG_2025"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_OUTPUT_SHAFT",
+          "kind": "mechanical_shaft",
+          "properties": {
+            "diameter": {"value": 0.006, "unit": "m", "source": "SRC_MAXON_CATALOG_2025"},
+            "length": {"value": 0.02, "unit": "m", "source": "SRC_MAXON_CATALOG_2025"}
+          }
+        },
+        {
+          "id": "IF_MOUNTING_PILOT",
+          "kind": "mechanical_mount",
+          "properties": {
+            "pilot_diameter": {"value": 0.022, "unit": "m", "source": "SRC_MAXON_CATALOG_2025"}
+          }
+        }
+      ],
+      "assets": [
+        {
+          "id": "ASSET_STEP",
+          "kind": "stp",
+          "uri": "https://www.maxongroup.com/medias/sys_master/root/8824729010206/496660-ec-i40-100w.zip",
+          "digest": "sha256:0e971b305884a8703d5c9d8883b66248220ebb820caf4e7078c9399942b4595a",
+          "source": "SRC_MAXON_CAD_2017",
+          "license": "maxon upstream download; redistribution not asserted"
+        },
+        {
+          "id": "ASSET_DATASHEET",
+          "kind": "datasheet",
+          "uri": "https://www.maxongroup.com/medias/sys_master/root/9406692261918/Cataloge-Page-EN-310.pdf",
+          "digest": "sha256:3273ff843a2d643417cf5d200d57c5218370e224abdb8315918a84013d9d8b71",
+          "source": "SRC_MAXON_CATALOG_2025",
+          "license": "maxon upstream download; redistribution not asserted"
+        }
+      ]
+    }
+  ]
+}
