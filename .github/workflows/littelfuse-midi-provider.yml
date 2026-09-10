@@ -27,7 +27,14 @@ jobs:
         with:
           python-version: "3.12"
       - run: python tools/providers/littelfuse_midi.py normalize catalogs/sources/littelfuse-midi70v-40a.source.json /tmp/littelfuse.catalog.json
-      - run: cmp catalogs/littelfuse-midi70v-40a.catalog.json /tmp/littelfuse.catalog.json
+      - run: |
+          python - <<'PY'
+          import json
+          committed = json.load(open('catalogs/littelfuse-midi70v-40a.catalog.json'))
+          generated = json.load(open('/tmp/littelfuse.catalog.json'))
+          assert committed == generated
+          print('VALID deterministic-littelfuse-catalog-content')
+          PY
       - run: python tools/catalog.py validate catalogs/littelfuse-midi70v-40a.catalog.json
       - run: |
           python - <<'PY'
