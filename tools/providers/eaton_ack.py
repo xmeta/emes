@@ -17,7 +17,7 @@ def fetch(url: str) -> bytes:
     request = urllib.request.Request(
         url, headers={"User-Agent": USER_AGENT, "Accept": "application/pdf,*/*"}
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with urllib.request.urlopen(request, timeout=90) as response:
         return response.read()
 
 
