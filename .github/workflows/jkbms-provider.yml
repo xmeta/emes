@@ -2,17 +2,22 @@ name: jkbms-provider
 
 on:
   push:
+    branches: ["main"]
     paths:
       - "tools/providers/jkbms.py"
       - "catalogs/sources/jkbms-bd6a20s6p.source.json"
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - ".github/workflows/jkbms-provider.yml"
+      - "tools/catalog.py"
+      - "spec/emes-catalog-v0.schema.json"
   pull_request:
     paths:
       - "tools/providers/jkbms.py"
       - "catalogs/sources/jkbms-bd6a20s6p.source.json"
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
       - ".github/workflows/jkbms-provider.yml"
+      - "tools/catalog.py"
+      - "spec/emes-catalog-v0.schema.json"
   workflow_dispatch:
 
 permissions:
