@@ -29,7 +29,10 @@
     {
       "id": "MAXON_496661",
       "kind": "motor",
-      "identity": {"manufacturer": "maxon", "part_number": "496661"},
+      "identity": {
+        "manufacturer": "maxon",
+        "part_number": "496661"
+      },
       "properties": {
         "mass": {"value": 0.39, "unit": "kg", "source": "SRC_MAXON_CATALOG_2025"},
         "nominal_voltage": {"value": 36.0, "unit": "V", "source": "SRC_MAXON_CATALOG_2025"},
@@ -38,16 +41,16 @@
         "no_load_current": {"value": 0.176, "unit": "A", "source": "SRC_MAXON_CATALOG_2025"},
         "continuous_current": {"value": 2.76, "unit": "A", "source": "SRC_MAXON_CATALOG_2025"},
         "stall_current": {"value": 43.4, "unit": "A", "source": "SRC_MAXON_CATALOG_2025"},
-        "no_load_speed": {"value": 476.474885794452, "unit": "rad/s", "source": "SRC_MAXON_CATALOG_2025"},
-        "nominal_speed": {"value": 413.64303272265613, "unit": "rad/s", "source": "SRC_MAXON_CATALOG_2025"},
+        "no_load_speed": {"value": 476.47488579445195, "unit": "rad/s", "source": "SRC_MAXON_CATALOG_2025"},
+        "nominal_speed": {"value": 413.6430327226561, "unit": "rad/s", "source": "SRC_MAXON_CATALOG_2025"},
         "max_speed": {"value": 837.7580409572781, "unit": "rad/s", "source": "SRC_MAXON_CATALOG_2025"},
         "max_efficiency": {"value": 0.875, "unit": "1", "source": "SRC_MAXON_CATALOG_2025"},
         "terminal_resistance": {"value": 0.829, "unit": "ohm", "source": "SRC_MAXON_CATALOG_2025"},
         "terminal_inductance": {"value": 0.000675, "unit": "H", "source": "SRC_MAXON_CATALOG_2025"},
         "torque_constant": {"value": 0.07490000000000001, "unit": "N*m/A", "source": "SRC_MAXON_CATALOG_2025"},
-        "speed_constant": {"value": 13.299408900196791, "unit": "rad/s/V", "source": "SRC_MAXON_CATALOG_2025"},
-        "speed_torque_gradient": {"value": 147.6548547187203, "unit": "rad/s/N*m", "source": "SRC_MAXON_CATALOG_2025"},
-        "mechanical_time_constant": {"value": 0.00065, "unit": "s", "source": "SRC_MAXON_CATALOG_2025"},
+        "speed_constant": {"value": 13.29940890019679, "unit": "rad/s/V", "source": "SRC_MAXON_CATALOG_2025"},
+        "speed_torque_gradient": {"value": 147.65485471872026, "unit": "rad/s/N*m", "source": "SRC_MAXON_CATALOG_2025"},
+        "mechanical_time_constant": {"value": 0.0006500000000000001, "unit": "s", "source": "SRC_MAXON_CATALOG_2025"},
         "rotor_inertia": {"value": 4.4e-06, "unit": "kg*m^2", "source": "SRC_MAXON_CATALOG_2025"},
         "number_of_pole_pairs": {"value": 7.0, "unit": "1", "source": "SRC_MAXON_CATALOG_2025"},
         "number_of_phases": {"value": 3.0, "unit": "1", "source": "SRC_MAXON_CATALOG_2025"},
