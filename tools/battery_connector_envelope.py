@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compose catalog-backed pack-side connector/contactor limits with known evidence."""
+"""Compose catalog-backed pack-side conductor/connector/contactor limits with known evidence."""
 
 from __future__ import annotations
 
@@ -81,6 +81,11 @@ def evaluate(
         raise ValueError("power path must declare at least one pack_connector_components entry")
     if len(set(connector_ids)) != len(connector_ids):
         raise ValueError("power path contains duplicate pack-side connector components")
+    conductor_ids = path.get("pack_conductor_components", [])
+    if not isinstance(conductor_ids, list):
+        raise ValueError("power path pack_conductor_components must be an array")
+    if len(set(conductor_ids)) != len(conductor_ids):
+        raise ValueError("power path contains duplicate pack-side conductor components")
     contactor_id = path.get("contactor_component")
     if contactor_id is not None and not isinstance(contactor_id, str):
         raise ValueError("power path contactor_component must be a component id")
@@ -107,6 +112,59 @@ def evaluate(
             "parent_evidence_digest": canonical_digest(known_evidence),
         }
     ]
+
+    conductor_records: list[dict[str, Any]] = []
+    for component_id in conductor_ids:
+        if component_id not in selected:
+            raise ValueError(f"{component_id}: conductor must be catalog-backed")
+        conductor = selected[component_id]
+        if conductor.get("kind") != "conductor":
+            raise ValueError(
+                f"{component_id}: expected conductor catalog part, got {conductor.get('kind')}"
+            )
+        allowable_ampacity_a = property_number(conductor, "allowable_ampacity", "A")
+        rated_voltage_v = property_number(conductor, "rated_voltage", "V")
+        voltage_margin_v = rated_voltage_v - pack_max_voltage_v
+        if voltage_margin_v < 0:
+            raise ValueError(
+                "conductor voltage rating is below maximum pack voltage: "
+                f"component={component_id} pack={pack_max_voltage_v:g}V "
+                f"conductor={rated_voltage_v:g}V"
+            )
+        scale = positive_ratio(
+            allowable_ampacity_a,
+            max_pack_current_a,
+            f"{component_id} allowable ampacity",
+        )
+        record = {
+            "component": component_id,
+            "part": conductor["id"],
+            "part_digest": catalog_digest(conductor),
+            "allowable_ampacity": allowable_ampacity_a,
+            "allowable_ampacity_unit": "A",
+            "rated_voltage": rated_voltage_v,
+            "rated_voltage_unit": "V",
+            "voltage_margin": voltage_margin_v,
+            "voltage_margin_unit": "V",
+            "max_pack_current": max_pack_current_a,
+            "max_pack_current_unit": "A",
+            "scale_factor": scale,
+        }
+        conductor_records.append(record)
+        candidates.append(
+            {
+                "id": f"conductor_allowable_ampacity:{component_id}",
+                "component": component_id,
+                "part": conductor["id"],
+                "part_digest": catalog_digest(conductor),
+                "rating_kind": "source_conditioned_conductor_allowable_ampacity",
+                "limit": allowable_ampacity_a,
+                "demand": max_pack_current_a,
+                "unit": "A",
+                "scale_factor": scale,
+            }
+        )
+
     connector_records: list[dict[str, Any]] = []
     for component_id in connector_ids:
         if component_id not in selected:
@@ -228,20 +286,44 @@ def evaluate(
     final_scale = float(limiting["scale_factor"])
     final_output_w = reference_output_w * final_scale
 
-    metrics = [
-        {
-            "id": "M_KNOWN_CONNECTOR_RATED_LOAD_SCALE",
-            "value": min_connector_scale,
-            "unit": "1",
-            "method": "minimum_connector_rated_current_over_max_pack_current",
-        },
-        {
-            "id": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN",
-            "value": min_connector_voltage_margin,
-            "unit": "V",
-            "method": "minimum_connector_rated_dc_voltage_minus_pack_max_voltage",
-        },
-    ]
+    metrics: list[dict[str, Any]] = []
+    if conductor_records:
+        min_conductor_scale = min(item["scale_factor"] for item in conductor_records)
+        min_conductor_voltage_margin = min(
+            item["voltage_margin"] for item in conductor_records
+        )
+        metrics.extend(
+            [
+                {
+                    "id": "M_KNOWN_CONDUCTOR_AMPACITY_LOAD_SCALE",
+                    "value": min_conductor_scale,
+                    "unit": "1",
+                    "method": "minimum_source_conditioned_ampacity_over_max_pack_current",
+                },
+                {
+                    "id": "M_KNOWN_CONDUCTOR_VOLTAGE_MARGIN",
+                    "value": min_conductor_voltage_margin,
+                    "unit": "V",
+                    "method": "minimum_conductor_rated_voltage_minus_pack_max_voltage",
+                },
+            ]
+        )
+    metrics.extend(
+        [
+            {
+                "id": "M_KNOWN_CONNECTOR_RATED_LOAD_SCALE",
+                "value": min_connector_scale,
+                "unit": "1",
+                "method": "minimum_connector_rated_current_over_max_pack_current",
+            },
+            {
+                "id": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN",
+                "value": min_connector_voltage_margin,
+                "unit": "V",
+                "method": "minimum_connector_rated_dc_voltage_minus_pack_max_voltage",
+            },
+        ]
+    )
     if contactor_record is not None:
         metrics.extend(
             [
@@ -271,7 +353,7 @@ def evaluate(
                 "id": "M_KNOWN_PATH_LOAD_SCALE_LIMIT",
                 "value": final_scale,
                 "unit": "1",
-                "method": "minimum_parent_connector_and_contactor_load_scale",
+                "method": "minimum_parent_conductor_connector_and_contactor_load_scale",
             },
             {
                 "id": "M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE",
@@ -295,15 +377,17 @@ def evaluate(
             verification=no_design_decision(),
         ),
         "path_id": path_id,
-        "method": "minimum_parent_pack_connector_and_contactor_native_rating_load_scale",
+        "method": "minimum_parent_pack_conductor_connector_and_contactor_native_rating_load_scale",
         "limiting_candidate": limiting["id"],
+        "conductors": conductor_records,
         "connectors": connector_records,
         "candidates": candidates,
         "limitations": [
-            "Connector current is evaluated against the maximum pack-side current over the modeled battery voltage range; no arbitrary voltage is used to manufacture a power rating.",
+            "Conductor and connector current limits are evaluated against the maximum pack-side current over the modeled battery voltage range; no arbitrary voltage is used to manufacture a power rating.",
+            "Conductor ampacity is consumed only as the manufacturer-published value for the exact reviewed cable construction and stated NEC/CEC table basis; EMES does not infer a universal ampacity from AWG or copper area.",
             "The selected SB50 rating is tied to the reviewed manufacturer assembly configuration recorded in the catalog snapshot; it is not a rating for a bare housing in isolation.",
             "Contactor evaluation uses only source-backed main-contact continuous current and the declared DC operating-voltage range; switching life, pulse/breaking capability, coil-drive suitability, and pre-charge approval are not inferred.",
-            "Conductor thermal ampacity, crimp quality, installation method, contact aging, contamination, and enclosure temperature rise are not yet modeled.",
+            "Conductor routing, bundling, enclosed-harness ambient/temperature rise, crimp quality, contact aging, contamination, and enclosure temperature rise are not modeled; the published flexible-cord ampacity is not fabrication approval.",
             "The result composes with parent weakest-known evidence and is not approval to fabricate, charge, or energize a battery pack.",
         ],
     }
