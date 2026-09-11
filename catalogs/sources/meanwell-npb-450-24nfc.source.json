@@ -1,0 +1,31 @@
+{
+  "provider": "meanwell_npb450",
+  "manufacturer": "MEAN WELL",
+  "part_number": "NPB-450-24NFC",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-11T03:28:00Z",
+  "capture_method": "direct download of the current MEAN WELL NPB-450 manufacturer specification",
+  "upstream": {
+    "datasheet_pdf": {
+      "uri": "https://www.meanwell.com/Upload/PDF/NPB-450/NPB-450-SPEC.PDF",
+      "edition": "NPB-450-SPEC 2026-07-06",
+      "bytes": 2327766,
+      "sha256": "sha256:5463c9823f4e23e9b7723452b645a79bc99db03557ddc9e3badb9c434e4034f8",
+      "redistribution": "not_asserted"
+    }
+  },
+  "facts": {
+    "charge_voltage_min": {"locator": "p.3 SPECIFICATION / NPB-450-24NFC / CHARGE VOLTAGE RANGE", "value": 21.0, "unit": "V"},
+    "charge_voltage_max": {"locator": "p.3 SPECIFICATION / NPB-450-24NFC / CHARGE VOLTAGE RANGE", "value": 42.0, "unit": "V"},
+    "max_output_current": {"locator": "p.3 SPECIFICATION / NPB-450-24NFC / MAX. OUTPUT CURRENT(CC)", "value": 13.5, "unit": "A"},
+    "max_output_power": {"locator": "p.3 SPECIFICATION / NPB-450-24NFC / MAX. POWER", "value": 453.6, "unit": "W"},
+    "working_temperature_min": {"locator": "p.3 SPECIFICATION / WORKING TEMP.", "value": -30.0, "unit": "degC"},
+    "working_temperature_max": {"locator": "p.3 SPECIFICATION / WORKING TEMP.", "value": 70.0, "unit": "degC"}
+  },
+  "notes": [
+    "The datasheet states the charge-voltage range is programmable through NFC/MEAN WELL APP for the NFC model.",
+    "The datasheet states the rated current changes with programmed output voltage and low-input derating may apply; this slice uses only the published maximum power/current ceilings for static compatibility.",
+    "The manufacturer instructs users to consult the battery manufacturer for maximum charging-current limits; EMES therefore also enforces the P45B source-backed standard charge current.",
+    "This snapshot does not establish system-level thermal, EMC, charge-termination, or BMS-control approval."
+  ]
+}
