@@ -57,6 +57,7 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
         "max_internal_loop_resistance":q(fact(s,"max_internal_loop_resistance","ohm"),"ohm",src),
         "operating_temperature_min":q(fact(s,"operating_temperature_min","degC"),"degC",src),
         "operating_temperature_max":q(fact(s,"operating_temperature_max","degC"),"degC",src),
+        "cell_voltage_acquisition_accuracy_abs":q(fact(s,"cell_voltage_acquisition_accuracy_abs","V"),"V",src),
         "default_cell_overcharge_protection_voltage":q(fact(s,"default_cell_overcharge_protection_voltage","V"),"V",src),
         "default_cell_overcharge_recovery_voltage":q(fact(s,"default_cell_overcharge_recovery_voltage","V"),"V",src),
         "default_cell_charge_cutoff_temperature":q(fact(s,"default_charge_overtemperature","degC"),"degC",src),

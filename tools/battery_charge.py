@@ -95,6 +95,9 @@ def evaluate(
     bms_recovery_v = property_number(
         bms, "default_cell_overcharge_recovery_voltage", "V"
     )
+    bms_voltage_accuracy_v = property_number(
+        bms, "cell_voltage_acquisition_accuracy_abs", "V"
+    )
     bms_cutoff_c = property_number(bms, "default_cell_charge_cutoff_temperature", "degC")
     charger_min_v = property_number(charger, "charge_voltage_min", "V")
     charger_max_v = property_number(charger, "charge_voltage_max", "V")
@@ -146,7 +149,15 @@ def evaluate(
             "BMS default cell overcharge recovery must be below protection threshold: "
             f"recovery={bms_recovery_v:g}V protection={bms_overcharge_v:g}V"
         )
+    if bms_voltage_accuracy_v < 0.0:
+        raise ValueError("BMS cell-voltage acquisition absolute accuracy must be non-negative")
 
+    worst_case_trip_v = bms_overcharge_v + bms_voltage_accuracy_v
+    measurement_aware_guard_margin_v = cell_max_v - worst_case_trip_v
+    measurement_aware_guard_sufficient = (
+        worst_case_trip_v <= cell_max_v
+        or math.isclose(worst_case_trip_v, cell_max_v, rel_tol=0.0, abs_tol=1e-12)
+    )
     thermal_guard_margin_c = cell_temp_max - bms_cutoff_c
     thermal_guard_sufficient = thermal_guard_margin_c >= 0.0
     metrics = [
@@ -163,8 +174,11 @@ def evaluate(
         {"id": "M_CELL_MAX_CHARGE_VOLTAGE", "value": cell_max_v, "unit": "V", "method": "source"},
         {"id": "M_BMS_DEFAULT_CELL_OVERCHARGE_PROTECTION", "value": bms_overcharge_v, "unit": "V", "method": "source"},
         {"id": "M_BMS_DEFAULT_CELL_OVERCHARGE_RECOVERY", "value": bms_recovery_v, "unit": "V", "method": "source"},
+        {"id": "M_BMS_CELL_VOLTAGE_ACQUISITION_ACCURACY_ABS", "value": bms_voltage_accuracy_v, "unit": "V", "method": "source"},
         {"id": "M_BMS_CELL_OVERCHARGE_PROTECTION_MARGIN", "value": cell_max_v - bms_overcharge_v, "unit": "V", "method": "analytic"},
         {"id": "M_BMS_CELL_OVERCHARGE_RECOVERY_HYSTERESIS", "value": bms_overcharge_v - bms_recovery_v, "unit": "V", "method": "analytic"},
+        {"id": "M_BMS_WORST_CASE_CELL_VOLTAGE_AT_TRIP", "value": worst_case_trip_v, "unit": "V", "method": "analytic"},
+        {"id": "M_BMS_MEASUREMENT_AWARE_OVERCHARGE_MARGIN", "value": measurement_aware_guard_margin_v, "unit": "V", "method": "analytic"},
         {"id": "M_CELL_CHARGE_TEMPERATURE_MIN", "value": cell_temp_min, "unit": "degC", "method": "source"},
         {"id": "M_CELL_CHARGE_TEMPERATURE_MAX", "value": cell_temp_max, "unit": "degC", "method": "source"},
         {"id": "M_BMS_DEFAULT_CHARGE_CUTOFF_TEMPERATURE", "value": bms_cutoff_c, "unit": "degC", "method": "source"},
@@ -187,6 +201,7 @@ def evaluate(
             "scope": "static_electrical_compatibility_only",
             "electrical_compatible": True,
             "cell_overcharge_guard_compatible": True,
+            "measurement_aware_cell_overcharge_guard_sufficient": measurement_aware_guard_sufficient,
             "thermal_guard_sufficient": thermal_guard_sufficient,
             "automatic_charging_approval": False,
         },
@@ -210,8 +225,12 @@ def evaluate(
             "cell_max_charge_voltage": cell_max_v,
             "bms_factory_default_overcharge_protection": bms_overcharge_v,
             "bms_factory_default_overcharge_recovery": bms_recovery_v,
+            "bms_voltage_acquisition_accuracy_abs": bms_voltage_accuracy_v,
             "protection_margin": cell_max_v - bms_overcharge_v,
             "recovery_hysteresis": bms_overcharge_v - bms_recovery_v,
+            "worst_case_cell_voltage_at_trip": worst_case_trip_v,
+            "measurement_aware_margin": measurement_aware_guard_margin_v,
+            "measurement_aware_sufficient": measurement_aware_guard_sufficient,
             "configured_at_runtime": False,
         },
         "temperature_guard": {
@@ -224,7 +243,8 @@ def evaluate(
         "limitations": [
             "Static compatibility evidence only; it does not authorize charging, fabrication, or energization.",
             "The JKBMS 4.2 V / 4.18 V per-cell protection values are source-backed factory defaults, not proof of live runtime configuration.",
-            "Pack-total voltage and factory-default per-cell thresholds do not model cell imbalance dynamics, BMS voltage-measurement accuracy, protection latency, or balancing effectiveness.",
+            "The JKBMS ±3 mV acquisition accuracy is applied conservatively to the factory-default protection threshold; the current 4.20 V threshold has a negative measurement-aware margin to the P45B 4.20 V maximum.",
+            "Pack-total voltage and factory-default per-cell thresholds still do not model cell imbalance dynamics, calibration drift, protection latency, or balancing effectiveness.",
             "The current JKBMS factory-default 70 degC charge cutoff is above the P45B 60 degC charge operating maximum and is not treated as a sufficient automatic thermal guard.",
             "The JKBMS manual states the temperature threshold is user-configurable, but this evidence does not invent or certify an exact 60 degC setting range.",
             "Charger thermal derating, charge termination dynamics, communications, connectors, enclosure, and system EMC are not evaluated."

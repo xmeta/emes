@@ -85,6 +85,11 @@
           "unit": "degC",
           "source": "SRC_JKBMS_BD6A20S6P"
         },
+        "cell_voltage_acquisition_accuracy_abs": {
+          "value": 0.003,
+          "unit": "V",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
         "default_cell_overcharge_protection_voltage": {
           "value": 4.2,
           "unit": "V",
