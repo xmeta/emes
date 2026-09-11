@@ -2,8 +2,8 @@
   "emes_version": "0.1",
   "design": {
     "id": "DESIGN_POWER_PACK_MOLICEL_P45B_CONNECTED",
-    "name": "Molicel P45B battery subsystem with fuse, contactor, and SB50 connector",
-    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and manufacturer-backed SynQor NiQor NQ60 converter configured at 36 V, reviewed Littelfuse MIDI HP fuse, Littelfuse DCNHF60NG12-F contactor, and Anderson Power Products SB50 wire-to-wire connector assembly in the pack-side power path."
+    "name": "Molicel P45B battery subsystem with fuse, contactor, conductor, and SB50 connector",
+    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and manufacturer-backed SynQor NiQor NQ60 converter configured at 36 V, reviewed Littelfuse MIDI HP fuse, Littelfuse DCNHF60NG12-F contactor, Southwire stock 550431 10 AWG 2-conductor SEOOW cable, and Anderson Power Products SB50 wire-to-wire connector assembly in the pack-side power path."
   },
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
@@ -12,12 +12,14 @@
     {"id": "R_BMS", "kind": "safety", "statement": "Use a BMS compatible with the full modeled pack series-count and voltage ranges."},
     {"id": "R_FUSE", "kind": "safety", "statement": "Represent a DC-rated series fuse explicitly and require its DC voltage rating to cover maximum pack voltage."},
     {"id": "R_CONTACTOR", "kind": "safety", "statement": "Represent the pack contactor explicitly and require its source-backed continuous current and DC operating-voltage range to cover the modeled pack path."},
+    {"id": "R_CONDUCTOR", "kind": "safety", "statement": "Represent the pack conductor explicitly and require its exact source-conditioned allowable ampacity and voltage rating to cover the modeled pack path."},
     {"id": "R_CONNECTOR", "kind": "safety", "statement": "Represent the pack-side connector assembly explicitly, require its DC voltage rating to cover maximum pack voltage, and require its rated current to cover the reference pack current."}
   ],
   "design_intent": [
     {"id": "DI_REAL_CELL_CONDITIONS", "statement": "The P45B continuous-discharge rating is usable only when a selected control component satisfies every normalized manufacturer rating condition.", "protects": ["R_CURRENT", "R_BMS"]},
     {"id": "DI_FUSE_EXPLICIT", "statement": "Treat the fuse as a first-class power-path component; use nominal rated current only as a conservative known-limit cap and do not infer a 10-second ampacity from sparse time-current or I2t data.", "protects": ["R_CURRENT", "R_FUSE"]},
     {"id": "DI_CONTACTOR_EXPLICIT", "statement": "Treat the contactor as a first-class power-path component using only source-backed main-contact continuous current and declared DC operating-voltage range; do not infer pulse ampacity, switching life, coil-drive suitability, or pre-charge approval.", "protects": ["R_CURRENT", "R_CONTACTOR"]},
+    {"id": "DI_CONDUCTOR_EXPLICIT", "statement": "Treat conductor ampacity as a source-conditioned property of the reviewed Southwire stock 550431 two-conductor SEOOW construction; do not derive a universal 10 AWG ampacity or infer routing, bundling, termination, or enclosure thermal suitability.", "protects": ["R_CURRENT", "R_CONDUCTOR"]},
     {"id": "DI_CONNECTOR_ASSEMBLY", "statement": "Treat the connector as the reviewed mated wire-to-wire assembly configuration, not as a bare housing, and include its native current rating in weakest-link evaluation.", "protects": ["R_CURRENT", "R_CONNECTOR"]},
     {"id": "DI_COMPOSE_CELLS", "statement": "Represent repeated cylindrical cells by series/parallel composition rather than duplicating cell records.", "protects": ["R_ENERGY"]}
   ],
@@ -32,6 +34,7 @@
     {"id": "battery_pack", "kind": "other", "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL", "P_BMS_DISCHARGE_OVERTEMP"], "metadata": {"org.emes.role": "battery_pack_assembly"}},
     {"id": "main_fuse", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_MIDI70V", "part": "LITTELFUSE_4998040_M_M6", "digest": "sha256:8dea4164629aaee0d4bd4a658bb61c82568b51c62c572097547ffeee4ccbc169"}}},
     {"id": "main_contactor", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_DCNHF60", "part": "LITTELFUSE_DCNHF60NG12_F", "digest": "sha256:08f546940ce1d38d8dcb043ae14a4759f2455beb993ced86911a6b36899351be"}}},
+    {"id": "main_conductor", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_SOUTHWIRE_SEOOW_550431", "part": "SOUTHWIRE_SEOOW_550431_10AWG_2C", "digest": "sha256:f1257a45239956f820f2c9325df5f3cbbb865e491911797eae4237961adadc2f"}}},
     {"id": "main_connector", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_ANDERSON_SB50", "part": "ANDERSON_SB50_992G4_5900_WTW", "digest": "sha256:112950122b6877d179f2e5bf0b7a89a816821212b2c9ea2652734a88ea0847cc"}}},
     {"id": "dc_converter", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_SYNQOR_NQ60", "part": "SYNQOR_NQ60W60HGC40NRF_G", "digest": "sha256:85d7c67b99a5201b7564ffd842957ad11984e24deb5043ba449aecbc2b1d0bbe"}}},
     {"id": "dc_bus_load", "kind": "other", "metadata": {"org.emes.role": "electrical_load"}}
@@ -39,7 +42,8 @@
   "connections": [
     {"id": "E_PACK_TO_FUSE", "kind": "electrical", "a": {"component": "battery_pack", "port": "dc_out"}, "b": {"component": "main_fuse", "port": "IF_IN"}},
     {"id": "E_FUSE_TO_CONTACTOR", "kind": "electrical", "a": {"component": "main_fuse", "port": "IF_OUT"}, "b": {"component": "main_contactor", "port": "IF_IN"}},
-    {"id": "E_CONTACTOR_TO_CONNECTOR", "kind": "electrical", "a": {"component": "main_contactor", "port": "IF_OUT"}, "b": {"component": "main_connector", "port": "IF_IN"}},
+    {"id": "E_CONTACTOR_TO_CONDUCTOR", "kind": "electrical", "a": {"component": "main_contactor", "port": "IF_OUT"}, "b": {"component": "main_conductor", "port": "IF_IN"}},
+    {"id": "E_CONDUCTOR_TO_CONNECTOR", "kind": "electrical", "a": {"component": "main_conductor", "port": "IF_OUT"}, "b": {"component": "main_connector", "port": "IF_IN"}},
     {"id": "E_CONNECTOR_TO_CONVERTER", "kind": "electrical", "a": {"component": "main_connector", "port": "IF_OUT"}, "b": {"component": "dc_converter", "port": "IF_DC_IN"}},
     {"id": "E_CONVERTER_TO_LOAD", "kind": "electrical", "a": {"component": "dc_converter", "port": "IF_DC_OUT"}, "b": {"component": "dc_bus_load", "port": "dc_in"}}
   ],
@@ -49,7 +53,8 @@
     {"id": "F_PACK_POWERS_FUSE", "from": "battery_pack", "relation": "supplies-electrical-power-to", "to": "main_fuse"},
     {"id": "F_FUSE_PROTECTS_PATH", "from": "main_fuse", "relation": "protects", "to": "main_contactor"},
     {"id": "F_FUSE_POWERS_CONTACTOR", "from": "main_fuse", "relation": "supplies-electrical-power-to", "to": "main_contactor"},
-    {"id": "F_CONTACTOR_POWERS_CONNECTOR", "from": "main_contactor", "relation": "supplies-electrical-power-to", "to": "main_connector"},
+    {"id": "F_CONTACTOR_POWERS_CONDUCTOR", "from": "main_contactor", "relation": "supplies-electrical-power-to", "to": "main_conductor"},
+    {"id": "F_CONDUCTOR_POWERS_CONNECTOR", "from": "main_conductor", "relation": "supplies-electrical-power-to", "to": "main_connector"},
     {"id": "F_CONNECTOR_POWERS_CONVERTER", "from": "main_connector", "relation": "supplies-electrical-power-to", "to": "dc_converter"},
     {"id": "F_CONVERTER_POWERS_LOAD", "from": "dc_converter", "relation": "supplies-electrical-power-to", "to": "dc_bus_load"}
   ],
@@ -70,6 +75,8 @@
     {"id": "C_CONTACTOR_CURRENT", "metric": "M_KNOWN_CONTACTOR_CONTINUOUS_LOAD_SCALE", "op": ">=", "target": {"value": 1.0, "unit": "1"}, "load_case": "LC_POWER"},
     {"id": "C_CONTACTOR_MIN_VOLTAGE", "metric": "M_KNOWN_CONTACTOR_MIN_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_CONTACTOR_MAX_VOLTAGE", "metric": "M_KNOWN_CONTACTOR_MAX_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
+    {"id": "C_CONDUCTOR_AMPACITY", "metric": "M_KNOWN_CONDUCTOR_AMPACITY_LOAD_SCALE", "op": ">=", "target": {"value": 1.0, "unit": "1"}, "load_case": "LC_POWER"},
+    {"id": "C_CONDUCTOR_VOLTAGE", "metric": "M_KNOWN_CONDUCTOR_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_CONNECTOR_CURRENT", "metric": "M_KNOWN_CONNECTOR_RATED_LOAD_SCALE", "op": ">=", "target": {"value": 1.0, "unit": "1"}, "load_case": "LC_POWER"},
     {"id": "C_CONNECTOR_VOLTAGE", "metric": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"}
   ],
@@ -104,6 +111,8 @@
     {
       "id": "A_CONNECTOR_ENVELOPE", "kind": "analytic", "adapter": "tools/battery_connector_envelope.py", "fidelity": "analytic", "load_cases": ["LC_POWER"],
       "produces": [
+        {"id": "M_KNOWN_CONDUCTOR_AMPACITY_LOAD_SCALE", "unit": "1"},
+        {"id": "M_KNOWN_CONDUCTOR_VOLTAGE_MARGIN", "unit": "V"},
         {"id": "M_KNOWN_CONNECTOR_RATED_LOAD_SCALE", "unit": "1"},
         {"id": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN", "unit": "V"},
         {"id": "M_KNOWN_CONTACTOR_CONTINUOUS_LOAD_SCALE", "unit": "1"},
@@ -117,10 +126,11 @@
   "traceability": [
     {"requirement": "R_BUS_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
     {"requirement": "R_ENERGY", "verified_by": ["C_ENERGY"]},
-    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER", "C_CONVERTER_INPUT_CURRENT", "C_CONTACTOR_CURRENT", "C_CONNECTOR_CURRENT"]},
+    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER", "C_CONVERTER_INPUT_CURRENT", "C_CONTACTOR_CURRENT", "C_CONDUCTOR_AMPACITY", "C_CONNECTOR_CURRENT"]},
     {"requirement": "R_BMS", "verified_by": ["C_BMS_MIN_SERIES", "C_BMS_SERIES", "C_BMS_MIN_VOLTAGE", "C_BMS_VOLTAGE"]},
     {"requirement": "R_FUSE", "verified_by": ["C_FUSE_VOLTAGE"]},
     {"requirement": "R_CONTACTOR", "verified_by": ["C_CONTACTOR_CURRENT", "C_CONTACTOR_MIN_VOLTAGE", "C_CONTACTOR_MAX_VOLTAGE"]},
+    {"requirement": "R_CONDUCTOR", "verified_by": ["C_CONDUCTOR_AMPACITY", "C_CONDUCTOR_VOLTAGE"]},
     {"requirement": "R_CONNECTOR", "verified_by": ["C_CONNECTOR_CURRENT", "C_CONNECTOR_VOLTAGE"]}
   ],
   "extensions": {
@@ -130,6 +140,7 @@
       {"id": "CAT_SYNQOR_NQ60", "path": "catalogs/synqor-nq60w60hgc40.catalog.json", "digest": "sha256:7251fb11baab05158b654341a69fce7baa6f713eed4e13dabe8888ee1525753b"},
       {"id": "CAT_LITTELFUSE_MIDI70V", "path": "catalogs/littelfuse-midi70v-40a.catalog.json", "digest": "sha256:a0163dbfe1b5f06227225481d565fb722c4f8c586bea89de8d5dca0ae09966a0"},
       {"id": "CAT_LITTELFUSE_DCNHF60", "path": "catalogs/littelfuse-dcnhf60ng12-f.catalog.json", "digest": "sha256:2f02d040db4aa6685e6d2a87d66ca41090a55cf2ae55c062863eb870e7c6d2a4"},
+      {"id": "CAT_SOUTHWIRE_SEOOW_550431", "path": "catalogs/southwire-seoow-550431.catalog.json", "digest": "sha256:a18f9de53ef5977aa924882c677eb9e1302a6f0a597eec6d48f991812d2087ce"},
       {"id": "CAT_ANDERSON_SB50", "path": "catalogs/anderson-sb50-992g4-5900.catalog.json", "digest": "sha256:b8fc97d2f1b39c1e676bc6e89e36e88552ace2312bb6093a378a8dff9b08ace8"}
     ],
     "org.emes.power": {
@@ -137,7 +148,7 @@
         {"id": "PACK_MAIN", "component": "battery_pack", "cell_component": "cell_model", "bms_component": "bms", "series_parameter": "P_PACK_SERIES", "parallel_parameter": "P_PACK_PARALLEL", "condition_bindings": {"cell_discharge_cutoff_temperature": {"parameter": "P_BMS_DISCHARGE_OVERTEMP", "control_component": "bms", "control_property": "default_cell_discharge_cutoff_temperature"}}, "overhead_mass": {"value": 0.25, "unit": "kg"}}
       ],
       "power_paths": [
-        {"id": "PATH_MAIN", "source_pack": "PACK_MAIN", "fuse_component": "main_fuse", "contactor_component": "main_contactor", "pack_connector_components": ["main_connector"], "converter_component": "dc_converter", "load_case": "LC_POWER"}
+        {"id": "PATH_MAIN", "source_pack": "PACK_MAIN", "fuse_component": "main_fuse", "contactor_component": "main_contactor", "pack_conductor_components": ["main_conductor"], "pack_connector_components": ["main_connector"], "converter_component": "dc_converter", "load_case": "LC_POWER"}
       ]
     }
   }

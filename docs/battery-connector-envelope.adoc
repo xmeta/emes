@@ -1,23 +1,23 @@
-= Pack-Side Connector Envelope
+= Pack-Side Conductor and Connector Envelope
 
 == Purpose
 
-`tools/battery_connector_envelope.py` composes explicit pack-side connector limits with the existing weakest-known battery-component evidence.
+`tools/battery_connector_envelope.py` composes explicit pack-side conductor, connector, and contactor limits with the existing weakest-known battery-component evidence.
 
-It intentionally does not reopen or recompute the upstream cell/BMS/converter/fuse analysis. Instead it consumes the digest-bound parent evidence and adds connector candidates in their native electrical domains.
+It intentionally does not reopen or recompute the upstream cell/BMS/converter/fuse analysis. Instead it consumes the digest-bound parent evidence and adds conductor, connector, and contactor candidates in their native electrical domains.
 
 [source,text]
 ----
 mechanism + power evidence + known-component evidence
                   |
                   v
-       pack-side connector ratings
+  conductor / connector / contactor ratings
                   |
                   v
        minimum load-scale factor
                   |
                   v
-        connector/path evidence
+          pack-side path evidence
 ----
 
 == Anderson SB50 reference assembly
@@ -37,9 +37,26 @@ The source snapshot is `catalogs/sources/anderson-sb50-992g4-5900.source.json`, 
 
 The current environment could read the official manufacturer PDF through the research browser but could not retrieve stable raw PDF bytes for local hashing. Therefore `raw_bytes_not_pinned` is explicit and no source digest is fabricated.
 
+== Southwire SEOOW reference conductor
+
+The pack conductor is Southwire stock `550431` / CCI `22229`, a 10 AWG, two-conductor SEOOW flexible cord covered by manufacturer SPEC 70070. The reviewed manufacturer specification publishes 30 A allowable ampacity, 600 V rating, and a -50 to 105 degC temperature range for this exact construction.
+
+The 30 A value is retained as a source-conditioned fact for that cable construction; EMES does not derive a generic 10 AWG ampacity from gauge, copper area, or resistance. Southwire states that the published ampacity is based on NEC Table 400.5(A)(1) / CEC Table 12.
+
+The official manufacturer PDF was acquired directly and hash-pinned as `sha256:55bf4912817e75d51b63f75b46ff64ddb47f456f72916a636463d492268ba359` (171224 bytes). EMES stores the URI and digest but does not redistribute the PDF.
+
+The source snapshot is `catalogs/sources/southwire-seoow-550431.source.json`, normalized deterministically by `tools/providers/southwire_seoow.py` into `catalogs/southwire-seoow-550431.catalog.json`.
+
 == Native-domain composition
 
-For each declared `pack_connector_components` entry, the adapter computes:
+For each declared `pack_conductor_components` entry, the adapter computes the source-conditioned conductor scale:
+
+[stem]
++++++
+s_{conductor} = \frac{I_{allowable}}{I_{pack,max}}
++++++
+
+and rejects a conductor whose rated voltage is below the maximum pack voltage. For each declared `pack_connector_components` entry, it separately computes:
 
 [stem]
 +++++
@@ -53,13 +70,13 @@ and independently checks:
 V_{margin} = V_{connector,rated} - V_{pack,max}
 +++++
 
-A negative voltage margin is rejected. Current and voltage are not multiplied together to invent a connector power rating.
+A negative voltage margin is rejected. Current and voltage are not multiplied together to invent a conductor or connector power rating.
 
 The parent known-component scale is retained as another candidate, so the final known path scale is:
 
 [stem]
 +++++
-s_{path} = \min(s_{parent}, s_{connector,1}, \ldots)
+s_{path} = \min(s_{parent}, s_{conductor,1}, \ldots, s_{connector,1}, \ldots, s_{contactor})
 +++++
 
 == Reference result
@@ -67,24 +84,26 @@ s_{path} = \min(s_{parent}, s_{connector,1}, \ldots)
 For `examples/power-pack-molicel-p45b-connected/mechanism.json` at the existing 500 W load:
 
 * nominal-point pack-side current is approximately 14.62 A, while the maximum over the modeled 25--42 V pack range is approximately 21.05 A;
-* SB50 rated current is 50 A, giving a 2.375 load-scale factor against that maximum current;
-* maximum pack voltage is 42 V;
-* SB50 steady-state rating is 250 V, giving a 208 V margin;
-* the upstream known-component envelope is 1.9, set by the SynQor 40 A input-current limit and tied by the nominal 40 A fuse;
-* the composed known path output envelope is therefore 950 W.
+* Southwire allowable ampacity is 30 A, giving a 1.425 load-scale factor against the maximum pack-side current;
+* the Southwire 600 V rating gives a 558 V margin above the 42 V maximum pack voltage;
+* SB50 rated current is 50 A, giving a 2.375 load-scale factor and a 208 V voltage margin;
+* the contactor scale is 2.85, and the upstream SynQor/fuse envelope is 1.9;
+* the conductor is therefore the weakest modeled pack-side element at 1.425, giving a 712.5 W composed output envelope.
 
 == Counterexamples
 
-Focused CI verifies that the connector actually participates in the decision:
+Focused CI verifies that the conductor and the existing switching/connection hardware actually participate in the decision:
 
+* replacing the conductor allowable ampacity with 15 A keeps the conductor as the limiting candidate at a 0.7125 load scale and 356.25 W output envelope;
+* replacing the conductor voltage rating with 30 V is rejected against the 42 V maximum pack voltage;
 * replacing the connector rating with 10 A moves the limiting candidate to `connector_rated_current:main_connector`, giving a 0.475 load scale and 237.5 W output envelope;
 * replacing the connector voltage rating with 30 V is rejected against the 42 V maximum pack voltage;
 * tampering with the parent known-envelope evidence linkage is rejected rather than accepted as a valid evidence chain.
 
 == Remaining boundary
 
-This slice does not model conductor thermal ampacity, cable bundling, ambient-temperature derating, crimp process capability, contact aging, contamination, enclosure heating, or contactor limits.
+This slice consumes the manufacturer-published allowable ampacity but does not model installation-specific conductor temperature rise, bundling, enclosed-harness ambient, routing, terminal/crimp process capability, contact resistance, aging, contamination, enclosure heating, or cell-tab/busbar behavior.
 
-In particular, the manufacturer statement that a connector configuration was tested with 16 mm^2 wire is not treated as proof that every 16 mm^2 conductor installation is safe at the connector current rating. Conductor sizing remains a separate evidence problem.
+The Southwire 30 A value is not treated as universal approval for every 10 AWG installation, and the SB50 tested wire size is not treated as evidence for unrelated conductor constructions.
 
 Physical fabrication, charging, and energization remain outside automatic approval.

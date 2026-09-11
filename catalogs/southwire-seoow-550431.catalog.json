@@ -1,0 +1,56 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_SOUTHWIRE_SEOOW_550431",
+    "name": "Southwire SEOOW stock 550431 10 AWG 2-conductor cable",
+    "description": "Manufacturer SPEC 70070 cable construction normalized for EMES. The published 30 A ampacity remains tied to this exact two-conductor SEOOW configuration and its stated NEC/CEC table basis."
+  },
+  "sources": [
+    {
+      "id": "SRC_SOUTHWIRE_SEOOW_550431",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://cabletechsupport.southwire.com/cablespec/download_cable/?cable=7159&country=US",
+      "retrieved_at": "2026-09-11T01:10:00Z",
+      "license": "Southwire upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:55bf4912817e75d51b63f75b46ff64ddb47f456f72916a636463d492268ba359"
+    }
+  ],
+  "parts": [
+    {
+      "id": "SOUTHWIRE_SEOOW_550431_10AWG_2C",
+      "kind": "conductor",
+      "identity": {
+        "manufacturer": "Southwire",
+        "part_number": "550431"
+      },
+      "properties": {
+        "cci_part_number": {"value": "22229", "unit": "1", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "allowable_ampacity": {"value": 30.0, "unit": "A", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "rated_voltage": {"value": 600.0, "unit": "V", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "conductor_size": {"value": 10.0, "unit": "AWG", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "conductor_count": {"value": 2.0, "unit": "1", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "strand_count": {"value": 104.0, "unit": "1", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "operating_temperature_min": {"value": -50.0, "unit": "degC", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "operating_temperature_max": {"value": 105.0, "unit": "degC", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "outer_diameter": {"value": 15.67, "unit": "mm", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "mass_per_length": {"value": 292.0, "unit": "kg/km", "source": "SRC_SOUTHWIRE_SEOOW_550431"},
+        "ampacity_basis": {"value": "NEC Table 400.5(A)(1) / CEC Table 12", "unit": "1", "source": "SRC_SOUTHWIRE_SEOOW_550431"}
+      },
+      "interfaces": [
+        {"id": "IF_IN", "kind": "electrical_dc", "properties": {}},
+        {"id": "IF_OUT", "kind": "electrical_dc", "properties": {}}
+      ],
+      "assets": [
+        {
+          "id": "ASSET_SPEC_PDF",
+          "kind": "datasheet",
+          "uri": "https://cabletechsupport.southwire.com/cablespec/download_cable/?cable=7159&country=US",
+          "digest": "sha256:55bf4912817e75d51b63f75b46ff64ddb47f456f72916a636463d492268ba359",
+          "source": "SRC_SOUTHWIRE_SEOOW_550431",
+          "license": "Southwire upstream terms; redistribution not asserted"
+        }
+      ]
+    }
+  ]
+}

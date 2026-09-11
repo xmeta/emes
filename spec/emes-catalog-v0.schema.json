@@ -123,7 +123,7 @@
       "required": ["id", "kind", "identity", "properties"],
       "properties": {
         "id": {"$ref": "#/$defs/id"},
-        "kind": {"enum": ["motor", "gearbox", "bearing", "sensor", "fastener", "transmission", "spring", "damper", "controller", "power_supply", "battery_cell", "battery_pack", "bms", "power_converter", "charger", "fuse", "contactor", "connector", "other"]},
+        "kind": {"enum": ["motor", "gearbox", "bearing", "sensor", "fastener", "transmission", "spring", "damper", "controller", "power_supply", "battery_cell", "battery_pack", "bms", "power_converter", "charger", "fuse", "contactor", "conductor", "connector", "other"]},
         "identity": {
           "type": "object",
           "additionalProperties": false,
