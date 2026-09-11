@@ -39,6 +39,8 @@ _UNIT_NORMALIZATION: dict[str, tuple[str, str, str]] = {
     "kW*h": ("energy", "W*h", "1000"),
     "A*h": ("capacity", "A*h", "1"),
     "mA*h": ("capacity", "A*h", "0.001"),
+    "F": ("capacitance", "F", "1"),
+    "uF": ("capacitance", "F", "0.000001"),
     "rad": ("angle", "rad", "1"),
     "s": ("time", "s", "1"),
     "ms": ("time", "s", "0.001"),
