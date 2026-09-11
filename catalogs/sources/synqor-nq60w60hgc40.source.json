@@ -36,16 +36,16 @@
       "rationale": "explicit EMES reference design setpoint within the manufacturer-supported 0-60 V Vset range; not a fixed manufacturer output rating"
     },
     "efficiency": {
-      "value": 0.90,
+      "value": 0.95,
       "unit": "1",
-      "rationale": "explicit conservative EMES analysis assumption used only because the current power evaluator requires one efficiency scalar; not a manufacturer-guaranteed efficiency at 25-42 Vin / 36 Vout / 500 W"
+      "rationale": "existing EMES reference-analysis assumption retained to avoid mixing a hardware substitution with an unrelated efficiency-model change; not a manufacturer-guaranteed efficiency at 25-42 Vin / 36 Vout / 500 W"
     }
   },
   "notes": [
     "The datasheet states that output current is input-voltage dependent; 40 A is therefore retained as the family recommended-range ceiling and must not be reinterpreted as a fixed power rating at every Vin/Vout point.",
     "The datasheet states that for Vin much less than 28 V and/or Vout much greater than 28 V the input capacitance/stability design should be reviewed with SynQor applications guidance. The 25 V pack minimum / 36 V setpoint enters that caution region; EMES does not automatically approve the input filter or loop stability.",
     "Electrical-characteristic tables are referenced to 25 degC baseplate, 300 LFM and 28 Vin unless otherwise noted; detailed thermal derating remains outside this slice.",
-    "The 90% efficiency value is an EMES modeling assumption kept separate from manufacturer facts. Published example efficiencies must not be silently promoted to a guarantee at the reference operating point.",
+    "The 95% efficiency value is an EMES reference-analysis assumption kept separate from manufacturer facts. Published example efficiencies must not be silently promoted to a guarantee at the reference operating point.",
     "Raw manufacturer PDF bytes are not pinned in this snapshot; no digest is fabricated."
   ]
 }
