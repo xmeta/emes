@@ -73,7 +73,7 @@
         "org.emes.catalog_ref": {
           "catalog": "CAT_JKBMS_BD6A20S6P",
           "part": "JKBMS_JK_BD6A20S_6P",
-          "digest": "sha256:24d68169326bf156b36bc9fce1201e0db426869d79ca03c80b145f89392ac184"
+          "digest": "sha256:ef10c98f4ee8f6b378c3208788e352bc08a74e1cea390003602f8bd9b8236867"
         }
       }
     },
@@ -203,7 +203,7 @@
       {
         "id": "CAT_JKBMS_BD6A20S6P",
         "path": "catalogs/jkbms-bd6a20s6p.catalog.json",
-        "digest": "sha256:11262ae5b03cf32b57ab19b9f50a32678f84afd7dece8e22c75b32709d11ecaa"
+        "digest": "sha256:36aa9d0f14fb74c53c2ec0691e029655eb34b305ff9c13bd5b911609ed19cb5b"
       },
       {
         "id": "CAT_SYNQOR_NQ60",

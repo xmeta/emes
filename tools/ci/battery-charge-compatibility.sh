@@ -59,6 +59,12 @@ assert math.isclose(metrics["M_BMS_CELL_OVERCHARGE_PROTECTION_MARGIN"], 0.0)
 assert math.isclose(metrics["M_BMS_CELL_OVERCHARGE_RECOVERY_HYSTERESIS"], 0.02)
 assert math.isclose(metrics["M_BMS_WORST_CASE_CELL_VOLTAGE_AT_TRIP"], 4.203)
 assert math.isclose(metrics["M_BMS_MEASUREMENT_AWARE_OVERCHARGE_MARGIN"], -0.003)
+assert math.isclose(metrics["M_BMS_DEFAULT_BALANCING_START_VOLTAGE"], 3.0)
+assert math.isclose(metrics["M_BMS_DEFAULT_BALANCING_TRIGGER_DELTA_VOLTAGE"], 0.01)
+assert math.isclose(metrics["M_BMS_MAX_BALANCING_CURRENT"], 0.6)
+assert math.isclose(metrics["M_BMS_BALANCING_DIFFERENTIAL_MEASUREMENT_UNCERTAINTY"], 0.006)
+assert math.isclose(metrics["M_BMS_BALANCING_TRIGGER_MEASUREMENT_MARGIN"], 0.004)
+assert math.isclose(metrics["M_BMS_BALANCING_CURRENT_TO_CHARGE_CURRENT_RATIO"], 0.6 / 9.0)
 assert math.isclose(metrics["M_CELL_CHARGE_TEMPERATURE_MIN"], 0.0)
 assert math.isclose(metrics["M_CELL_CHARGE_TEMPERATURE_MAX"], 60.0)
 assert math.isclose(metrics["M_BMS_DEFAULT_CHARGE_CUTOFF_TEMPERATURE"], 70.0)
@@ -70,6 +76,9 @@ assert compat["measurement_aware_cell_overcharge_guard_sufficient"] is False
 assert compat["thermal_guard_sufficient"] is False
 assert evidence["cell_voltage_guard"]["measurement_aware_sufficient"] is False
 assert evidence["cell_voltage_guard"]["configured_at_runtime"] is False
+assert evidence["balancing"]["trigger_measurement_resolved"] is True
+assert evidence["balancing"]["configured_at_runtime"] is False
+assert evidence["balancing"]["effectiveness_decidable"] is False
 assert compat["automatic_charging_approval"] is False
 assert evidence["verification"]["design_decision"] == "not_decidable"
 assert any("does not authorize charging" in item for item in evidence["limitations"])
@@ -131,7 +140,8 @@ bms_variant("charge-bms8", lambda part: part["properties"]["max_charge_current"]
 bms_variant("charge-bms-overvoltage", lambda part: part["properties"]["default_cell_overcharge_protection_voltage"].__setitem__("value", 4.25))
 bms_variant("charge-bms-invalid-recovery", lambda part: part["properties"]["default_cell_overcharge_recovery_voltage"].__setitem__("value", 4.2))
 bms_variant("charge-bms-measurement-margin", lambda part: part["properties"]["default_cell_overcharge_protection_voltage"].__setitem__("value", 4.197))
-print("CREATED charge compatibility counterexamples and measurement-margin variant")
+bms_variant("charge-bms-balancing-trigger5mv", lambda part: part["properties"]["default_balancing_trigger_delta_voltage"].__setitem__("value", 0.005))
+print("CREATED charge compatibility counterexamples and measurement/balancing variants")
 PY_VARIANTS
 
 if python tools/battery_charge.py "$MECHANISM" --request /tmp/charge-overvoltage.request.json --out /tmp/invalid.json; then
@@ -192,3 +202,19 @@ assert evidence["cell_voltage_guard"]["configured_at_runtime"] is False
 assert evidence["charge_compatibility"]["automatic_charging_approval"] is False
 print("VALID measurement-aware 4.197V synthetic threshold margin")
 PY_MEASUREMENT_MARGIN
+python tools/battery_charge.py /tmp/charge-bms-balancing-trigger5mv.mechanism.json --request "$REQUEST" --out /tmp/charge-bms-balancing-trigger5mv.json
+python - <<'PY_BALANCING_TRIGGER'
+import json
+import math
+from pathlib import Path
+
+evidence = json.loads(Path("/tmp/charge-bms-balancing-trigger5mv.json").read_text())
+metrics = {item["id"]: item["value"] for item in evidence["metrics"]}
+assert math.isclose(metrics["M_BMS_DEFAULT_BALANCING_TRIGGER_DELTA_VOLTAGE"], 0.005)
+assert math.isclose(metrics["M_BMS_BALANCING_DIFFERENTIAL_MEASUREMENT_UNCERTAINTY"], 0.006)
+assert math.isclose(metrics["M_BMS_BALANCING_TRIGGER_MEASUREMENT_MARGIN"], -0.001)
+assert evidence["balancing"]["trigger_measurement_resolved"] is False
+assert evidence["balancing"]["effectiveness_decidable"] is False
+assert evidence["charge_compatibility"]["automatic_charging_approval"] is False
+print("VALID measurement-unresolved 5mV synthetic balancing trigger")
+PY_BALANCING_TRIGGER

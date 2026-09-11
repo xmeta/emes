@@ -63,6 +63,18 @@
       "value": 0.6,
       "unit": "A"
     },
+    "default_balancing_start_voltage": {
+      "source": "datasheet_pdf",
+      "locator": "p.22 Default parameters / Balancing initial voltage / LI-ION",
+      "value": 3.0,
+      "unit": "V"
+    },
+    "default_balancing_trigger_delta_voltage": {
+      "source": "datasheet_pdf",
+      "locator": "p.22 Default parameters / Trigger balancing differential pressure / LI-ION",
+      "value": 0.01,
+      "unit": "V"
+    },
     "max_charge_current": {
       "source": "datasheet_pdf",
       "locator": "p.20 60A protection board Basic parameter / Maximum charging current",
