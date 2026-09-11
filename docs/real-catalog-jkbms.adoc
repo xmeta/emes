@@ -59,6 +59,6 @@ CI rejects a 6S variant for violating the BMS minimum series count and a 7S P45B
 
 == Evidence boundary
 
-The manufacturer-backed BMS removes the synthetic 30 A BMS as the reference weakest link. At the current 500 W load, the real 60 A BMS has a 2.85 load-scale factor against the maximum modeled pack-side current, so the still-synthetic DC/DC converter is lower at 1.44 and determines the current known-component envelope of 720 W.
+The manufacturer-backed BMS removes the synthetic 30 A BMS as the reference weakest link. At the current 500 W load, the real 60 A BMS has a 2.85 load-scale factor against the maximum modeled pack-side current. The manufacturer-backed SynQor NQ60 is lower on its 40 A input-current limit at 1.9, so the current unfused known-component output envelope is 950 W.
 
 This is still not battery-pack safety approval. Cell temperature distribution, wiring and busbar thermal limits, contact resistance, charger behavior, fault-energy coordination, enclosure, certification, and physical build quality remain separate evidence problems.

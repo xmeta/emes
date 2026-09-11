@@ -112,6 +112,7 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
             "efficiency": q(
                 float(config["efficiency"]["value"]), "1", config_source
             ),
+            "efficiency_basis": q("analysis_assumption", "1", config_source),
         },
         "interfaces": [
             {

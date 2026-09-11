@@ -209,6 +209,12 @@ def evaluate(
     converter_continuous_a = property_number(
         converter, "continuous_output_current", "A"
     )
+    converter_properties = converter.get("properties", {})
+    converter_input_a = (
+        property_number(converter, "continuous_input_current", "A")
+        if "continuous_input_current" in converter_properties
+        else None
+    )
 
     candidates = [
         {
@@ -252,6 +258,24 @@ def evaluate(
             ),
         },
     ]
+    if converter_input_a is not None:
+        candidates.append(
+            {
+                "id": "converter_continuous_input_current",
+                "component": converter_component,
+                "part": converter["id"],
+                "part_digest": catalog_digest(converter),
+                "rating_kind": "continuous_input_current_used_as_conservative_10s_cap",
+                "limit": converter_input_a,
+                "demand": max_pack_current_a,
+                "unit": "A",
+                "scale_factor": positive_ratio(
+                    converter_input_a,
+                    max_pack_current_a,
+                    "converter continuous input current",
+                ),
+            }
+        )
 
     fuse_voltage_margin_v: float | None = None
     conditioned_fuse_point: dict[str, Any] | None = None
@@ -331,6 +355,18 @@ def evaluate(
             "method": "native_rating_ratio",
         },
     ]
+    if converter_input_a is not None:
+        input_candidate = next(
+            item for item in candidates if item["id"] == "converter_continuous_input_current"
+        )
+        metrics.append(
+            {
+                "id": "M_KNOWN_CONVERTER_INPUT_CONTINUOUS_LOAD_SCALE",
+                "value": input_candidate["scale_factor"],
+                "unit": "1",
+                "method": "native_rating_ratio",
+            }
+        )
     if fuse is not None and fuse_voltage_margin_v is not None:
         fuse_candidate = next(item for item in candidates if item["id"] == "fuse_rated_current")
         metrics.extend(
@@ -389,10 +425,18 @@ def evaluate(
     limitations = [
         "Cross-domain limits are compared through dimensionless load-scale factors rather than by inventing a common rating unit.",
         "BMS and converter continuous-current ratings are conservative caps for the 10 s pulse context; they are not treated as pulse ratings.",
-        "The current BMS and converter records are synthetic architecture fixtures, not physical product recommendations.",
-        "Interconnect, conductor, connector, contactor, temperature rise, cell imbalance, aging, and enclosure limits are not yet included.",
+        "Catalog provenance does not convert continuous-current ratings into pulse or thermal qualifications; only the stated native limits are used here.",
+        "Interconnect, conductor, temperature rise, cell imbalance, aging, and enclosure limits are not yet included unless a downstream path analysis adds them explicitly.",
         "The result is a weakest-known-component envelope, not a complete system pulse rating or approval to fabricate, charge, or energize a pack.",
     ]
+    efficiency_basis = converter_properties.get("efficiency_basis")
+    if isinstance(efficiency_basis, dict) and efficiency_basis.get("value") == "analysis_assumption":
+        efficiency = converter_properties.get("efficiency", {})
+        limitations.insert(
+            2,
+            "Converter efficiency used to derive battery-input demand is an explicit EMES analysis assumption "
+            f"({efficiency.get('value')} {efficiency.get('unit')}, source={efficiency.get('source')}), not a manufacturer-guaranteed operating-point efficiency.",
+        )
     if fuse is not None:
         if config is None:
             limitations.insert(

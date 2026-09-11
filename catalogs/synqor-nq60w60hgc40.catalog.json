@@ -44,7 +44,8 @@
         "reference_baseplate_temperature": {"value": 25.0, "unit": "degC", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
         "reference_airflow": {"value": 300.0, "unit": "LFM", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
         "output_voltage": {"value": 36.0, "unit": "V", "source": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION"},
-        "efficiency": {"value": 0.95, "unit": "1", "source": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION"}
+        "efficiency": {"value": 0.95, "unit": "1", "source": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION"},
+        "efficiency_basis": {"value": "analysis_assumption", "unit": "1", "source": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION"}
       },
       "interfaces": [
         {

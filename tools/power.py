@@ -235,7 +235,7 @@ def evaluate_constraints(
 
 
 def selected_part_record(component_id: str, part: dict[str, Any]) -> dict[str, Any]:
-    return {
+    record = {
         "component": component_id,
         "part_id": part["id"],
         "kind": part["kind"],
@@ -243,6 +243,25 @@ def selected_part_record(component_id: str, part: dict[str, Any]) -> dict[str, A
         "part_number": part["identity"]["part_number"],
         "part_digest": catalog_digest(part),
     }
+    properties = part.get("properties", {})
+    efficiency = properties.get("efficiency")
+    basis = properties.get("efficiency_basis")
+    if (
+        part.get("kind") == "power_converter"
+        and isinstance(efficiency, dict)
+        and isinstance(basis, dict)
+        and basis.get("value") == "analysis_assumption"
+    ):
+        record["analysis_assumptions"] = [
+            {
+                "property": "efficiency",
+                "value": efficiency["value"],
+                "unit": efficiency["unit"],
+                "source": efficiency.get("source"),
+                "basis": basis["value"],
+            }
+        ]
+    return record
 
 
 def evidence(
@@ -430,6 +449,22 @@ def evaluate_battery_pack(
     converter_max_v = property_number(converter, "input_voltage_max", "V")
     converter_output_v = property_number(converter, "output_voltage", "V")
     converter_output_a = property_number(converter, "continuous_output_current", "A")
+    converter_properties = converter.get("properties", {})
+    converter_input_a = (
+        property_number(converter, "continuous_input_current", "A")
+        if "continuous_input_current" in converter_properties
+        else None
+    )
+    output_min_v = (
+        property_number(converter, "output_voltage_min", "V")
+        if "output_voltage_min" in converter_properties
+        else None
+    )
+    output_max_v = (
+        property_number(converter, "output_voltage_max", "V")
+        if "output_voltage_max" in converter_properties
+        else None
+    )
     efficiency = property_number(converter, "efficiency", "1")
     if not 0 < efficiency <= 1:
         raise ValueError(f"{converter_component}.efficiency must be in (0, 1]")
@@ -438,6 +473,16 @@ def evaluate_battery_pack(
             "converter input range incompatible with full pack voltage range: "
             f"pack=[{pack_min_v:g},{pack_max_v:g}]V "
             f"converter=[{converter_min_v:g},{converter_max_v:g}]V"
+        )
+    if output_min_v is not None and converter_output_v < output_min_v:
+        raise ValueError(
+            "converter output setpoint is below supported range: "
+            f"setpoint={converter_output_v:g}V min={output_min_v:g}V"
+        )
+    if output_max_v is not None and converter_output_v > output_max_v:
+        raise ValueError(
+            "converter output setpoint is above supported range: "
+            f"setpoint={converter_output_v:g}V max={output_max_v:g}V"
         )
 
     load_power_w, load_output_a = load_power_watts(
@@ -486,6 +531,11 @@ def evaluate_battery_pack(
         metrics["M_BMS_MIN_SERIES_MARGIN"] = (series - bms_min_series, "1")
     if bms_min_v is not None:
         metrics["M_BMS_MIN_VOLTAGE_MARGIN"] = (pack_min_v - bms_min_v, "V")
+    if converter_input_a is not None:
+        metrics["M_CONVERTER_INPUT_CURRENT_MARGIN"] = (
+            converter_input_a - max_pack_current_a,
+            "A",
+        )
 
     return evidence(
         document,

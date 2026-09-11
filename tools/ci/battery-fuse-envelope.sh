@@ -20,12 +20,12 @@ import json, math
 e = json.load(open('/tmp/fused-known.json'))
 by_id = {x['id']: x for x in e['candidates']}
 metrics = {x['id']: x['value'] for x in e['metrics']}
-assert e['limiting_candidate'] == 'converter_continuous_output_current'
+assert e['limiting_candidate'] == 'converter_continuous_input_current'
 assert 'fuse_source_conditioned_current' not in by_id
 assert math.isclose(by_id['fuse_rated_current']['limit'], 40.0)
 assert math.isclose(by_id['fuse_rated_current']['scale_factor'], 1.9, rel_tol=1e-12)
 assert math.isclose(metrics['M_KNOWN_FUSE_VOLTAGE_MARGIN'], 28.0)
-assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 720.0)
+assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 950.0)
 print('VALID fused-reference-envelope-nominal-only')
 PY
 
@@ -38,7 +38,7 @@ by_id = {x['id']: x for x in e['candidates']}
 metrics = {x['id']: x['value'] for x in e['metrics']}
 point = e['selected_fuse_current_point']
 assert e['analysis_id'] == 'A_KNOWN_ENVELOPE_FUSE_20C'
-assert e['limiting_candidate'] == 'converter_continuous_output_current'
+assert e['limiting_candidate'] == 'fuse_source_conditioned_current'
 assert point['property'] == 'max_allowed_current_20c'
 assert math.isclose(point['property_value'], 38.0)
 assert point['condition_results'] == [{
@@ -54,7 +54,7 @@ assert math.isclose(by_id['fuse_source_conditioned_current']['limit'], 38.0)
 assert math.isclose(by_id['fuse_source_conditioned_current']['scale_factor'], 1.805, rel_tol=1e-12)
 assert math.isclose(metrics['M_KNOWN_FUSE_RATED_LOAD_SCALE'], 1.9, rel_tol=1e-12)
 assert math.isclose(metrics['M_KNOWN_FUSE_SOURCE_CONDITIONED_LOAD_SCALE'], 1.805, rel_tol=1e-12)
-assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 720.0)
+assert math.isclose(metrics['M_KNOWN_COMPONENT_OUTPUT_POWER_ENVELOPE'], 902.5)
 print('VALID exact-20c-fuse-derating')
 PY
 

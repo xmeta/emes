@@ -6,6 +6,9 @@ on:
     paths:
       - "spec/emes-power-v0.schema.json"
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
+      - "catalogs/synqor-nq60w60hgc40.catalog.json"
+      - "catalogs/sources/synqor-nq60w60hgc40.source.json"
+      - "tools/providers/synqor_nq60.py"
       - "catalogs/anderson-sb50-992g4-5900.catalog.json"
       - "catalogs/sources/anderson-sb50-992g4-5900.source.json"
       - "catalogs/littelfuse-dcnhf60ng12-f.catalog.json"
@@ -36,6 +39,9 @@ on:
     paths:
       - "spec/emes-power-v0.schema.json"
       - "catalogs/jkbms-bd6a20s6p.catalog.json"
+      - "catalogs/synqor-nq60w60hgc40.catalog.json"
+      - "catalogs/sources/synqor-nq60w60hgc40.source.json"
+      - "tools/providers/synqor_nq60.py"
       - "catalogs/anderson-sb50-992g4-5900.catalog.json"
       - "catalogs/sources/anderson-sb50-992g4-5900.source.json"
       - "catalogs/littelfuse-dcnhf60ng12-f.catalog.json"

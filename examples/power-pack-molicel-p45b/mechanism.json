@@ -3,7 +3,7 @@
   "design": {
     "id": "DESIGN_POWER_PACK_MOLICEL_P45B",
     "name": "Molicel P45B battery-powered DC subsystem",
-    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and synthetic converter fixture, executable conditional-current checks, and a source-conditioned first-order voltage-drop analysis."
+    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and manufacturer-backed SynQor NiQor NQ60 converter configured at 36 V, executable conditional-current checks, and a source-conditioned first-order voltage-drop analysis."
   },
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
@@ -88,9 +88,9 @@
       "kind": "purchased_part",
       "metadata": {
         "org.emes.catalog_ref": {
-          "catalog": "CAT_POWER",
-          "part": "DCDC_REF_25_50V_TO_36V_20A",
-          "digest": "sha256:71785ddca5367b924235f7e1e9fbd8de313f0e97dc8e3e7fb03f5553929b695d"
+          "catalog": "CAT_SYNQOR_NQ60",
+          "part": "SYNQOR_NQ60W60HGC40NRF_G",
+          "digest": "sha256:85d7c67b99a5201b7564ffd842957ad11984e24deb5043ba449aecbc2b1d0bbe"
         }
       }
     },
@@ -133,7 +133,8 @@
     {"id": "C_BMS_SERIES", "metric": "M_BMS_SERIES_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "1"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_MIN_VOLTAGE", "metric": "M_BMS_MIN_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_VOLTAGE", "metric": "M_BMS_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
-    {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"}
+    {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"},
+    {"id": "C_CONVERTER_INPUT_CURRENT", "metric": "M_CONVERTER_INPUT_CURRENT_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "A"}, "load_case": "LC_POWER"}
   ],
   "objectives": [
     {"id": "O_PACK_MASS", "metric": "M_PACK_TOTAL_MASS", "direction": "minimize", "weight": 1.0}
@@ -166,7 +167,8 @@
         {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"},
         {"id": "M_CONVERTER_OUTPUT_VOLTAGE", "unit": "V"},
         {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"},
-        {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}
+        {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"},
+        {"id": "M_CONVERTER_INPUT_CURRENT_MARGIN", "unit": "A"}
       ]
     },
     {
@@ -188,7 +190,7 @@
   "traceability": [
     {"requirement": "R_BUS_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
     {"requirement": "R_ENERGY", "verified_by": ["C_ENERGY"]},
-    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER"]},
+    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER", "C_CONVERTER_INPUT_CURRENT"]},
     {"requirement": "R_BMS", "verified_by": ["C_BMS_MIN_SERIES", "C_BMS_SERIES", "C_BMS_MIN_VOLTAGE", "C_BMS_VOLTAGE"]}
   ],
   "extensions": {
@@ -204,9 +206,9 @@
         "digest": "sha256:9e9dfc04fe5ca80cba10e0202b75c5e40a6fea3c35c68691763c2f41641f26c3"
       },
       {
-        "id": "CAT_POWER",
-        "path": "catalogs/reference-power.catalog.json",
-        "digest": "sha256:ae2d9cd11b18fc0233f2b96d4ce65eb69f3c43a3cc92eccf5940b4c0096a6ade"
+        "id": "CAT_SYNQOR_NQ60",
+        "path": "catalogs/synqor-nq60w60hgc40.catalog.json",
+        "digest": "sha256:7251fb11baab05158b654341a69fce7baa6f713eed4e13dabe8888ee1525753b"
       }
     ],
     "org.emes.power": {
