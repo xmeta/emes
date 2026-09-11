@@ -3,7 +3,7 @@
   "catalog": {
     "id": "CAT_JKBMS_BD6A20S6P",
     "name": "JKBMS JK-BD6A20S-6P",
-    "description": "Hash-pinned manufacturer manual normalized for EMES; configurable factory-default temperature settings are kept distinct from selected mechanism configuration."
+    "description": "Hash-pinned manufacturer manual normalized for EMES; configurable factory-default protection settings are kept distinct from selected runtime configuration."
   },
   "sources": [
     {
@@ -83,6 +83,16 @@
         "operating_temperature_max": {
           "value": 70.0,
           "unit": "degC",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "default_cell_overcharge_protection_voltage": {
+          "value": 4.2,
+          "unit": "V",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "default_cell_overcharge_recovery_voltage": {
+          "value": 4.18,
+          "unit": "V",
           "source": "SRC_JKBMS_BD6A20S6P"
         },
         "default_cell_charge_cutoff_temperature": {

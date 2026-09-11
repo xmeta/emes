@@ -93,6 +93,18 @@
       "value": 0.464,
       "unit": "kg"
     },
+    "default_cell_overcharge_protection_voltage": {
+      "source": "datasheet_pdf",
+      "locator": "p.23 Default parameters / Unit overcharge voltage / LI-ION",
+      "value": 4.2,
+      "unit": "V"
+    },
+    "default_cell_overcharge_recovery_voltage": {
+      "source": "datasheet_pdf",
+      "locator": "p.23 Default parameters / Single overcharge protection recovery / LI-ION",
+      "value": 4.18,
+      "unit": "V"
+    },
     "default_charge_overtemperature": {
       "source": "datasheet_pdf",
       "locator": "p.23 Default parameters / Charging overtemperature protection temperature / LI-ION",
@@ -107,8 +119,9 @@
     }
   },
   "notes": [
-    "The manual states charge/discharge overtemperature thresholds are user-configurable in the app; 70 degC is the LI-ION factory default, not an immutable hardware limit.",
+    "The manual states single-cell overcharge protection/recovery thresholds and charge/discharge overtemperature thresholds are user-configurable in the app; normalized values are LI-ION factory defaults, not immutable hardware limits or proof of runtime configuration.",
     "The EMES mechanism must bind the selected discharge-overtemperature setting explicitly before using a cell rating conditioned on that setting.",
+    "Static charge compatibility may compare the source-backed factory-default 4.2 V / 4.18 V per-cell guard with the selected cell limits, but this does not establish measurement accuracy, protection latency, cell imbalance dynamics, or the live BMS configuration.",
     "The 60 A value is retained in its native current domain; no pulse capability is inferred from the 120 A instantaneous-current entry.",
     "The hash-pinned v20.1.1 manual reports 120 A maximum instantaneous current, while the older official product page reports 100 A peak discharge; EMES does not consume either value as a pulse envelope in this slice."
   ]

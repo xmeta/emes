@@ -51,13 +51,20 @@ assert math.isclose(metrics["M_CHARGER_CURRENT_MARGIN"], 4.5)
 assert math.isclose(metrics["M_CHARGER_POWER_CURRENT_MARGIN"], 1.8)
 assert math.isclose(metrics["M_CHARGER_POWER_MARGIN"], 75.6)
 assert math.isclose(metrics["M_BMS_CHARGE_CURRENT_MARGIN"], 51.0)
+assert math.isclose(metrics["M_CELL_MAX_CHARGE_VOLTAGE"], 4.2)
+assert math.isclose(metrics["M_BMS_DEFAULT_CELL_OVERCHARGE_PROTECTION"], 4.2)
+assert math.isclose(metrics["M_BMS_DEFAULT_CELL_OVERCHARGE_RECOVERY"], 4.18)
+assert math.isclose(metrics["M_BMS_CELL_OVERCHARGE_PROTECTION_MARGIN"], 0.0)
+assert math.isclose(metrics["M_BMS_CELL_OVERCHARGE_RECOVERY_HYSTERESIS"], 0.02)
 assert math.isclose(metrics["M_CELL_CHARGE_TEMPERATURE_MIN"], 0.0)
 assert math.isclose(metrics["M_CELL_CHARGE_TEMPERATURE_MAX"], 60.0)
 assert math.isclose(metrics["M_BMS_DEFAULT_CHARGE_CUTOFF_TEMPERATURE"], 70.0)
 assert math.isclose(metrics["M_CHARGE_THERMAL_GUARD_MARGIN"], -10.0)
 compat = evidence["charge_compatibility"]
 assert compat["electrical_compatible"] is True
+assert compat["cell_overcharge_guard_compatible"] is True
 assert compat["thermal_guard_sufficient"] is False
+assert evidence["cell_voltage_guard"]["configured_at_runtime"] is False
 assert compat["automatic_charging_approval"] is False
 assert evidence["verification"]["design_decision"] == "not_decidable"
 assert any("does not authorize charging" in item for item in evidence["limitations"])
@@ -98,19 +105,26 @@ request_variant("charge-overcurrent", lambda value: value["charge_current"].__se
 charger_variant("charge-range41", lambda part: part["properties"]["charge_voltage_max"].__setitem__("value", 41.0))
 charger_variant("charge-power350", lambda part: part["properties"]["max_output_power"].__setitem__("value", 350.0))
 
-bms_catalog = json.loads(Path("catalogs/jkbms-bd6a20s6p.catalog.json").read_text())
-bms_catalog["parts"][0]["properties"]["max_charge_current"]["value"] = 8.0
-bms_path = Path("/tmp/charge-bms8.catalog.json")
-bms_path.write_text(json.dumps(bms_catalog, indent=2) + "\n")
-bms_mechanism = copy.deepcopy(mechanism)
-for binding in bms_mechanism["extensions"]["org.emes.catalogs"]:
-    if binding["id"] == "CAT_JKBMS_BD6A20S6P":
-        binding["path"] = str(bms_path)
-        binding["digest"] = canonical_digest(bms_catalog)
-for component in bms_mechanism["components"]:
-    if component["id"] == "bms":
-        component["metadata"]["org.emes.catalog_ref"]["digest"] = canonical_digest(bms_catalog["parts"][0])
-Path("/tmp/charge-bms8.mechanism.json").write_text(json.dumps(bms_mechanism, indent=2) + "\n")
+base_bms_catalog = json.loads(Path("catalogs/jkbms-bd6a20s6p.catalog.json").read_text())
+
+def bms_variant(name, mutate):
+    catalog = copy.deepcopy(base_bms_catalog)
+    mutate(catalog["parts"][0])
+    catalog_path = Path(f"/tmp/{name}.catalog.json")
+    catalog_path.write_text(json.dumps(catalog, indent=2) + "\n")
+    value = copy.deepcopy(mechanism)
+    for binding in value["extensions"]["org.emes.catalogs"]:
+        if binding["id"] == "CAT_JKBMS_BD6A20S6P":
+            binding["path"] = str(catalog_path)
+            binding["digest"] = canonical_digest(catalog)
+    for component in value["components"]:
+        if component["id"] == "bms":
+            component["metadata"]["org.emes.catalog_ref"]["digest"] = canonical_digest(catalog["parts"][0])
+    Path(f"/tmp/{name}.mechanism.json").write_text(json.dumps(value, indent=2) + "\n")
+
+bms_variant("charge-bms8", lambda part: part["properties"]["max_charge_current"].__setitem__("value", 8.0))
+bms_variant("charge-bms-overvoltage", lambda part: part["properties"]["default_cell_overcharge_protection_voltage"].__setitem__("value", 4.25))
+bms_variant("charge-bms-invalid-recovery", lambda part: part["properties"]["default_cell_overcharge_recovery_voltage"].__setitem__("value", 4.2))
 print("CREATED charge compatibility counterexamples")
 PY_VARIANTS
 
@@ -143,3 +157,15 @@ if python tools/battery_charge.py /tmp/charge-bms8.mechanism.json --request "$RE
   exit 1
 fi
 echo "VALID bms-charge-current-fail-closed"
+
+if python tools/battery_charge.py /tmp/charge-bms-overvoltage.mechanism.json --request "$REQUEST" --out /tmp/invalid.json; then
+  echo "expected BMS cell overcharge threshold rejection" >&2
+  exit 1
+fi
+echo "VALID bms-cell-overcharge-threshold-fail-closed"
+
+if python tools/battery_charge.py /tmp/charge-bms-invalid-recovery.mechanism.json --request "$REQUEST" --out /tmp/invalid.json; then
+  echo "expected BMS cell overcharge recovery rejection" >&2
+  exit 1
+fi
+echo "VALID bms-cell-overcharge-recovery-fail-closed"

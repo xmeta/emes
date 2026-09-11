@@ -57,13 +57,15 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
         "max_internal_loop_resistance":q(fact(s,"max_internal_loop_resistance","ohm"),"ohm",src),
         "operating_temperature_min":q(fact(s,"operating_temperature_min","degC"),"degC",src),
         "operating_temperature_max":q(fact(s,"operating_temperature_max","degC"),"degC",src),
+        "default_cell_overcharge_protection_voltage":q(fact(s,"default_cell_overcharge_protection_voltage","V"),"V",src),
+        "default_cell_overcharge_recovery_voltage":q(fact(s,"default_cell_overcharge_recovery_voltage","V"),"V",src),
         "default_cell_charge_cutoff_temperature":q(fact(s,"default_charge_overtemperature","degC"),"degC",src),
         "default_cell_discharge_cutoff_temperature":q(fact(s,"default_discharge_overtemperature","degC"),"degC",src),
       },
       "interfaces":[{"id":"IF_BATTERY","kind":"electrical_dc","properties":{}},{"id":"IF_LOAD","kind":"electrical_dc","properties":{}}],
       "assets":[{"id":"ASSET_DATASHEET","kind":"datasheet","uri":u["uri"],"digest":u["sha256"],"source":src,"license":"Jikong/JKBMS upstream terms; redistribution not asserted"}],
     }
-    catalog={"emes_catalog_version":"0.1","catalog":{"id":"CAT_JKBMS_BD6A20S6P","name":"JKBMS JK-BD6A20S-6P","description":"Hash-pinned manufacturer manual normalized for EMES; configurable factory-default temperature settings are kept distinct from selected mechanism configuration."},"sources":[{"id":src,"authority":"manufacturer","format":"datasheet","uri":u["uri"],"retrieved_at":s["captured_at"],"license":"Jikong/JKBMS upstream terms; redistribution not asserted","raw_digest":u["sha256"]}],"parts":[part]}
+    catalog={"emes_catalog_version":"0.1","catalog":{"id":"CAT_JKBMS_BD6A20S6P","name":"JKBMS JK-BD6A20S-6P","description":"Hash-pinned manufacturer manual normalized for EMES; configurable factory-default protection settings are kept distinct from selected runtime configuration."},"sources":[{"id":src,"authority":"manufacturer","format":"datasheet","uri":u["uri"],"retrieved_at":s["captured_at"],"license":"Jikong/JKBMS upstream terms; redistribution not asserted","raw_digest":u["sha256"]}],"parts":[part]}
     output_path.write_text(json.dumps(catalog,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
     return catalog
 
