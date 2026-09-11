@@ -52,6 +52,17 @@ def positive_ratio(limit: float, demand: float, context: str) -> float:
     return limit / demand
 
 
+def directly_connected(document: dict[str, Any], first: str, second: str) -> bool:
+    for connection in document.get("connections", []):
+        if connection.get("kind") != "electrical":
+            continue
+        a = connection.get("a", {}).get("component")
+        b = connection.get("b", {}).get("component")
+        if {a, b} == {first, second}:
+            return True
+    return False
+
+
 def evaluate(
     document: dict[str, Any],
     power_evidence: dict[str, Any],
@@ -124,6 +135,7 @@ def evaluate(
             )
         allowable_ampacity_a = property_number(conductor, "allowable_ampacity", "A")
         rated_voltage_v = property_number(conductor, "rated_voltage", "V")
+        conductor_size_awg = property_number(conductor, "conductor_size", "AWG")
         voltage_margin_v = rated_voltage_v - pack_max_voltage_v
         if voltage_margin_v < 0:
             raise ValueError(
@@ -144,6 +156,8 @@ def evaluate(
             "allowable_ampacity_unit": "A",
             "rated_voltage": rated_voltage_v,
             "rated_voltage_unit": "V",
+            "conductor_size": conductor_size_awg,
+            "conductor_size_unit": "AWG",
             "voltage_margin": voltage_margin_v,
             "voltage_margin_unit": "V",
             "max_pack_current": max_pack_current_a,
@@ -165,6 +179,8 @@ def evaluate(
             }
         )
 
+    conductor_by_component = {item["component"]: item for item in conductor_records}
+    termination_records: list[dict[str, Any]] = []
     connector_records: list[dict[str, Any]] = []
     for component_id in connector_ids:
         if component_id not in selected:
@@ -176,6 +192,34 @@ def evaluate(
             )
         rated_current_a = property_number(connector, "rated_current", "A")
         rated_voltage_v = property_number(connector, "rated_voltage_dc", "V")
+        adjacent_conductors = [
+            conductor_id
+            for conductor_id in conductor_ids
+            if directly_connected(document, conductor_id, component_id)
+        ]
+        contact_wire_size_awg: float | None = None
+        if adjacent_conductors:
+            contact_wire_size_awg = property_number(connector, "contact_wire_size", "AWG")
+            for conductor_id in adjacent_conductors:
+                conductor_size_awg = float(conductor_by_component[conductor_id]["conductor_size"])
+                if not math.isclose(
+                    conductor_size_awg, contact_wire_size_awg, rel_tol=0.0, abs_tol=1e-12
+                ):
+                    raise ValueError(
+                        "direct conductor-to-connector wire size is incompatible: "
+                        f"conductor={conductor_id} {conductor_size_awg:g}AWG "
+                        f"connector={component_id} contact={contact_wire_size_awg:g}AWG"
+                    )
+                termination_records.append(
+                    {
+                        "conductor_component": conductor_id,
+                        "connector_component": component_id,
+                        "conductor_size": conductor_size_awg,
+                        "contact_wire_size": contact_wire_size_awg,
+                        "unit": "AWG",
+                        "compatible": True,
+                    }
+                )
         voltage_margin_v = rated_voltage_v - pack_max_voltage_v
         if voltage_margin_v < 0:
             raise ValueError(
@@ -194,6 +238,8 @@ def evaluate(
             "rated_current_unit": "A",
             "rated_voltage_dc": rated_voltage_v,
             "rated_voltage_unit": "V",
+            "contact_wire_size": contact_wire_size_awg,
+            "contact_wire_size_unit": "AWG" if contact_wire_size_awg is not None else None,
             "voltage_margin": voltage_margin_v,
             "voltage_margin_unit": "V",
             "max_pack_current": max_pack_current_a,
@@ -381,10 +427,12 @@ def evaluate(
         "limiting_candidate": limiting["id"],
         "conductors": conductor_records,
         "connectors": connector_records,
+        "termination_compatibility": termination_records,
         "candidates": candidates,
         "limitations": [
             "Conductor and connector current limits are evaluated against the maximum pack-side current over the modeled battery voltage range; no arbitrary voltage is used to manufacture a power rating.",
             "Conductor ampacity is consumed only as the manufacturer-published value for the exact reviewed cable construction and stated NEC/CEC table basis; EMES does not infer a universal ampacity from AWG or copper area.",
+            "A conductor directly connected to a catalog-backed connector must match the connector contact's source-backed direct wire size; reducer-bushing derating is not inferred.",
             "The selected SB50 rating is tied to the reviewed manufacturer assembly configuration recorded in the catalog snapshot; it is not a rating for a bare housing in isolation.",
             "Contactor evaluation uses only source-backed main-contact continuous current and the declared DC operating-voltage range; switching life, pulse/breaking capability, coil-drive suitability, and pre-charge approval are not inferred.",
             "Conductor routing, bundling, enclosed-harness ambient/temperature rise, crimp quality, contact aging, contamination, and enclosure temperature rise are not modeled; the published flexible-cord ampacity is not fabrication approval.",

@@ -3,15 +3,23 @@
   "catalog": {
     "id": "CAT_ANDERSON_SB50",
     "name": "Anderson Power Products SB50 wire-to-wire connector assembly",
-    "description": "Reviewed manufacturer SB50 IEC configuration normalized for EMES as a mated wire-to-wire assembly using 992G4 housings and 5900 contacts; 50 A and 250 V AC/DC ratings are retained with tested-configuration facts."
+    "description": "Reviewed manufacturer SB50 IEC configuration normalized for EMES as a mated wire-to-wire assembly using 992G4 housings and 5900 contacts; 50 A pack-side current is tied to the 6 AWG / 50 A / 23 degC-rise technical reference; direct 5900 wire size is 6 AWG."
   },
   "sources": [
     {
-      "id": "SRC_ANDERSON_SB50",
+      "id": "SRC_ANDERSON_SB50_DATASHEET",
       "authority": "manufacturer",
       "format": "datasheet",
-      "uri": "https://www.andersonpower.com/content/dam/app/ecommerce/product-pdfs/DS-SB50.pdf",
-      "retrieved_at": "2026-09-10T17:28:00Z",
+      "uri": "https://www.andersonpower.com/content/dam/app/ecommerce/product-pdfs/SB50/ds-sb50.pdf",
+      "retrieved_at": "2026-09-11T02:34:00Z",
+      "license": "Anderson Power Products upstream terms; redistribution not asserted"
+    },
+    {
+      "id": "SRC_ANDERSON_SB50_TECHREF",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.andersonpower.com/content/dam/app/site/resources/techreference/ppmptecref.pdf",
+      "retrieved_at": "2026-09-11T02:34:00Z",
       "license": "Anderson Power Products upstream terms; redistribution not asserted"
     }
   ],
@@ -24,17 +32,68 @@
         "part_number": "992G4 + 5900 wire-to-wire mated assembly"
       },
       "properties": {
-        "rated_current": {"value": 50.0, "unit": "A", "source": "SRC_ANDERSON_SB50"},
-        "rated_voltage_dc": {"value": 250.0, "unit": "V", "source": "SRC_ANDERSON_SB50"},
-        "wire_cross_section_tested": {"value": 16.0, "unit": "mm^2", "source": "SRC_ANDERSON_SB50"},
-        "contact_series_tested": {"value": "5900/1307", "unit": "1", "source": "SRC_ANDERSON_SB50"},
-        "operating_temperature_min": {"value": -20.0, "unit": "degC", "source": "SRC_ANDERSON_SB50"},
-        "operating_temperature_max": {"value": 105.0, "unit": "degC", "source": "SRC_ANDERSON_SB50"},
-        "cycle_life_iec": {"value": 5000.0, "unit": "1", "source": "SRC_ANDERSON_SB50"}
+        "rated_current": {
+          "value": 50.0,
+          "unit": "A",
+          "source": "SRC_ANDERSON_SB50_TECHREF"
+        },
+        "rated_voltage_dc": {
+          "value": 250.0,
+          "unit": "V",
+          "source": "SRC_ANDERSON_SB50_DATASHEET"
+        },
+        "contact_wire_size": {
+          "value": 6.0,
+          "unit": "AWG",
+          "source": "SRC_ANDERSON_SB50_DATASHEET"
+        },
+        "reference_temperature_rise_at_rated_current": {
+          "value": 23.0,
+          "unit": "degC",
+          "source": "SRC_ANDERSON_SB50_TECHREF"
+        },
+        "reference_ambient_temperature": {
+          "value": 25.0,
+          "unit": "degC",
+          "source": "SRC_ANDERSON_SB50_TECHREF"
+        },
+        "wire_cross_section_tested": {
+          "value": 16.0,
+          "unit": "mm^2",
+          "source": "SRC_ANDERSON_SB50_DATASHEET"
+        },
+        "contact_series_tested": {
+          "value": "5900/1307",
+          "unit": "1",
+          "source": "SRC_ANDERSON_SB50_DATASHEET"
+        },
+        "operating_temperature_min": {
+          "value": -20.0,
+          "unit": "degC",
+          "source": "SRC_ANDERSON_SB50_DATASHEET"
+        },
+        "operating_temperature_max": {
+          "value": 105.0,
+          "unit": "degC",
+          "source": "SRC_ANDERSON_SB50_DATASHEET"
+        },
+        "cycle_life_iec": {
+          "value": 5000.0,
+          "unit": "1",
+          "source": "SRC_ANDERSON_SB50_DATASHEET"
+        }
       },
       "interfaces": [
-        {"id": "IF_IN", "kind": "electrical_dc", "properties": {}},
-        {"id": "IF_OUT", "kind": "electrical_dc", "properties": {}}
+        {
+          "id": "IF_IN",
+          "kind": "electrical_dc",
+          "properties": {}
+        },
+        {
+          "id": "IF_OUT",
+          "kind": "electrical_dc",
+          "properties": {}
+        }
       ]
     }
   ]

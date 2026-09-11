@@ -1,0 +1,89 @@
+{
+  "provider": "southwire_soow",
+  "manufacturer": "Southwire",
+  "part_number": "569973",
+  "stock_number": "569973",
+  "cci_part_number": "822221",
+  "specification": "SPEC 70002",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-11T02:39:54Z",
+  "capture_method": "direct acquisition and reviewed transcription of the current Southwire CableTech SPEC 70002 manufacturer PDF for stock 569973",
+  "upstream": {
+    "spec_pdf": {
+      "uri": "https://cabletechsupport.southwire.com/en/cablespec/download_cable/?cable=7039&country=US",
+      "edition": "SPEC 70002 / stock 569973",
+      "bytes": 134832,
+      "sha256": "sha256:fce28312c04c96a7a678887a0d207b37205c8703494174c5cd4e261f9678367b",
+      "redistribution": "not_asserted",
+      "integrity_status": "hash_pinned"
+    }
+  },
+  "facts": {
+    "allowable_ampacity": {
+      "source": "spec_pdf",
+      "locator": "Table 1 / stock 569973 / Ampacity",
+      "value": 55.0,
+      "unit": "A"
+    },
+    "rated_voltage": {
+      "source": "spec_pdf",
+      "locator": "title / 600 Volt",
+      "value": 600.0,
+      "unit": "V"
+    },
+    "conductor_size": {
+      "source": "spec_pdf",
+      "locator": "Table 1 / stock 569973 / Cond. Size",
+      "value": 6.0,
+      "unit": "AWG"
+    },
+    "conductor_count": {
+      "source": "spec_pdf",
+      "locator": "Table 1 / stock 569973 / Cond. Number",
+      "value": 2.0,
+      "unit": "1"
+    },
+    "strand_count": {
+      "source": "spec_pdf",
+      "locator": "Table 1 / stock 569973 / Cond. Strands",
+      "value": 133.0,
+      "unit": "1"
+    },
+    "operating_temperature_min": {
+      "source": "spec_pdf",
+      "locator": "sample print legend / -40C TO 90C",
+      "value": -40.0,
+      "unit": "degC"
+    },
+    "operating_temperature_max": {
+      "source": "spec_pdf",
+      "locator": "sample print legend / -40C TO 90C",
+      "value": 90.0,
+      "unit": "degC"
+    },
+    "outer_diameter": {
+      "source": "spec_pdf",
+      "locator": "Table 2 / stock 569973 / Approx. OD",
+      "value": 18.31,
+      "unit": "mm"
+    },
+    "mass_per_length": {
+      "source": "spec_pdf",
+      "locator": "Table 2 / stock 569973 / Approx. Weight",
+      "value": 499.0,
+      "unit": "kg/km"
+    },
+    "ampacity_basis": {
+      "source": "spec_pdf",
+      "locator": "Table 1 note",
+      "value": "NEC Table 400.5(A)(1) / CEC Table 12",
+      "unit": "1"
+    }
+  },
+  "notes": [
+    "The 55 A value is the manufacturer-published allowable ampacity for exact stock 569973, a 6 AWG two-conductor SOOW construction; it is not a universal 6 AWG limit.",
+    "This reference cable is selected to match the modeled Anderson SB50 5900 high-force contact directly at 6 AWG, avoiding an unquantified reducing-bushing derating.",
+    "Installation-specific routing, bundling, termination quality, and enclosed thermal rise remain outside automatic approval.",
+    "Manufacturer PDF bytes are hash-pinned but are not redistributed by EMES."
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_SOUTHWIRE_SOOW_569973",
+    "name": "Southwire SOOW stock 569973 6 AWG 2-conductor cable",
+    "description": "Manufacturer SPEC 70002 stock 569973 construction normalized for EMES. The published 55 A ampacity remains tied to this exact two-conductor SOOW configuration and its stated NEC/CEC table basis."
+  },
+  "sources": [
+    {
+      "id": "SRC_SOUTHWIRE_SOOW_569973",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://cabletechsupport.southwire.com/en/cablespec/download_cable/?cable=7039&country=US",
+      "retrieved_at": "2026-09-11T02:39:54Z",
+      "license": "Southwire upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:fce28312c04c96a7a678887a0d207b37205c8703494174c5cd4e261f9678367b"
+    }
+  ],
+  "parts": [
+    {
+      "id": "SOUTHWIRE_SOOW_569973_6AWG_2C",
+      "kind": "conductor",
+      "identity": {
+        "manufacturer": "Southwire",
+        "part_number": "569973"
+      },
+      "properties": {
+        "cci_part_number": {
+          "value": "822221",
+          "unit": "1",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "allowable_ampacity": {
+          "value": 55.0,
+          "unit": "A",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "rated_voltage": {
+          "value": 600.0,
+          "unit": "V",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "conductor_size": {
+          "value": 6.0,
+          "unit": "AWG",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "conductor_count": {
+          "value": 2.0,
+          "unit": "1",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "strand_count": {
+          "value": 133.0,
+          "unit": "1",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "operating_temperature_min": {
+          "value": -40.0,
+          "unit": "degC",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "operating_temperature_max": {
+          "value": 90.0,
+          "unit": "degC",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "outer_diameter": {
+          "value": 18.31,
+          "unit": "mm",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "mass_per_length": {
+          "value": 499.0,
+          "unit": "kg/km",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        },
+        "ampacity_basis": {
+          "value": "NEC Table 400.5(A)(1) / CEC Table 12",
+          "unit": "1",
+          "source": "SRC_SOUTHWIRE_SOOW_569973"
+        }
+      },
+      "interfaces": [
+        {
+          "id": "IF_IN",
+          "kind": "electrical_dc",
+          "properties": {}
+        },
+        {
+          "id": "IF_OUT",
+          "kind": "electrical_dc",
+          "properties": {}
+        }
+      ],
+      "assets": [
+        {
+          "id": "ASSET_SPEC_PDF",
+          "kind": "datasheet",
+          "uri": "https://cabletechsupport.southwire.com/en/cablespec/download_cable/?cable=7039&country=US",
+          "digest": "sha256:fce28312c04c96a7a678887a0d207b37205c8703494174c5cd4e261f9678367b",
+          "source": "SRC_SOUTHWIRE_SOOW_569973",
+          "license": "Southwire upstream terms; redistribution not asserted"
+        }
+      ]
+    }
+  ]
+}
