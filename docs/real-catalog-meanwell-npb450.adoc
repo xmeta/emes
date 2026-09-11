@@ -1,0 +1,39 @@
+= MEAN WELL NPB-450-24NFC charge compatibility slice
+
+== Source
+
+The reference charger is MEAN WELL `NPB-450-24NFC`.
+EMES pins the current manufacturer `NPB-450-SPEC` PDF dated 2026-07-06 by byte count and SHA-256 without redistributing it.
+
+The normalized facts used by this slice are deliberately small:
+
+* programmable charge-voltage range: 21--42 V;
+* maximum output current: 13.5 A;
+* maximum output power: 453.6 W;
+* charger working-temperature range: -30--70 degC.
+
+No efficiency, thermal-derating, termination, communications, or EMC behavior is inferred beyond those reviewed values.
+
+== Reference request
+
+`examples/power-pack-molicel-p45b/charge-42v-9a.json` binds the charger catalog and part by digest and requests 42 V / 9 A.
+
+For the existing 10S2P P45B pack:
+
+* 10 x 4.2 V gives the source-backed 42 V maximum pack charge voltage;
+* 2 x 4.5 A gives the P45B standard 9 A pack charge current;
+* 42 V x 9 A is 378 W, below the charger 453.6 W limit;
+* the charger power limit corresponds to 10.8 A at 42 V;
+* JKBMS publishes a 60 A maximum charging current.
+
+`tools/battery_charge.py` fails closed when the voltage, current, charger range, charger power, or BMS current limits are violated.
+
+== Safety boundary
+
+This is static compatibility evidence, not permission to charge a real pack.
+
+The P45B charge operating range ends at 60 degC, while the currently normalized JKBMS LI-ION factory-default charging overtemperature cutoff is 70 degC.
+The JKBMS manual states that threshold is user-configurable, but the current EMES source snapshot does not establish an exact allowable setting range proving a 60 degC selection.
+Evidence therefore records `thermal_guard_sufficient=false` and `automatic_charging_approval=false`.
+
+Charge termination dynamics, cell balancing, charger/BMS communications, connector selection, enclosure behavior, thermal derating, system EMC, fabrication, and energization remain outside this slice.
