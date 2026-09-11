@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compose catalog-backed pack-side connector limits with known battery-path evidence."""
+"""Compose catalog-backed pack-side connector/contactor limits with known evidence."""
 
 from __future__ import annotations
 
@@ -81,6 +81,9 @@ def evaluate(
         raise ValueError("power path must declare at least one pack_connector_components entry")
     if len(set(connector_ids)) != len(connector_ids):
         raise ValueError("power path contains duplicate pack-side connector components")
+    contactor_id = path.get("contactor_component")
+    if contactor_id is not None and not isinstance(contactor_id, str):
+        raise ValueError("power path contactor_component must be a component id")
 
     selected = resolve_catalog_parts(
         document,
@@ -88,6 +91,7 @@ def evaluate(
         catalog_schema_path=repo_root / "spec/emes-catalog-v0.schema.json",
     )
     max_pack_current_a = evidence_metric(power_evidence, "M_LOAD_MAX_PACK_CURRENT", "A")
+    pack_min_voltage_v = evidence_metric(power_evidence, "M_PACK_MIN_VOLTAGE", "V")
     pack_max_voltage_v = evidence_metric(power_evidence, "M_PACK_MAX_VOLTAGE", "V")
     reference_output_w = evidence_metric(power_evidence, "M_LOAD_POWER", "W")
     parent_scale = evidence_metric(
@@ -153,8 +157,73 @@ def evaluate(
             }
         )
 
+    contactor_record: dict[str, Any] | None = None
+    if contactor_id is not None:
+        if contactor_id not in selected:
+            raise ValueError(f"{contactor_id}: contactor must be catalog-backed")
+        contactor = selected[contactor_id]
+        if contactor.get("kind") != "contactor":
+            raise ValueError(
+                f"{contactor_id}: expected contactor catalog part, got {contactor.get('kind')}"
+            )
+        continuous_current_a = property_number(contactor, "continuous_current", "A")
+        operating_min_v = property_number(contactor, "operating_voltage_min_dc", "V")
+        operating_max_v = property_number(contactor, "operating_voltage_max_dc", "V")
+        if operating_min_v > operating_max_v:
+            raise ValueError(f"{contactor_id}: contactor operating-voltage range is invalid")
+        min_voltage_margin_v = pack_min_voltage_v - operating_min_v
+        max_voltage_margin_v = operating_max_v - pack_max_voltage_v
+        if min_voltage_margin_v < 0:
+            raise ValueError(
+                "contactor minimum DC operating voltage is above minimum pack voltage: "
+                f"component={contactor_id} pack={pack_min_voltage_v:g}V "
+                f"contactor_min={operating_min_v:g}V"
+            )
+        if max_voltage_margin_v < 0:
+            raise ValueError(
+                "contactor maximum DC operating voltage is below maximum pack voltage: "
+                f"component={contactor_id} pack={pack_max_voltage_v:g}V "
+                f"contactor_max={operating_max_v:g}V"
+            )
+        scale = positive_ratio(
+            continuous_current_a,
+            max_pack_current_a,
+            f"{contactor_id} continuous current",
+        )
+        contactor_record = {
+            "component": contactor_id,
+            "part": contactor["id"],
+            "part_digest": catalog_digest(contactor),
+            "continuous_current": continuous_current_a,
+            "continuous_current_unit": "A",
+            "operating_voltage_min_dc": operating_min_v,
+            "operating_voltage_max_dc": operating_max_v,
+            "operating_voltage_unit": "V",
+            "min_voltage_margin": min_voltage_margin_v,
+            "max_voltage_margin": max_voltage_margin_v,
+            "voltage_margin_unit": "V",
+            "max_pack_current": max_pack_current_a,
+            "max_pack_current_unit": "A",
+            "scale_factor": scale,
+        }
+        candidates.append(
+            {
+                "id": f"contactor_continuous_current:{contactor_id}",
+                "component": contactor_id,
+                "part": contactor["id"],
+                "part_digest": catalog_digest(contactor),
+                "rating_kind": "contactor_continuous_current",
+                "limit": continuous_current_a,
+                "demand": max_pack_current_a,
+                "unit": "A",
+                "scale_factor": scale,
+            }
+        )
+
     min_connector_scale = min(item["scale_factor"] for item in connector_records)
-    min_voltage_margin = min(item["voltage_margin"] for item in connector_records)
+    min_connector_voltage_margin = min(
+        item["voltage_margin"] for item in connector_records
+    )
     limiting = min(candidates, key=lambda item: item["scale_factor"])
     final_scale = float(limiting["scale_factor"])
     final_output_w = reference_output_w * final_scale
@@ -168,24 +237,51 @@ def evaluate(
         },
         {
             "id": "M_KNOWN_CONNECTOR_VOLTAGE_MARGIN",
-            "value": min_voltage_margin,
+            "value": min_connector_voltage_margin,
             "unit": "V",
             "method": "minimum_connector_rated_dc_voltage_minus_pack_max_voltage",
         },
-        {
-            "id": "M_KNOWN_PATH_LOAD_SCALE_LIMIT",
-            "value": final_scale,
-            "unit": "1",
-            "method": "minimum_parent_and_connector_load_scale",
-        },
-        {
-            "id": "M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE",
-            "value": final_output_w,
-            "unit": "W",
-            "method": "reference_output_load_scaled_by_weakest_known_path_limit",
-        },
     ]
-    return {
+    if contactor_record is not None:
+        metrics.extend(
+            [
+                {
+                    "id": "M_KNOWN_CONTACTOR_CONTINUOUS_LOAD_SCALE",
+                    "value": contactor_record["scale_factor"],
+                    "unit": "1",
+                    "method": "contactor_continuous_current_over_max_pack_current",
+                },
+                {
+                    "id": "M_KNOWN_CONTACTOR_MIN_VOLTAGE_MARGIN",
+                    "value": contactor_record["min_voltage_margin"],
+                    "unit": "V",
+                    "method": "pack_min_voltage_minus_contactor_min_operating_voltage",
+                },
+                {
+                    "id": "M_KNOWN_CONTACTOR_MAX_VOLTAGE_MARGIN",
+                    "value": contactor_record["max_voltage_margin"],
+                    "unit": "V",
+                    "method": "contactor_max_operating_voltage_minus_pack_max_voltage",
+                },
+            ]
+        )
+    metrics.extend(
+        [
+            {
+                "id": "M_KNOWN_PATH_LOAD_SCALE_LIMIT",
+                "value": final_scale,
+                "unit": "1",
+                "method": "minimum_parent_connector_and_contactor_load_scale",
+            },
+            {
+                "id": "M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE",
+                "value": final_output_w,
+                "unit": "W",
+                "method": "reference_output_load_scaled_by_weakest_known_path_limit",
+            },
+        ]
+    )
+    result = {
         **envelope_fields(
             producer_id="battery_connector_envelope",
             design_id=document["design"]["id"],
@@ -199,17 +295,21 @@ def evaluate(
             verification=no_design_decision(),
         ),
         "path_id": path_id,
-        "method": "minimum_parent_and_pack_connector_native_rating_load_scale",
+        "method": "minimum_parent_pack_connector_and_contactor_native_rating_load_scale",
         "limiting_candidate": limiting["id"],
         "connectors": connector_records,
         "candidates": candidates,
         "limitations": [
             "Connector current is evaluated against the maximum pack-side current over the modeled battery voltage range; no arbitrary voltage is used to manufacture a power rating.",
             "The selected SB50 rating is tied to the reviewed manufacturer assembly configuration recorded in the catalog snapshot; it is not a rating for a bare housing in isolation.",
-            "Conductor thermal ampacity, crimp quality, installation method, contact aging, contamination, enclosure temperature rise, and contactor limits are not yet modeled.",
+            "Contactor evaluation uses only source-backed main-contact continuous current and the declared DC operating-voltage range; switching life, pulse/breaking capability, coil-drive suitability, and pre-charge approval are not inferred.",
+            "Conductor thermal ampacity, crimp quality, installation method, contact aging, contamination, and enclosure temperature rise are not yet modeled.",
             "The result composes with parent weakest-known evidence and is not approval to fabricate, charge, or energize a battery pack.",
         ],
     }
+    if contactor_record is not None:
+        result["contactor"] = contactor_record
+    return result
 
 
 def run(
