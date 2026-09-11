@@ -1,0 +1,68 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_SYNQOR_NQ60",
+    "name": "SynQor NQ60W60HGC40NRF-G configurable buck/boost converter",
+    "description": "Reviewed SynQor NiQor NQ60 half-brick hardware facts plus an explicit EMES 36 V / 95% reference-analysis configuration; the analysis efficiency is not a manufacturer rating."
+  },
+  "sources": [
+    {
+      "id": "SRC_SYNQOR_NQ60_DATASHEET",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.synqor.com/document-download?document=NQ60x60HGx40+Datasheet.pdf",
+      "retrieved_at": "2026-09-11T00:20:00Z",
+      "license": "SynQor upstream terms; redistribution not asserted"
+    },
+    {
+      "id": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION",
+      "authority": "synthetic",
+      "format": "json",
+      "path": "catalogs/sources/synqor-nq60w60hgc40.source.json",
+      "license": "CC0-1.0"
+    }
+  ],
+  "parts": [
+    {
+      "id": "SYNQOR_NQ60W60HGC40NRF_G",
+      "kind": "power_converter",
+      "identity": {
+        "manufacturer": "SynQor",
+        "part_number": "NQ60W60HGC40NRF-G"
+      },
+      "properties": {
+        "mass": {"value": 0.1582, "unit": "kg", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "input_voltage_min": {"value": 9.0, "unit": "V", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "input_voltage_max": {"value": 60.0, "unit": "V", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "output_voltage_min": {"value": 0.0, "unit": "V", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "output_voltage_max": {"value": 60.0, "unit": "V", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "continuous_input_current": {"value": 40.0, "unit": "A", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "continuous_output_current": {"value": 40.0, "unit": "A", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "output_current_limit_dependency": {"value": "input_voltage_dependent", "unit": "1", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "external_input_capacitance_min": {"value": 1500.0, "unit": "uF", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "external_input_capacitance_esr_min": {"value": 0.05, "unit": "ohm", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "reference_baseplate_temperature": {"value": 25.0, "unit": "degC", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "reference_airflow": {"value": 300.0, "unit": "LFM", "source": "SRC_SYNQOR_NQ60_DATASHEET"},
+        "output_voltage": {"value": 36.0, "unit": "V", "source": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION"},
+        "efficiency": {"value": 0.95, "unit": "1", "source": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION"},
+        "efficiency_basis": {"value": "analysis_assumption", "unit": "1", "source": "SRC_EMES_NQ60_REFERENCE_CONFIGURATION"}
+      },
+      "interfaces": [
+        {
+          "id": "IF_DC_IN",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "input", "unit": "1", "source": "SRC_SYNQOR_NQ60_DATASHEET"}
+          }
+        },
+        {
+          "id": "IF_DC_OUT",
+          "kind": "electrical_dc",
+          "properties": {
+            "role": {"value": "output", "unit": "1", "source": "SRC_SYNQOR_NQ60_DATASHEET"}
+          }
+        }
+      ]
+    }
+  ]
+}

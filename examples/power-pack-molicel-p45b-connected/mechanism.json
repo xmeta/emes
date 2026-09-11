@@ -3,7 +3,7 @@
   "design": {
     "id": "DESIGN_POWER_PACK_MOLICEL_P45B_CONNECTED",
     "name": "Molicel P45B battery subsystem with fuse, contactor, and SB50 connector",
-    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and synthetic converter fixture, reviewed Littelfuse MIDI HP fuse, Littelfuse DCNHF60NG12-F contactor, and Anderson Power Products SB50 wire-to-wire connector assembly in the pack-side power path."
+    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and manufacturer-backed SynQor NiQor NQ60 converter configured at 36 V, reviewed Littelfuse MIDI HP fuse, Littelfuse DCNHF60NG12-F contactor, and Anderson Power Products SB50 wire-to-wire connector assembly in the pack-side power path."
   },
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
@@ -33,7 +33,7 @@
     {"id": "main_fuse", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_MIDI70V", "part": "LITTELFUSE_4998040_M_M6", "digest": "sha256:8dea4164629aaee0d4bd4a658bb61c82568b51c62c572097547ffeee4ccbc169"}}},
     {"id": "main_contactor", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_DCNHF60", "part": "LITTELFUSE_DCNHF60NG12_F", "digest": "sha256:08f546940ce1d38d8dcb043ae14a4759f2455beb993ced86911a6b36899351be"}}},
     {"id": "main_connector", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_ANDERSON_SB50", "part": "ANDERSON_SB50_992G4_5900_WTW", "digest": "sha256:112950122b6877d179f2e5bf0b7a89a816821212b2c9ea2652734a88ea0847cc"}}},
-    {"id": "dc_converter", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_POWER", "part": "DCDC_REF_25_50V_TO_36V_20A", "digest": "sha256:71785ddca5367b924235f7e1e9fbd8de313f0e97dc8e3e7fb03f5553929b695d"}}},
+    {"id": "dc_converter", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_SYNQOR_NQ60", "part": "SYNQOR_NQ60W60HGC40NRF_G", "digest": "sha256:85d7c67b99a5201b7564ffd842957ad11984e24deb5043ba449aecbc2b1d0bbe"}}},
     {"id": "dc_bus_load", "kind": "other", "metadata": {"org.emes.role": "electrical_load"}}
   ],
   "connections": [
@@ -65,6 +65,7 @@
     {"id": "C_BMS_MIN_VOLTAGE", "metric": "M_BMS_MIN_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_BMS_VOLTAGE", "metric": "M_BMS_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_CONVERTER_POWER", "metric": "M_CONVERTER_POWER_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "W"}, "load_case": "LC_POWER"},
+    {"id": "C_CONVERTER_INPUT_CURRENT", "metric": "M_CONVERTER_INPUT_CURRENT_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "A"}, "load_case": "LC_POWER"},
     {"id": "C_FUSE_VOLTAGE", "metric": "M_KNOWN_FUSE_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
     {"id": "C_CONTACTOR_CURRENT", "metric": "M_KNOWN_CONTACTOR_CONTINUOUS_LOAD_SCALE", "op": ">=", "target": {"value": 1.0, "unit": "1"}, "load_case": "LC_POWER"},
     {"id": "C_CONTACTOR_MIN_VOLTAGE", "metric": "M_KNOWN_CONTACTOR_MIN_VOLTAGE_MARGIN", "op": ">=", "target": {"value": 0.0, "unit": "V"}, "load_case": "LC_POWER"},
@@ -84,7 +85,7 @@
         {"id": "M_PACK_CELL_MASS", "unit": "kg"}, {"id": "M_PACK_TOTAL_MASS", "unit": "kg"}, {"id": "M_LOAD_POWER", "unit": "W"}, {"id": "M_LOAD_EQUIV_PACK_CURRENT", "unit": "A"},
         {"id": "M_LOAD_MAX_PACK_CURRENT", "unit": "A"},
         {"id": "M_PACK_CURRENT_MARGIN", "unit": "A"}, {"id": "M_BMS_MIN_SERIES_MARGIN", "unit": "1"}, {"id": "M_BMS_SERIES_MARGIN", "unit": "1"}, {"id": "M_BMS_MIN_VOLTAGE_MARGIN", "unit": "V"}, {"id": "M_BMS_VOLTAGE_MARGIN", "unit": "V"}, {"id": "M_CONVERTER_OUTPUT_VOLTAGE", "unit": "V"},
-        {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"}, {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}
+        {"id": "M_CONVERTER_OUTPUT_CURRENT", "unit": "A"}, {"id": "M_CONVERTER_POWER_MARGIN", "unit": "W"}, {"id": "M_CONVERTER_INPUT_CURRENT_MARGIN", "unit": "A"}
       ]
     },
     {
@@ -116,7 +117,7 @@
   "traceability": [
     {"requirement": "R_BUS_VOLTAGE", "verified_by": ["C_BUS_VOLTAGE"]},
     {"requirement": "R_ENERGY", "verified_by": ["C_ENERGY"]},
-    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER", "C_CONTACTOR_CURRENT", "C_CONNECTOR_CURRENT"]},
+    {"requirement": "R_CURRENT", "verified_by": ["C_CURRENT_MARGIN", "C_CONVERTER_POWER", "C_CONVERTER_INPUT_CURRENT", "C_CONTACTOR_CURRENT", "C_CONNECTOR_CURRENT"]},
     {"requirement": "R_BMS", "verified_by": ["C_BMS_MIN_SERIES", "C_BMS_SERIES", "C_BMS_MIN_VOLTAGE", "C_BMS_VOLTAGE"]},
     {"requirement": "R_FUSE", "verified_by": ["C_FUSE_VOLTAGE"]},
     {"requirement": "R_CONTACTOR", "verified_by": ["C_CONTACTOR_CURRENT", "C_CONTACTOR_MIN_VOLTAGE", "C_CONTACTOR_MAX_VOLTAGE"]},
@@ -126,7 +127,7 @@
     "org.emes.catalogs": [
       {"id": "CAT_MOLICEL", "path": "catalogs/molicel-p45b.catalog.json", "digest": "sha256:bce19e9220c1d77091310da16dd91d64f3689cae80277e356a66a45ad0847b56"},
       {"id": "CAT_JKBMS_BD6A20S6P", "path": "catalogs/jkbms-bd6a20s6p.catalog.json", "digest": "sha256:9e9dfc04fe5ca80cba10e0202b75c5e40a6fea3c35c68691763c2f41641f26c3"},
-      {"id": "CAT_POWER", "path": "catalogs/reference-power.catalog.json", "digest": "sha256:ae2d9cd11b18fc0233f2b96d4ce65eb69f3c43a3cc92eccf5940b4c0096a6ade"},
+      {"id": "CAT_SYNQOR_NQ60", "path": "catalogs/synqor-nq60w60hgc40.catalog.json", "digest": "sha256:7251fb11baab05158b654341a69fce7baa6f713eed4e13dabe8888ee1525753b"},
       {"id": "CAT_LITTELFUSE_MIDI70V", "path": "catalogs/littelfuse-midi70v-40a.catalog.json", "digest": "sha256:a0163dbfe1b5f06227225481d565fb722c4f8c586bea89de8d5dca0ae09966a0"},
       {"id": "CAT_LITTELFUSE_DCNHF60", "path": "catalogs/littelfuse-dcnhf60ng12-f.catalog.json", "digest": "sha256:2f02d040db4aa6685e6d2a87d66ca41090a55cf2ae55c062863eb870e7c6d2a4"},
       {"id": "CAT_ANDERSON_SB50", "path": "catalogs/anderson-sb50-992g4-5900.catalog.json", "digest": "sha256:b8fc97d2f1b39c1e676bc6e89e36e88552ace2312bb6093a378a8dff9b08ace8"}

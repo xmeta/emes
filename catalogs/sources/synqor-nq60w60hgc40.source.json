@@ -1,0 +1,51 @@
+{
+  "provider": "synqor_nq60",
+  "manufacturer": "SynQor",
+  "part_number": "NQ60W60HGC40NRF-G",
+  "family": "NQ60W60HGx40",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-11T00:20:00Z",
+  "capture_method": "reviewed transcription from SynQor NQ60W60HGx40 Technical Specification 005-0006097 Rev. K dated 2025-03-19; direct raw-byte acquisition from the authorized workstation returned HTTP 404 while the official SynQor document remained web-readable",
+  "upstream": {
+    "datasheet_pdf": {
+      "uri": "https://www.synqor.com/document-download?document=NQ60x60HGx40+Datasheet.pdf",
+      "edition": "005-0006097 Rev. K, 2025-03-19",
+      "bytes": null,
+      "sha256": null,
+      "redistribution": "not_asserted",
+      "integrity_status": "raw_bytes_not_pinned"
+    }
+  },
+  "facts": {
+    "mass": {"locator": "Page 1 Mechanical Features / standard encased weight", "value": 0.1582, "unit": "kg"},
+    "input_voltage_min": {"locator": "Page 4 Recommended Operating Conditions / Input Voltage Range", "value": 9.0, "unit": "V"},
+    "input_voltage_max": {"locator": "Page 4 Recommended Operating Conditions / Input Voltage Range", "value": 60.0, "unit": "V"},
+    "output_voltage_min": {"locator": "Page 4 Output Characteristics / Output Voltage Range", "value": 0.0, "unit": "V"},
+    "output_voltage_max": {"locator": "Page 4 Output Characteristics / Output Voltage Range", "value": 60.0, "unit": "V"},
+    "continuous_input_current": {"locator": "Page 4 Recommended Operating Conditions / Input Current", "value": 40.0, "unit": "A"},
+    "continuous_output_current": {"locator": "Page 4 Recommended Operating Conditions / Output Current", "value": 40.0, "unit": "A", "qualifier": "input_voltage_dependent"},
+    "external_input_capacitance_min": {"locator": "Page 4 Recommended Operating Conditions / External Input Capacitance", "value": 1500.0, "unit": "uF"},
+    "external_input_capacitance_esr_min": {"locator": "Page 4 Recommended Operating Conditions / External Input Capacitance", "value": 0.05, "unit": "ohm"},
+    "reference_baseplate_temperature": {"locator": "Page 4 Electrical Characteristics header", "value": 25.0, "unit": "degC"},
+    "reference_airflow": {"locator": "Page 4 Electrical Characteristics header", "value": 300.0, "unit": "LFM"}
+  },
+  "analysis_configuration": {
+    "output_voltage": {
+      "value": 36.0,
+      "unit": "V",
+      "rationale": "explicit EMES reference design setpoint within the manufacturer-supported 0-60 V Vset range; not a fixed manufacturer output rating"
+    },
+    "efficiency": {
+      "value": 0.95,
+      "unit": "1",
+      "rationale": "existing EMES reference-analysis assumption retained to avoid mixing a hardware substitution with an unrelated efficiency-model change; not a manufacturer-guaranteed efficiency at 25-42 Vin / 36 Vout / 500 W"
+    }
+  },
+  "notes": [
+    "The datasheet states that output current is input-voltage dependent; 40 A is therefore retained as the family recommended-range ceiling and must not be reinterpreted as a fixed power rating at every Vin/Vout point.",
+    "The datasheet states that for Vin much less than 28 V and/or Vout much greater than 28 V the input capacitance/stability design should be reviewed with SynQor applications guidance. The 25 V pack minimum / 36 V setpoint enters that caution region; EMES does not automatically approve the input filter or loop stability.",
+    "Electrical-characteristic tables are referenced to 25 degC baseplate, 300 LFM and 28 Vin unless otherwise noted; detailed thermal derating remains outside this slice.",
+    "The 95% efficiency value is an EMES reference-analysis assumption kept separate from manufacturer facts. Published example efficiencies must not be silently promoted to a guarantee at the reference operating point.",
+    "Raw manufacturer PDF bytes are not pinned because direct acquisition from the authorized workstation returned HTTP 404; the official document remained web-readable and no digest is fabricated."
+  ]
+}

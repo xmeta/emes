@@ -70,8 +70,8 @@ For `examples/power-pack-molicel-p45b-connected/mechanism.json` at the existing 
 * SB50 rated current is 50 A, giving a 2.375 load-scale factor against that maximum current;
 * maximum pack voltage is 42 V;
 * SB50 steady-state rating is 250 V, giving a 208 V margin;
-* the upstream synthetic DC/DC converter is the weakest known element at 1.44;
-* the composed known path output envelope is therefore 720 W.
+* the upstream known-component envelope is 1.9, set by the SynQor 40 A input-current limit and tied by the nominal 40 A fuse;
+* the composed known path output envelope is therefore 950 W.
 
 == Counterexamples
 

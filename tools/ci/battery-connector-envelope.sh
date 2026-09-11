@@ -58,8 +58,8 @@ assert math.isclose(contactor['max_pack_current'], 21.05263157894737, rel_tol=1e
 assert math.isclose(m['M_KNOWN_CONTACTOR_CONTINUOUS_LOAD_SCALE'], 2.85, rel_tol=1e-12)
 assert math.isclose(m['M_KNOWN_CONTACTOR_MIN_VOLTAGE_MARGIN'], 13.0, rel_tol=1e-12)
 assert math.isclose(m['M_KNOWN_CONTACTOR_MAX_VOLTAGE_MARGIN'], 958.0, rel_tol=1e-12)
-assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.44, rel_tol=1e-12)
-assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 720.0, rel_tol=1e-12)
+assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.9, rel_tol=1e-12)
+assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 950.0, rel_tol=1e-12)
 print('VALID sb50-and-dcnhf60-reference-path-envelope')
 PY
 

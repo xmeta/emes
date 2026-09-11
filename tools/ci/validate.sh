@@ -114,6 +114,35 @@ python tools/catalog.py validate catalogs/reference-bms-thermal.catalog.json
 
 python tools/catalog.py validate catalogs/reference-power.catalog.json
 
+python tools/catalog.py validate catalogs/synqor-nq60w60hgc40.catalog.json
+
+python tools/providers/synqor_nq60.py catalogs/sources/synqor-nq60w60hgc40.source.json /tmp/synqor-nq60w60hgc40.catalog.json
+
+python - <<'PY2'
+import json
+from pathlib import Path
+from tools.catalog import canonical_digest
+committed = json.loads(Path('catalogs/synqor-nq60w60hgc40.catalog.json').read_text())
+regenerated = json.loads(Path('/tmp/synqor-nq60w60hgc40.catalog.json').read_text())
+assert committed == regenerated
+part = committed['parts'][0]
+props = part['properties']
+assert part['id'] == 'SYNQOR_NQ60W60HGC40NRF_G'
+assert props['input_voltage_min']['value'] == 9.0
+assert props['input_voltage_max']['value'] == 60.0
+assert props['output_voltage_min']['value'] == 0.0
+assert props['output_voltage_max']['value'] == 60.0
+assert props['continuous_input_current']['value'] == 40.0
+assert props['continuous_output_current']['value'] == 40.0
+assert props['output_voltage']['value'] == 36.0
+assert props['efficiency']['value'] == 0.95
+assert props['efficiency']['source'] == 'SRC_EMES_NQ60_REFERENCE_CONFIGURATION'
+assert props['efficiency_basis']['value'] == 'analysis_assumption'
+assert canonical_digest(committed) == 'sha256:7251fb11baab05158b654341a69fce7baa6f713eed4e13dabe8888ee1525753b'
+assert canonical_digest(part) == 'sha256:85d7c67b99a5201b7564ffd842957ad11984e24deb5043ba449aecbc2b1d0bbe'
+print('DETERMINISTIC SynQor NQ60 normalization with explicit EMES efficiency assumption')
+PY2
+
 python tools/validate.py examples/power-pack/mechanism.json
 
 python tools/power.py examples/power-pack/mechanism.json --out generated/power-pack/evidence.json --check-determinism
