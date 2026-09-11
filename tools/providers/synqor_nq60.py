@@ -134,8 +134,8 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
             "name": "SynQor NQ60W60HGC40NRF-G configurable buck/boost converter",
             "description": (
                 "Reviewed SynQor NiQor NQ60 half-brick hardware facts plus an "
-                "explicit EMES 36 V / 90% conservative reference-analysis "
-                "configuration; the analysis efficiency is not a manufacturer rating."
+                "explicit EMES 36 V / 95% reference-analysis configuration; "
+                "the analysis efficiency is not a manufacturer rating."
             ),
         },
         "sources": [
