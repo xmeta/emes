@@ -1,0 +1,41 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_MEANWELL_NPB450_24NFC",
+    "name": "MEAN WELL NPB-450-24NFC charger",
+    "description": "Hash-pinned manufacturer charger facts for static 10S Li-ion charge compatibility; no system charging approval."
+  },
+  "sources": [
+    {
+      "id": "SRC_MEANWELL_NPB450_24NFC",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.meanwell.com/Upload/PDF/NPB-450/NPB-450-SPEC.PDF",
+      "retrieved_at": "2026-09-11T03:28:00Z",
+      "license": "MEAN WELL upstream terms; redistribution not asserted",
+      "raw_digest": "sha256:5463c9823f4e23e9b7723452b645a79bc99db03557ddc9e3badb9c434e4034f8"
+    }
+  ],
+  "parts": [
+    {
+      "id": "MEANWELL_NPB_450_24NFC",
+      "kind": "charger",
+      "identity": {
+        "manufacturer": "MEAN WELL",
+        "part_number": "NPB-450-24NFC"
+      },
+      "properties": {
+        "charge_voltage_min": {"value": 21.0, "unit": "V", "source": "SRC_MEANWELL_NPB450_24NFC"},
+        "charge_voltage_max": {"value": 42.0, "unit": "V", "source": "SRC_MEANWELL_NPB450_24NFC"},
+        "max_output_current": {"value": 13.5, "unit": "A", "source": "SRC_MEANWELL_NPB450_24NFC"},
+        "max_output_power": {"value": 453.6, "unit": "W", "source": "SRC_MEANWELL_NPB450_24NFC"},
+        "working_temperature_min": {"value": -30.0, "unit": "degC", "source": "SRC_MEANWELL_NPB450_24NFC"},
+        "working_temperature_max": {"value": 70.0, "unit": "degC", "source": "SRC_MEANWELL_NPB450_24NFC"}
+      },
+      "interfaces": [
+        {"id": "IF_AC_IN", "kind": "electrical_ac", "properties": {}},
+        {"id": "IF_CHARGE_OUT", "kind": "electrical_dc", "properties": {"role": {"value": "charger_output", "unit": "1", "source": "SRC_MEANWELL_NPB450_24NFC"}}}
+      ]
+    }
+  ]
+}

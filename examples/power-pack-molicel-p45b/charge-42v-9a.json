@@ -1,0 +1,11 @@
+{
+  "pack_id": "PACK_MAIN",
+  "charger": {
+    "catalog_path": "catalogs/meanwell-npb-450-24nfc.catalog.json",
+    "catalog_digest": "sha256:f48de6e0a1090c82db738a7203a39d495bafdb6b784f152be8f842f06fedc489",
+    "part_id": "MEANWELL_NPB_450_24NFC",
+    "part_digest": "sha256:d39be9a2ff265120137801c14674c6d86ed108c03b48e7c1b045579ed769b125"
+  },
+  "target_voltage": {"value": 42.0, "unit": "V"},
+  "charge_current": {"value": 9.0, "unit": "A"}
+}
