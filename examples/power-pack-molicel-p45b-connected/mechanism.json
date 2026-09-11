@@ -30,7 +30,7 @@
   ],
   "components": [
     {"id": "cell_model", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_MOLICEL", "part": "MOLICEL_INR_21700_P45B", "digest": "sha256:b98c1e3f071b945fbbd3bfc8f44fb0faa17b17ec01017e1716ae72e6d7e6bff6"}}},
-    {"id": "bms", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_JKBMS_BD6A20S6P", "part": "JKBMS_JK_BD6A20S_6P", "digest": "sha256:9d6d60ff9d22ccc3646736098296108f86b6baaaaefd1c42695ac4a5c37fb068"}}},
+    {"id": "bms", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_JKBMS_BD6A20S6P", "part": "JKBMS_JK_BD6A20S_6P", "digest": "sha256:f0cd32edd4ed00a59d10a21fa5533916ab2604c879e1bef5cec3e10dba7880b5"}}},
     {"id": "battery_pack", "kind": "other", "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL", "P_BMS_DISCHARGE_OVERTEMP"], "metadata": {"org.emes.role": "battery_pack_assembly"}},
     {"id": "main_fuse", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_MIDI70V", "part": "LITTELFUSE_4998040_M_M6", "digest": "sha256:8dea4164629aaee0d4bd4a658bb61c82568b51c62c572097547ffeee4ccbc169"}}},
     {"id": "main_contactor", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_DCNHF60", "part": "LITTELFUSE_DCNHF60NG12_F", "digest": "sha256:08f546940ce1d38d8dcb043ae14a4759f2455beb993ced86911a6b36899351be"}}},
@@ -136,7 +136,7 @@
   "extensions": {
     "org.emes.catalogs": [
       {"id": "CAT_MOLICEL", "path": "catalogs/molicel-p45b.catalog.json", "digest": "sha256:bce19e9220c1d77091310da16dd91d64f3689cae80277e356a66a45ad0847b56"},
-      {"id": "CAT_JKBMS_BD6A20S6P", "path": "catalogs/jkbms-bd6a20s6p.catalog.json", "digest": "sha256:9e9dfc04fe5ca80cba10e0202b75c5e40a6fea3c35c68691763c2f41641f26c3"},
+      {"id": "CAT_JKBMS_BD6A20S6P", "path": "catalogs/jkbms-bd6a20s6p.catalog.json", "digest": "sha256:fddb0da9d14f54fe26ca004f742845ac67326708167157c0d60d7ddca1560a99"},
       {"id": "CAT_SYNQOR_NQ60", "path": "catalogs/synqor-nq60w60hgc40.catalog.json", "digest": "sha256:7251fb11baab05158b654341a69fce7baa6f713eed4e13dabe8888ee1525753b"},
       {"id": "CAT_LITTELFUSE_MIDI70V", "path": "catalogs/littelfuse-midi70v-40a.catalog.json", "digest": "sha256:a0163dbfe1b5f06227225481d565fb722c4f8c586bea89de8d5dca0ae09966a0"},
       {"id": "CAT_LITTELFUSE_DCNHF60", "path": "catalogs/littelfuse-dcnhf60ng12-f.catalog.json", "digest": "sha256:2f02d040db4aa6685e6d2a87d66ca41090a55cf2ae55c062863eb870e7c6d2a4"},
