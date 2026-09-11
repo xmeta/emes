@@ -1,0 +1,42 @@
+{
+  "provider": "southwire_seoow",
+  "manufacturer": "Southwire",
+  "part_number": "550431",
+  "cci_part_number": "22229",
+  "specification": "SPEC 70070",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-11T01:10:00Z",
+  "capture_method": "reviewed Southwire CableTech SPEC 70070 manufacturer PDF; raw PDF bytes acquired from the manufacturer endpoint and SHA-256 pinned without redistributing the PDF",
+  "upstream": {
+    "spec_pdf": {
+      "uri": "https://cabletechsupport.southwire.com/cablespec/download_cable/?cable=7159&country=US",
+      "edition": "SPEC 70070 - 600V SEOPRENE SEOOW Cord Control 105C",
+      "bytes": 171224,
+      "sha256": "sha256:55bf4912817e75d51b63f75b46ff64ddb47f456f72916a636463d492268ba359",
+      "redistribution": "not_asserted",
+      "integrity_status": "hash_pinned"
+    },
+    "product_page": {
+      "uri": "https://cabletechsupport.southwire.com/en/tile/32/cable/7159/?country=US",
+      "role": "manufacturer-product-spec-page"
+    }
+  },
+  "facts": {
+    "allowable_ampacity": {"source": "spec_pdf", "locator": "Table 1 / Stock Number 550431 / Ampacity", "value": 30.0, "unit": "A"},
+    "rated_voltage": {"source": "spec_pdf", "locator": "Title and sample print legend", "value": 600.0, "unit": "V"},
+    "conductor_size": {"source": "spec_pdf", "locator": "Table 1 / Stock Number 550431 / Cond. Size", "value": 10.0, "unit": "AWG"},
+    "conductor_count": {"source": "spec_pdf", "locator": "Table 1 / Stock Number 550431 / Cond. Number", "value": 2.0, "unit": "1"},
+    "strand_count": {"source": "spec_pdf", "locator": "Table 1 / Stock Number 550431 / Cond. Strands", "value": 104.0, "unit": "1"},
+    "operating_temperature_min": {"source": "spec_pdf", "locator": "Applications and Features / temperature range", "value": -50.0, "unit": "degC"},
+    "operating_temperature_max": {"source": "spec_pdf", "locator": "Applications and Features / temperature range", "value": 105.0, "unit": "degC"},
+    "outer_diameter": {"source": "spec_pdf", "locator": "Table 1 metric / Stock Number 550431 / Approx. OD", "value": 15.67, "unit": "mm"},
+    "mass_per_length": {"source": "spec_pdf", "locator": "Table 1 metric / Stock Number 550431 / Approx. Weight", "value": 292.0, "unit": "kg/km"},
+    "ampacity_basis": {"source": "spec_pdf", "locator": "Table note / ampacity basis", "value": "NEC Table 400.5(A)(1) / CEC Table 12", "unit": "1"}
+  },
+  "notes": [
+    "The 30 A value is the manufacturer-published allowable ampacity for stock 550431, a 10 AWG two-conductor SEOOW flexible-cord construction; it is not a universal 10 AWG ampacity.",
+    "Southwire states that the published ampacity is based on NEC Table 400.5(A)(1) and CEC Table 12. EMES preserves that basis instead of independently deriving ampacity from gauge, copper area, or resistance.",
+    "The source application is flexible cord for specified Article 400 / industrial uses. This slice does not establish suitability for a particular enclosed battery harness, routing, bundling, termination, or thermal environment.",
+    "Raw manufacturer PDF bytes are SHA-256 pinned but are not redistributed by EMES."
+  ]
+}
