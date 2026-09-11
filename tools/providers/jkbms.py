@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Jikong/JKBMS provider for the hash-pinned JK-BD6A20S-6P manual."""
 from __future__ import annotations
-import argparse, hashlib, json, urllib.request
+import argparse, hashlib, json, time, urllib.error, urllib.request
 from pathlib import Path
 from typing import Any
 
@@ -21,11 +21,28 @@ def fetch(url: str) -> bytes:
     with urllib.request.urlopen(req,timeout=45) as response:
         return response.read()
 
+def fetch_pdf(url: str, attempts: int = 3, retry_delay: float = 1.0) -> bytes:
+    if attempts < 1:
+        raise ValueError("attempts must be positive")
+    last_reason = "source did not return a PDF"
+    for attempt in range(1, attempts + 1):
+        try:
+            data = fetch(url)
+        except (urllib.error.URLError, TimeoutError, OSError) as exc:
+            last_reason = f"fetch failed: {exc}"
+        else:
+            if data.startswith(b"%PDF"):
+                return data
+            last_reason = "source did not return a PDF"
+        if attempt < attempts and retry_delay > 0:
+            time.sleep(retry_delay)
+    raise RuntimeError(
+        f"JKBMS source verification failed after {attempts} attempts: {last_reason}"
+    )
+
 def verify_snapshot(path: Path) -> dict[str, Any]:
     snapshot=load(path); upstream=snapshot["upstream"]["datasheet_pdf"]
-    data=fetch(upstream["uri"])
-    if not data.startswith(b"%PDF"):
-        raise RuntimeError("JKBMS source did not return a PDF")
+    data=fetch_pdf(upstream["uri"])
     actual=sha256(data)
     if actual != upstream["sha256"] or len(data) != int(upstream["bytes"]):
         raise RuntimeError(f"JKBMS datasheet changed: got {actual} bytes={len(data)}")
