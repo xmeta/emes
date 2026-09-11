@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/xmeta/emes/spec/emes-battery-charge-v0.schema.json",
+  "title": "EMES Battery Charge Compatibility Request v0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pack_id", "charger", "target_voltage", "charge_current"],
+  "properties": {
+    "pack_id": {"$ref": "#/$defs/id"},
+    "charger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalog_path", "catalog_digest", "part_id", "part_digest"],
+      "properties": {
+        "catalog_path": {"type": "string", "minLength": 1},
+        "catalog_digest": {"$ref": "#/$defs/digest"},
+        "part_id": {"$ref": "#/$defs/id"},
+        "part_digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "target_voltage": {"$ref": "#/$defs/voltage"},
+    "charge_current": {"$ref": "#/$defs/current"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]*$"},
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "voltage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "number", "exclusiveMinimum": 0},
+        "unit": {"const": "V"}
+      }
+    },
+    "current": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": {"type": "number", "exclusiveMinimum": 0},
+        "unit": {"const": "A"}
+      }
+    }
+  }
+}
