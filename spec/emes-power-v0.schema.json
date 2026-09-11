@@ -76,6 +76,12 @@
         "source_component": {"$ref": "#/$defs/id"},
         "fuse_component": {"$ref": "#/$defs/id"},
         "contactor_component": {"$ref": "#/$defs/id"},
+        "pack_conductor_components": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}
+        },
         "pack_connector_components": {
           "type": "array",
           "minItems": 1,
@@ -98,6 +104,7 @@
               {"required": ["converter_component"]},
               {"required": ["fuse_component"]},
               {"required": ["contactor_component"]},
+              {"required": ["pack_conductor_components"]},
               {"required": ["pack_connector_components"]}
             ]
           }
