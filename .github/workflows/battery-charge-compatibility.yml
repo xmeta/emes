@@ -1,0 +1,63 @@
+name: battery-charge-compatibility
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "catalogs/meanwell-npb-450-24nfc.catalog.json"
+      - "catalogs/sources/meanwell-npb-450-24nfc.source.json"
+      - "tools/providers/meanwell_npb450.py"
+      - "tools/battery_charge.py"
+      - "tools/ci/battery-charge-compatibility.sh"
+      - "spec/emes-battery-charge-v0.schema.json"
+      - "examples/power-pack-molicel-p45b/charge-42v-9a.json"
+      - "examples/power-pack-molicel-p45b/mechanism.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - "catalogs/jkbms-bd6a20s6p.catalog.json"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "tools/evidence.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-evidence-v0.schema.json"
+      - ".github/workflows/battery-charge-compatibility.yml"
+      - "requirements-dev.txt"
+  pull_request:
+    paths:
+      - "catalogs/meanwell-npb-450-24nfc.catalog.json"
+      - "catalogs/sources/meanwell-npb-450-24nfc.source.json"
+      - "tools/providers/meanwell_npb450.py"
+      - "tools/battery_charge.py"
+      - "tools/ci/battery-charge-compatibility.sh"
+      - "spec/emes-battery-charge-v0.schema.json"
+      - "examples/power-pack-molicel-p45b/charge-42v-9a.json"
+      - "examples/power-pack-molicel-p45b/mechanism.json"
+      - "catalogs/molicel-p45b.catalog.json"
+      - "catalogs/jkbms-bd6a20s6p.catalog.json"
+      - "tools/catalog.py"
+      - "tools/power.py"
+      - "tools/validate.py"
+      - "tools/evidence.py"
+      - "spec/emes-ir-v0.schema.json"
+      - "spec/emes-catalog-v0.schema.json"
+      - "spec/emes-evidence-v0.schema.json"
+      - ".github/workflows/battery-charge-compatibility.yml"
+      - "requirements-dev.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  static-charge-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: bash tools/ci/battery-charge-compatibility.sh
+      - run: bash tools/ci/validate.sh
