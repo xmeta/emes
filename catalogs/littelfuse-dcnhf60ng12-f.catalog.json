@@ -1,0 +1,46 @@
+{
+  "emes_catalog_version": "0.1",
+  "catalog": {
+    "id": "CAT_LITTELFUSE_DCNHF60",
+    "name": "Littelfuse DCNHF60NG12-F contactor",
+    "description": "Reviewed manufacturer DCNHF60 main-contact facts normalized for EMES: 60 A continuous current, 12-1000 V DC operating range, and about 160 g mass. Switching life, pulse/breaking capability, coil suitability, and pre-charge behavior are intentionally not inferred."
+  },
+  "sources": [
+    {
+      "id": "SRC_LITTELFUSE_DCNHF60_DATASHEET",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.littelfuse.com/assetdocs/dcnhf60-series-datasheet?assetguid=60f4e899-19a2-4333-b1eb-03a5bec9917c",
+      "retrieved_at": "2026-09-10T23:59:30Z",
+      "license": "Littelfuse upstream terms; redistribution not asserted"
+    },
+    {
+      "id": "SRC_LITTELFUSE_DCNHF60_OUTLINE",
+      "authority": "manufacturer",
+      "format": "datasheet",
+      "uri": "https://www.littelfuse.com/assetdocs/dcnhf60-2d-print?assetguid=ad6d950a-5c28-4c2e-8efb-66e55ebd99c1",
+      "retrieved_at": "2026-09-10T23:59:30Z",
+      "license": "Littelfuse upstream terms; redistribution not asserted"
+    }
+  ],
+  "parts": [
+    {
+      "id": "LITTELFUSE_DCNHF60NG12_F",
+      "kind": "contactor",
+      "identity": {
+        "manufacturer": "Littelfuse",
+        "part_number": "DCNHF60NG12-F"
+      },
+      "properties": {
+        "continuous_current": {"value": 60.0, "unit": "A", "source": "SRC_LITTELFUSE_DCNHF60_DATASHEET"},
+        "operating_voltage_min_dc": {"value": 12.0, "unit": "V", "source": "SRC_LITTELFUSE_DCNHF60_DATASHEET"},
+        "operating_voltage_max_dc": {"value": 1000.0, "unit": "V", "source": "SRC_LITTELFUSE_DCNHF60_DATASHEET"},
+        "mass": {"value": 0.16, "unit": "kg", "source": "SRC_LITTELFUSE_DCNHF60_OUTLINE"}
+      },
+      "interfaces": [
+        {"id": "IF_IN", "kind": "electrical_dc", "properties": {}},
+        {"id": "IF_OUT", "kind": "electrical_dc", "properties": {}}
+      ]
+    }
+  ]
+}

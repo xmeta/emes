@@ -75,6 +75,7 @@
         "source_pack": {"$ref": "#/$defs/id"},
         "source_component": {"$ref": "#/$defs/id"},
         "fuse_component": {"$ref": "#/$defs/id"},
+        "contactor_component": {"$ref": "#/$defs/id"},
         "pack_connector_components": {
           "type": "array",
           "minItems": 1,
@@ -96,6 +97,7 @@
               {"required": ["source_pack"]},
               {"required": ["converter_component"]},
               {"required": ["fuse_component"]},
+              {"required": ["contactor_component"]},
               {"required": ["pack_connector_components"]}
             ]
           }

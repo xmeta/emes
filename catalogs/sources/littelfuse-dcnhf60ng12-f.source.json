@@ -1,0 +1,58 @@
+{
+  "provider": "littelfuse_dcnhf60",
+  "manufacturer": "Littelfuse",
+  "part_number": "DCNHF60NG12-F",
+  "snapshot_version": "0.1",
+  "captured_at": "2026-09-10T23:59:30Z",
+  "capture_method": "reviewed transcription from official Littelfuse DCNHF60 Series datasheet and outline drawing; direct raw-byte acquisition from the authorized workstation returned HTTP 403",
+  "upstream": {
+    "datasheet_pdf": {
+      "uri": "https://www.littelfuse.com/assetdocs/dcnhf60-series-datasheet?assetguid=60f4e899-19a2-4333-b1eb-03a5bec9917c",
+      "edition": "DCNHF60 Series - 1000V DC Max Contactor Relays",
+      "bytes": null,
+      "sha256": null,
+      "redistribution": "not_asserted",
+      "integrity_status": "raw_bytes_not_pinned"
+    },
+    "outline_pdf": {
+      "uri": "https://www.littelfuse.com/assetdocs/dcnhf60-2d-print?assetguid=ad6d950a-5c28-4c2e-8efb-66e55ebd99c1",
+      "edition": "OL-DCNHF60NGXX-F,CHT outline",
+      "bytes": null,
+      "sha256": null,
+      "redistribution": "not_asserted",
+      "integrity_status": "raw_bytes_not_pinned"
+    }
+  },
+  "facts": {
+    "continuous_current": {
+      "source": "datasheet_pdf",
+      "locator": "Performance Data / MAIN CONTACT / Continous Current",
+      "value": 60.0,
+      "unit": "A"
+    },
+    "operating_voltage_min_dc": {
+      "source": "datasheet_pdf",
+      "locator": "Performance Data / MAIN CONTACT / Operating Voltage",
+      "value": 12.0,
+      "unit": "V"
+    },
+    "operating_voltage_max_dc": {
+      "source": "datasheet_pdf",
+      "locator": "Performance Data / MAIN CONTACT / Operating Voltage",
+      "value": 1000.0,
+      "unit": "V"
+    },
+    "mass": {
+      "source": "outline_pdf",
+      "locator": "NOTES / 5. WEIGHT",
+      "value": 0.160,
+      "unit": "kg"
+    }
+  },
+  "notes": [
+    "Only main-contact continuous current, declared DC operating-voltage range, and approximate mass are normalized for this EMES slice.",
+    "No switching-life, maximum-breaking, short-circuit, coil-drive, auxiliary-contact, pre-charge, pulse-current, or certification claim is inferred or used for automatic acceptance.",
+    "The selected 12 V coil variant is identified by part number, but coil electrical suitability is explicitly outside this slice.",
+    "Raw manufacturer asset bytes are not pinned because direct acquisition from the authorized workstation returned HTTP 403; no digest is fabricated."
+  ]
+}
