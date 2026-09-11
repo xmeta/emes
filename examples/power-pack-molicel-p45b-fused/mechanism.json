@@ -106,7 +106,7 @@
         {"id": "PACK_MAIN", "component": "battery_pack", "cell_component": "cell_model", "bms_component": "bms", "series_parameter": "P_PACK_SERIES", "parallel_parameter": "P_PACK_PARALLEL", "condition_bindings": {"cell_discharge_cutoff_temperature": {"parameter": "P_BMS_DISCHARGE_OVERTEMP", "control_component": "bms", "control_property": "default_cell_discharge_cutoff_temperature"}}, "overhead_mass": {"value": 0.25, "unit": "kg"}}
       ],
       "power_paths": [
-        {"id": "PATH_MAIN", "source_pack": "PACK_MAIN", "fuse_component": "main_fuse", "converter_component": "dc_converter", "load_case": "LC_POWER"}
+        {"id": "PATH_MAIN", "source_pack": "PACK_MAIN", "fuse_component": "main_fuse", "converter_component": "dc_converter", "converter_input_damping": {"capacitance": {"value": 1500.0, "unit": "uF"}, "esr": {"value": 0.06, "unit": "ohm"}, "voltage_rating": {"value": 63.0, "unit": "V"}}, "load_case": "LC_POWER"}
       ]
     }
   }

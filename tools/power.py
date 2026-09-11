@@ -485,6 +485,79 @@ def evaluate_battery_pack(
             f"setpoint={converter_output_v:g}V max={output_max_v:g}V"
         )
 
+    damping_record: dict[str, Any] | None = None
+    damping_cap_margin_f: float | None = None
+    damping_esr_margin_ohm: float | None = None
+    damping_voltage_margin_v: float | None = None
+    damping_requirement_names = {
+        "external_input_capacitance_min",
+        "external_input_capacitance_esr_min",
+    }
+    present_damping_requirements = damping_requirement_names & set(converter_properties)
+    if present_damping_requirements:
+        if present_damping_requirements != damping_requirement_names:
+            raise ValueError(
+                f"{converter_component}: incomplete source-backed input damping requirements"
+            )
+        damping = path.get("converter_input_damping")
+        if not isinstance(damping, dict):
+            raise ValueError(
+                f"{converter_component}: source-backed input damping requirements require "
+                "an explicit converter_input_damping declaration"
+            )
+        required_capacitance_uf = property_number(
+            converter, "external_input_capacitance_min", "uF"
+        )
+        required_esr_ohm = property_number(
+            converter, "external_input_capacitance_esr_min", "ohm"
+        )
+        required_capacitance_f = required_capacitance_uf * 1e-6
+        declared_capacitance_f = quantity_value(
+            damping["capacitance"], "F", f"{path['id']}.converter_input_damping.capacitance"
+        )
+        declared_esr_ohm = quantity_value(
+            damping["esr"], "ohm", f"{path['id']}.converter_input_damping.esr"
+        )
+        declared_voltage_rating_v = quantity_value(
+            damping["voltage_rating"], "V", f"{path['id']}.converter_input_damping.voltage_rating"
+        )
+        if declared_capacitance_f < required_capacitance_f:
+            raise ValueError(
+                "converter input damping capacitance is below source-backed minimum: "
+                f"declared={declared_capacitance_f:g}F minimum={required_capacitance_f:g}F"
+            )
+        if declared_esr_ohm <= required_esr_ohm:
+            raise ValueError(
+                "converter input damping ESR must exceed source-backed minimum: "
+                f"declared={declared_esr_ohm:g}ohm minimum_exclusive={required_esr_ohm:g}ohm"
+            )
+        if declared_voltage_rating_v < pack_max_v:
+            raise ValueError(
+                "converter input damping voltage rating is below maximum pack voltage: "
+                f"declared={declared_voltage_rating_v:g}V pack={pack_max_v:g}V"
+            )
+        damping_cap_margin_f = declared_capacitance_f - required_capacitance_f
+        damping_esr_margin_ohm = declared_esr_ohm - required_esr_ohm
+        damping_voltage_margin_v = declared_voltage_rating_v - pack_max_v
+        damping_record = {
+            "capacitance": declared_capacitance_f,
+            "capacitance_unit": "F",
+            "minimum_capacitance": required_capacitance_f,
+            "minimum_capacitance_unit": "F",
+            "esr": declared_esr_ohm,
+            "esr_unit": "ohm",
+            "minimum_esr_exclusive": required_esr_ohm,
+            "minimum_esr_unit": "ohm",
+            "voltage_rating": declared_voltage_rating_v,
+            "voltage_rating_unit": "V",
+            "check_scope": "datasheet_minimums_only",
+            "system_stability_verified": False,
+        }
+    elif "converter_input_damping" in path:
+        raise ValueError(
+            f"{converter_component}: converter_input_damping declared without source-backed requirements"
+        )
+
     load_power_w, load_output_a = load_power_watts(
         document, path["load_case"], converter_output_v
     )
@@ -536,21 +609,38 @@ def evaluate_battery_pack(
             converter_input_a - max_pack_current_a,
             "A",
         )
+    if damping_record is not None:
+        metrics["M_CONVERTER_INPUT_DAMPING_CAPACITANCE_MARGIN"] = (
+            damping_cap_margin_f,
+            "F",
+        )
+        metrics["M_CONVERTER_INPUT_DAMPING_ESR_MARGIN"] = (
+            damping_esr_margin_ohm,
+            "ohm",
+        )
+        metrics["M_CONVERTER_INPUT_DAMPING_VOLTAGE_MARGIN"] = (
+            damping_voltage_margin_v,
+            "V",
+        )
+
+    topology = {
+        "path_id": path["id"],
+        "source_kind": "battery_pack",
+        "pack_id": pack["id"],
+        "series": series,
+        "parallel": parallel,
+        "cell_count": cell_count,
+        "cell_component": cell_component,
+        "bms_component": bms_component,
+        "converter_component": converter_component,
+        "load_case": path["load_case"],
+    }
+    if damping_record is not None:
+        topology["converter_input_damping"] = damping_record
 
     return evidence(
         document,
-        {
-            "path_id": path["id"],
-            "source_kind": "battery_pack",
-            "pack_id": pack["id"],
-            "series": series,
-            "parallel": parallel,
-            "cell_count": cell_count,
-            "cell_component": cell_component,
-            "bms_component": bms_component,
-            "converter_component": converter_component,
-            "load_case": path["load_case"],
-        },
+        topology,
         selected,
         [cell_component, bms_component, converter_component],
         metrics,

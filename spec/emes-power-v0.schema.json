@@ -66,6 +66,16 @@
         }
       }
     },
+    "converter_input_damping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["capacitance", "esr", "voltage_rating"],
+      "properties": {
+        "capacitance": {"$ref": "#/$defs/quantity"},
+        "esr": {"$ref": "#/$defs/quantity"},
+        "voltage_rating": {"$ref": "#/$defs/quantity"}
+      }
+    },
     "power_path": {
       "type": "object",
       "additionalProperties": false,
@@ -89,6 +99,7 @@
           "items": {"$ref": "#/$defs/id"}
         },
         "converter_component": {"$ref": "#/$defs/id"},
+        "converter_input_damping": {"$ref": "#/$defs/converter_input_damping"},
         "load_case": {"$ref": "#/$defs/id"}
       },
       "oneOf": [
@@ -105,7 +116,8 @@
               {"required": ["fuse_component"]},
               {"required": ["contactor_component"]},
               {"required": ["pack_conductor_components"]},
-              {"required": ["pack_connector_components"]}
+              {"required": ["pack_connector_components"]},
+              {"required": ["converter_input_damping"]}
             ]
           }
         }

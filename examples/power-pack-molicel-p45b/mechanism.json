@@ -235,6 +235,11 @@
           "id": "PATH_MAIN",
           "source_pack": "PACK_MAIN",
           "converter_component": "dc_converter",
+          "converter_input_damping": {
+            "capacitance": {"value": 1500.0, "unit": "uF"},
+            "esr": {"value": 0.06, "unit": "ohm"},
+            "voltage_rating": {"value": 63.0, "unit": "V"}
+          },
           "load_case": "LC_POWER"
         }
       ]

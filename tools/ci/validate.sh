@@ -134,6 +134,10 @@ assert props['output_voltage_min']['value'] == 0.0
 assert props['output_voltage_max']['value'] == 60.0
 assert props['continuous_input_current']['value'] == 40.0
 assert props['continuous_output_current']['value'] == 40.0
+assert props['external_input_capacitance_min']['value'] == 1500.0
+assert props['external_input_capacitance_min']['unit'] == 'uF'
+assert props['external_input_capacitance_esr_min']['value'] == 0.05
+assert props['external_input_capacitance_esr_min']['unit'] == 'ohm'
 assert props['output_voltage']['value'] == 36.0
 assert props['efficiency']['value'] == 0.95
 assert props['efficiency']['source'] == 'SRC_EMES_NQ60_REFERENCE_CONFIGURATION'

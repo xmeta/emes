@@ -47,8 +47,19 @@ assert converter['analysis_assumptions'] == [{
     'source': 'SRC_EMES_NQ60_REFERENCE_CONFIGURATION',
     'basis': 'analysis_assumption',
 }]
+damping = power['power_topology']['converter_input_damping']
+assert math.isclose(damping['capacitance'], 0.0015)
+assert math.isclose(damping['minimum_capacitance'], 0.0015)
+assert math.isclose(damping['esr'], 0.06)
+assert math.isclose(damping['minimum_esr_exclusive'], 0.05)
+assert math.isclose(damping['voltage_rating'], 63.0)
+assert damping['check_scope'] == 'datasheet_minimums_only'
+assert damping['system_stability_verified'] is False
+assert math.isclose(power_metrics['M_CONVERTER_INPUT_DAMPING_CAPACITANCE_MARGIN'], 0.0)
+assert math.isclose(power_metrics['M_CONVERTER_INPUT_DAMPING_ESR_MARGIN'], 0.01)
+assert math.isclose(power_metrics['M_CONVERTER_INPUT_DAMPING_VOLTAGE_MARGIN'], 21.0)
 assert any('not a manufacturer-guaranteed' in item for item in evidence['limitations'])
-print('VERIFIED manufacturer-backed NQ60 with explicit efficiency assumption and native input-current limit')
+print('VERIFIED manufacturer-backed NQ60 current limits and required input damping declaration')
 PY
 
 python - <<'PY'
@@ -79,6 +90,16 @@ def variant(name, mutate):
 variant('nq60-input30v', lambda p: p['properties']['input_voltage_min'].__setitem__('value', 30.0))
 variant('nq60-output61v', lambda p: p['properties']['output_voltage'].__setitem__('value', 61.0))
 variant('nq60-input10a', lambda p: p['properties']['continuous_input_current'].__setitem__('value', 10.0))
+def mechanism_variant(name, mutate):
+    doc = copy.deepcopy(mechanism)
+    path = doc['extensions']['org.emes.power']['power_paths'][0]
+    mutate(path)
+    Path(f'/tmp/{name}.mechanism.json').write_text(json.dumps(doc, indent=2) + '\n')
+
+mechanism_variant('nq60-damping-missing', lambda p: p.pop('converter_input_damping'))
+mechanism_variant('nq60-damping-cap1499', lambda p: p['converter_input_damping']['capacitance'].__setitem__('value', 1499.0))
+mechanism_variant('nq60-damping-esr50m', lambda p: p['converter_input_damping']['esr'].__setitem__('value', 0.05))
+mechanism_variant('nq60-damping-30v', lambda p: p['converter_input_damping']['voltage_rating'].__setitem__('value', 30.0))
 print('CREATED NQ60 counterexamples')
 PY
 
@@ -99,6 +120,30 @@ if python tools/power.py /tmp/nq60-input10a.mechanism.json --out /tmp/nq60-input
   exit 1
 fi
 echo 'VALID NQ60-input-current-fail-closed'
+
+if python tools/power.py /tmp/nq60-damping-missing.mechanism.json --out /tmp/nq60-damping-missing.json; then
+  echo 'expected NQ60 missing input damping rejection' >&2
+  exit 1
+fi
+echo 'VALID NQ60-input-damping-missing-fail-closed'
+
+if python tools/power.py /tmp/nq60-damping-cap1499.mechanism.json --out /tmp/nq60-damping-cap1499.json; then
+  echo 'expected NQ60 low input capacitance rejection' >&2
+  exit 1
+fi
+echo 'VALID NQ60-input-damping-capacitance-fail-closed'
+
+if python tools/power.py /tmp/nq60-damping-esr50m.mechanism.json --out /tmp/nq60-damping-esr50m.json; then
+  echo 'expected NQ60 ESR threshold rejection' >&2
+  exit 1
+fi
+echo 'VALID NQ60-input-damping-esr-fail-closed'
+
+if python tools/power.py /tmp/nq60-damping-30v.mechanism.json --out /tmp/nq60-damping-30v.json; then
+  echo 'expected NQ60 damping voltage-rating rejection' >&2
+  exit 1
+fi
+echo 'VALID NQ60-input-damping-voltage-fail-closed'
 
 python - <<'PY'
 import json

@@ -37,6 +37,12 @@ The 500 W load requires approximately 14.62 A at the 36 V nominal pack point, bu
 
 The JKBMS and SynQor current limits are manufacturer-backed. The 95% efficiency used for the reference calculation is separately tagged as an EMES analysis assumption. Continuous ratings are used as conservative known caps in the 10-second comparison and are not relabeled as pulse ratings.
 
+== SynQor input-damping prerequisite
+
+The NQ60 manufacturer snapshot also preserves the recommended-operating-condition requirement for at least 1500 uF of external input capacitance with ESR strictly greater than 50 mOhm. Each current NQ60 power path therefore declares a requirement-level input-damping network of 1500 uF, 60 mOhm, and 63 V. The power evaluator requires capacitance at or above the source-backed minimum, ESR strictly above the source-backed threshold, and voltage rating at or above the full modeled 42 V pack maximum. Missing damping declarations fail closed.
+
+This declaration is intentionally not a selected physical capacitor or fabricated network. Satisfying the datasheet minimums is necessary but does not prove source/converter small-signal stability over line, load, and temperature. Evidence therefore records `check_scope=datasheet_minimums_only` and `system_stability_verified=false`; detailed stability analysis, pre-charge/inrush validation, EMI behavior, and fabrication approval remain separate work.
+
 == Explicit fuse variant
 
 `examples/power-pack-molicel-p45b-fused/mechanism.json` adds a catalog-backed Littelfuse MIDI High Performance 70 V `4998040.M-M6` fuse in series between the battery pack and converter.
