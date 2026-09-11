@@ -70,6 +70,16 @@
           "unit": "A",
           "source": "SRC_JKBMS_BD6A20S6P"
         },
+        "default_balancing_start_voltage": {
+          "value": 3.0,
+          "unit": "V",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
+        "default_balancing_trigger_delta_voltage": {
+          "value": 0.01,
+          "unit": "V",
+          "source": "SRC_JKBMS_BD6A20S6P"
+        },
         "max_internal_loop_resistance": {
           "value": 0.00153,
           "unit": "ohm",

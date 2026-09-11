@@ -105,8 +105,8 @@ assert props['min_pack_voltage']['value'] == 20.0
 assert props['max_pack_voltage']['value'] == 100.0
 assert props['continuous_discharge_current']['value'] == 60.0
 assert props['default_cell_discharge_cutoff_temperature']['value'] == 70.0
-assert canonical_digest(committed) == 'sha256:11262ae5b03cf32b57ab19b9f50a32678f84afd7dece8e22c75b32709d11ecaa'
-assert canonical_digest(part) == 'sha256:24d68169326bf156b36bc9fce1201e0db426869d79ca03c80b145f89392ac184'
+assert canonical_digest(committed) == 'sha256:36aa9d0f14fb74c53c2ec0691e029655eb34b305ff9c13bd5b911609ed19cb5b'
+assert canonical_digest(part) == 'sha256:ef10c98f4ee8f6b378c3208788e352bc08a74e1cea390003602f8bd9b8236867'
 print('DETERMINISTIC jkbms-normalization with source-backed default settings')
 PY
 

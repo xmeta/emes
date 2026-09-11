@@ -98,6 +98,11 @@ def evaluate(
     bms_voltage_accuracy_v = property_number(
         bms, "cell_voltage_acquisition_accuracy_abs", "V"
     )
+    bms_balancing_start_v = property_number(bms, "default_balancing_start_voltage", "V")
+    bms_balancing_trigger_delta_v = property_number(
+        bms, "default_balancing_trigger_delta_voltage", "V"
+    )
+    bms_balancing_a = property_number(bms, "max_balancing_current", "A")
     bms_cutoff_c = property_number(bms, "default_cell_charge_cutoff_temperature", "degC")
     charger_min_v = property_number(charger, "charge_voltage_min", "V")
     charger_max_v = property_number(charger, "charge_voltage_max", "V")
@@ -151,6 +156,8 @@ def evaluate(
         )
     if bms_voltage_accuracy_v < 0.0:
         raise ValueError("BMS cell-voltage acquisition absolute accuracy must be non-negative")
+    if bms_balancing_start_v < 0.0 or bms_balancing_trigger_delta_v < 0.0 or bms_balancing_a < 0.0:
+        raise ValueError("BMS balancing parameters must be non-negative")
 
     worst_case_trip_v = bms_overcharge_v + bms_voltage_accuracy_v
     measurement_aware_guard_margin_v = cell_max_v - worst_case_trip_v
@@ -158,6 +165,15 @@ def evaluate(
         worst_case_trip_v <= cell_max_v
         or math.isclose(worst_case_trip_v, cell_max_v, rel_tol=0.0, abs_tol=1e-12)
     )
+    balancing_differential_uncertainty_v = 2.0 * bms_voltage_accuracy_v
+    balancing_trigger_margin_v = (
+        bms_balancing_trigger_delta_v - balancing_differential_uncertainty_v
+    )
+    balancing_trigger_measurement_resolved = (
+        balancing_trigger_margin_v >= 0.0
+        or math.isclose(balancing_trigger_margin_v, 0.0, rel_tol=0.0, abs_tol=1e-12)
+    )
+    balancing_current_to_charge_current_ratio = bms_balancing_a / charge_a
     thermal_guard_margin_c = cell_temp_max - bms_cutoff_c
     thermal_guard_sufficient = thermal_guard_margin_c >= 0.0
     metrics = [
@@ -179,6 +195,12 @@ def evaluate(
         {"id": "M_BMS_CELL_OVERCHARGE_RECOVERY_HYSTERESIS", "value": bms_overcharge_v - bms_recovery_v, "unit": "V", "method": "analytic"},
         {"id": "M_BMS_WORST_CASE_CELL_VOLTAGE_AT_TRIP", "value": worst_case_trip_v, "unit": "V", "method": "analytic"},
         {"id": "M_BMS_MEASUREMENT_AWARE_OVERCHARGE_MARGIN", "value": measurement_aware_guard_margin_v, "unit": "V", "method": "analytic"},
+        {"id": "M_BMS_DEFAULT_BALANCING_START_VOLTAGE", "value": bms_balancing_start_v, "unit": "V", "method": "source"},
+        {"id": "M_BMS_DEFAULT_BALANCING_TRIGGER_DELTA_VOLTAGE", "value": bms_balancing_trigger_delta_v, "unit": "V", "method": "source"},
+        {"id": "M_BMS_MAX_BALANCING_CURRENT", "value": bms_balancing_a, "unit": "A", "method": "source"},
+        {"id": "M_BMS_BALANCING_DIFFERENTIAL_MEASUREMENT_UNCERTAINTY", "value": balancing_differential_uncertainty_v, "unit": "V", "method": "analytic"},
+        {"id": "M_BMS_BALANCING_TRIGGER_MEASUREMENT_MARGIN", "value": balancing_trigger_margin_v, "unit": "V", "method": "analytic"},
+        {"id": "M_BMS_BALANCING_CURRENT_TO_CHARGE_CURRENT_RATIO", "value": balancing_current_to_charge_current_ratio, "unit": "1", "method": "analytic"},
         {"id": "M_CELL_CHARGE_TEMPERATURE_MIN", "value": cell_temp_min, "unit": "degC", "method": "source"},
         {"id": "M_CELL_CHARGE_TEMPERATURE_MAX", "value": cell_temp_max, "unit": "degC", "method": "source"},
         {"id": "M_BMS_DEFAULT_CHARGE_CUTOFF_TEMPERATURE", "value": bms_cutoff_c, "unit": "degC", "method": "source"},
@@ -233,6 +255,18 @@ def evaluate(
             "measurement_aware_sufficient": measurement_aware_guard_sufficient,
             "configured_at_runtime": False,
         },
+        "balancing": {
+            "scope": "factory_default_static_capability_only",
+            "bms_factory_default_start_voltage": bms_balancing_start_v,
+            "bms_factory_default_trigger_delta_voltage": bms_balancing_trigger_delta_v,
+            "bms_max_balancing_current": bms_balancing_a,
+            "differential_measurement_uncertainty_bound": balancing_differential_uncertainty_v,
+            "trigger_measurement_margin": balancing_trigger_margin_v,
+            "trigger_measurement_resolved": balancing_trigger_measurement_resolved,
+            "balancing_current_to_charge_current_ratio": balancing_current_to_charge_current_ratio,
+            "configured_at_runtime": False,
+            "effectiveness_decidable": False,
+        },
         "temperature_guard": {
             "cell_charge_temperature_min": cell_temp_min,
             "cell_charge_temperature_max": cell_temp_max,
@@ -244,7 +278,9 @@ def evaluate(
             "Static compatibility evidence only; it does not authorize charging, fabrication, or energization.",
             "The JKBMS 4.2 V / 4.18 V per-cell protection values are source-backed factory defaults, not proof of live runtime configuration.",
             "The JKBMS ±3 mV acquisition accuracy is applied conservatively to the factory-default protection threshold; the current 4.20 V threshold has a negative measurement-aware margin to the P45B 4.20 V maximum.",
-            "Pack-total voltage and factory-default per-cell thresholds still do not model cell imbalance dynamics, calibration drift, protection latency, or balancing effectiveness.",
+            "JKBMS factory-default balancing start/trigger values and 0.6 A maximum balancing current are reported, but they do not establish imbalance convergence time, permissible capacity mismatch, safe initial imbalance, or balancing effectiveness for this pack.",
+            "The balancing trigger measurement margin uses a conservative two-channel bound of 2 × the ±3 mV per-cell acquisition accuracy; live configuration and calibration drift remain unverified.",
+            "Pack-total voltage and factory-default per-cell thresholds still do not model cell imbalance dynamics, calibration drift, or protection latency.",
             "The current JKBMS factory-default 70 degC charge cutoff is above the P45B 60 degC charge operating maximum and is not treated as a sufficient automatic thermal guard.",
             "The JKBMS manual states the temperature threshold is user-configurable, but this evidence does not invent or certify an exact 60 degC setting range.",
             "Charger thermal derating, charge termination dynamics, communications, connectors, enclosure, and system EMC are not evaluated."

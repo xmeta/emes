@@ -71,6 +71,8 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
         "max_charge_current":q(fact(s,"max_charge_current","A"),"A",src),
         "max_instantaneous_current":q(fact(s,"max_instantaneous_current","A"),"A",src),
         "max_balancing_current":q(fact(s,"max_balancing_current","A"),"A",src),
+        "default_balancing_start_voltage":q(fact(s,"default_balancing_start_voltage","V"),"V",src),
+        "default_balancing_trigger_delta_voltage":q(fact(s,"default_balancing_trigger_delta_voltage","V"),"V",src),
         "max_internal_loop_resistance":q(fact(s,"max_internal_loop_resistance","ohm"),"ohm",src),
         "operating_temperature_min":q(fact(s,"operating_temperature_min","degC"),"degC",src),
         "operating_temperature_max":q(fact(s,"operating_temperature_max","degC"),"degC",src),
