@@ -7,14 +7,14 @@ fi
 
 python tools/providers/anderson_sb50.py catalogs/sources/anderson-sb50-992g4-5900.source.json /tmp/anderson-sb50.catalog.json
 python tools/providers/littelfuse_dcnhf60.py catalogs/sources/littelfuse-dcnhf60ng12-f.source.json /tmp/littelfuse-dcnhf60.catalog.json
-python tools/providers/southwire_seoow.py catalogs/sources/southwire-seoow-550431.source.json /tmp/southwire-seoow.catalog.json
+python tools/providers/southwire_soow.py catalogs/sources/southwire-soow-569973.source.json /tmp/southwire-soow.catalog.json
 
 python - <<'PY'
 import json
 pairs = [
     ('catalogs/anderson-sb50-992g4-5900.catalog.json', '/tmp/anderson-sb50.catalog.json'),
     ('catalogs/littelfuse-dcnhf60ng12-f.catalog.json', '/tmp/littelfuse-dcnhf60.catalog.json'),
-    ('catalogs/southwire-seoow-550431.catalog.json', '/tmp/southwire-seoow.catalog.json'),
+    ('catalogs/southwire-soow-569973.catalog.json', '/tmp/southwire-soow.catalog.json'),
 ]
 for committed_path, generated_path in pairs:
     committed = json.load(open(committed_path))
@@ -25,7 +25,7 @@ PY
 
 python tools/catalog.py validate catalogs/anderson-sb50-992g4-5900.catalog.json
 python tools/catalog.py validate catalogs/littelfuse-dcnhf60ng12-f.catalog.json
-python tools/catalog.py validate catalogs/southwire-seoow-550431.catalog.json
+python tools/catalog.py validate catalogs/southwire-soow-569973.catalog.json
 
 python tools/validate.py examples/power-pack-molicel-p45b-connected/mechanism.json
 
@@ -41,15 +41,16 @@ python - <<'PY'
 import json, math
 e = json.load(open('/tmp/connected-path.json'))
 m = {x['id']: x['value'] for x in e['metrics']}
-assert e['limiting_candidate'] == 'conductor_allowable_ampacity:main_conductor'
+assert e['limiting_candidate'] == 'upstream_known_component_envelope'
 assert len(e['conductors']) == 1
 wire = e['conductors'][0]
 assert wire['component'] == 'main_conductor'
-assert wire['part'] == 'SOUTHWIRE_SEOOW_550431_10AWG_2C'
-assert math.isclose(wire['allowable_ampacity'], 30.0)
+assert wire['part'] == 'SOUTHWIRE_SOOW_569973_6AWG_2C'
+assert math.isclose(wire['allowable_ampacity'], 55.0)
+assert math.isclose(wire['conductor_size'], 6.0)
 assert math.isclose(wire['rated_voltage'], 600.0)
 assert math.isclose(wire['max_pack_current'], 21.05263157894737, rel_tol=1e-12)
-assert math.isclose(m['M_KNOWN_CONDUCTOR_AMPACITY_LOAD_SCALE'], 1.425, rel_tol=1e-12)
+assert math.isclose(m['M_KNOWN_CONDUCTOR_AMPACITY_LOAD_SCALE'], 2.6125, rel_tol=1e-12)
 assert math.isclose(m['M_KNOWN_CONDUCTOR_VOLTAGE_MARGIN'], 558.0, rel_tol=1e-12)
 assert len(e['connectors']) == 1
 c = e['connectors'][0]
@@ -70,9 +71,11 @@ assert math.isclose(contactor['max_pack_current'], 21.05263157894737, rel_tol=1e
 assert math.isclose(m['M_KNOWN_CONTACTOR_CONTINUOUS_LOAD_SCALE'], 2.85, rel_tol=1e-12)
 assert math.isclose(m['M_KNOWN_CONTACTOR_MIN_VOLTAGE_MARGIN'], 13.0, rel_tol=1e-12)
 assert math.isclose(m['M_KNOWN_CONTACTOR_MAX_VOLTAGE_MARGIN'], 958.0, rel_tol=1e-12)
-assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.425, rel_tol=1e-12)
-assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 712.5, rel_tol=1e-12)
-print('VALID southwire-sb50-and-dcnhf60-reference-path-envelope')
+assert math.isclose(m['M_KNOWN_PATH_LOAD_SCALE_LIMIT'], 1.9, rel_tol=1e-12)
+assert math.isclose(m['M_KNOWN_PATH_OUTPUT_POWER_ENVELOPE'], 950.0, rel_tol=1e-12)
+assert e['termination_compatibility'] == [{'conductor_component': 'main_conductor', 'connector_component': 'main_connector', 'conductor_size': 6.0, 'contact_wire_size': 6.0, 'unit': 'AWG', 'compatible': True}]
+assert math.isclose(c['contact_wire_size'], 6.0)
+print('VALID source-coherent-6awg-sb50-reference-path-envelope')
 PY
 
 python - <<'PY'
@@ -84,7 +87,7 @@ from catalog import canonical_digest
 mechanism = json.load(open('examples/power-pack-molicel-p45b-connected/mechanism.json'))
 connector_catalog = json.load(open('catalogs/anderson-sb50-992g4-5900.catalog.json'))
 contactor_catalog = json.load(open('catalogs/littelfuse-dcnhf60ng12-f.catalog.json'))
-conductor_catalog = json.load(open('catalogs/southwire-seoow-550431.catalog.json'))
+conductor_catalog = json.load(open('catalogs/southwire-soow-569973.catalog.json'))
 
 def write_variant(name, catalog_id, component_id, catalog):
     part = catalog['parts'][0]
@@ -118,11 +121,15 @@ write_variant('contactor30v', 'CAT_LITTELFUSE_DCNHF60', 'main_contactor', catalo
 
 catalog = copy.deepcopy(conductor_catalog)
 catalog['parts'][0]['properties']['allowable_ampacity']['value'] = 15.0
-write_variant('conductor15a', 'CAT_SOUTHWIRE_SEOOW_550431', 'main_conductor', catalog)
+write_variant('conductor15a', 'CAT_SOUTHWIRE_SOOW_569973', 'main_conductor', catalog)
 
 catalog = copy.deepcopy(conductor_catalog)
 catalog['parts'][0]['properties']['rated_voltage']['value'] = 30.0
-write_variant('conductor30v', 'CAT_SOUTHWIRE_SEOOW_550431', 'main_conductor', catalog)
+write_variant('conductor30v', 'CAT_SOUTHWIRE_SOOW_569973', 'main_conductor', catalog)
+
+catalog = copy.deepcopy(conductor_catalog)
+catalog['parts'][0]['properties']['conductor_size']['value'] = 10.0
+write_variant('conductor10awg', 'CAT_SOUTHWIRE_SOOW_569973', 'main_conductor', catalog)
 print('CREATED connector, contactor, and conductor counterexamples')
 PY
 
@@ -150,6 +157,15 @@ if python tools/battery_connector_envelope.py /tmp/conductor30v.mechanism.json -
   exit 1
 fi
 echo 'VALID conductor-voltage-fail-closed'
+
+python tools/power.py /tmp/conductor10awg.mechanism.json --out /tmp/conductor10awg-power.json --check-determinism
+python tools/battery_pulse.py /tmp/conductor10awg.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/conductor10awg-power.json --out /tmp/conductor10awg-pulse.json --check-determinism
+python tools/battery_known_envelope.py /tmp/conductor10awg.mechanism.json --power-evidence /tmp/conductor10awg-power.json --pulse-evidence /tmp/conductor10awg-pulse.json --out /tmp/conductor10awg-known.json --check-determinism
+if python tools/battery_connector_envelope.py /tmp/conductor10awg.mechanism.json --power-evidence /tmp/conductor10awg-power.json --known-envelope-evidence /tmp/conductor10awg-known.json --out /tmp/conductor10awg-path.json; then
+  echo 'expected direct 10 AWG to 5900 termination rejection' >&2
+  exit 1
+fi
+echo 'VALID conductor-contact-wire-size-fail-closed'
 
 python tools/power.py /tmp/connector10a.mechanism.json --out /tmp/connector10a-power.json --check-determinism
 python tools/battery_pulse.py /tmp/connector10a.mechanism.json --analysis-request examples/power-pack-molicel-p45b/pulse-10s-soc50.json --power-evidence /tmp/connector10a-power.json --out /tmp/connector10a-pulse.json --check-determinism

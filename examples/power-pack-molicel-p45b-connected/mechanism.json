@@ -3,7 +3,7 @@
   "design": {
     "id": "DESIGN_POWER_PACK_MOLICEL_P45B_CONNECTED",
     "name": "Molicel P45B battery subsystem with fuse, contactor, conductor, and SB50 connector",
-    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and manufacturer-backed SynQor NiQor NQ60 converter configured at 36 V, reviewed Littelfuse MIDI HP fuse, Littelfuse DCNHF60NG12-F contactor, Southwire stock 550431 10 AWG 2-conductor SEOOW cable, and Anderson Power Products SB50 wire-to-wire connector assembly in the pack-side power path."
+    "description": "Authoritative Molicel P45B 10S2P cell selection with real JKBMS BMS and manufacturer-backed SynQor NiQor NQ60 converter configured at 36 V, reviewed Littelfuse MIDI HP fuse, Littelfuse DCNHF60NG12-F contactor, Southwire stock 569973 6 AWG 2-conductor SOOW cable, and Anderson Power Products SB50 wire-to-wire connector assembly in the pack-side power path."
   },
   "requirements": [
     {"id": "R_BUS_VOLTAGE", "kind": "interface", "statement": "Provide a nominal 36 V DC load bus."},
@@ -19,7 +19,7 @@
     {"id": "DI_REAL_CELL_CONDITIONS", "statement": "The P45B continuous-discharge rating is usable only when a selected control component satisfies every normalized manufacturer rating condition.", "protects": ["R_CURRENT", "R_BMS"]},
     {"id": "DI_FUSE_EXPLICIT", "statement": "Treat the fuse as a first-class power-path component; use nominal rated current only as a conservative known-limit cap and do not infer a 10-second ampacity from sparse time-current or I2t data.", "protects": ["R_CURRENT", "R_FUSE"]},
     {"id": "DI_CONTACTOR_EXPLICIT", "statement": "Treat the contactor as a first-class power-path component using only source-backed main-contact continuous current and declared DC operating-voltage range; do not infer pulse ampacity, switching life, coil-drive suitability, or pre-charge approval.", "protects": ["R_CURRENT", "R_CONTACTOR"]},
-    {"id": "DI_CONDUCTOR_EXPLICIT", "statement": "Treat conductor ampacity as a source-conditioned property of the reviewed Southwire stock 550431 two-conductor SEOOW construction; do not derive a universal 10 AWG ampacity or infer routing, bundling, termination, or enclosure thermal suitability.", "protects": ["R_CURRENT", "R_CONDUCTOR"]},
+    {"id": "DI_CONDUCTOR_EXPLICIT", "statement": "Treat conductor ampacity as a source-conditioned property of the reviewed Southwire stock 569973 6 AWG two-conductor SOOW construction and require direct connector-contact wire-size compatibility; do not infer reducer derating, routing, bundling, termination quality, or enclosure thermal suitability.", "protects": ["R_CURRENT", "R_CONDUCTOR"]},
     {"id": "DI_CONNECTOR_ASSEMBLY", "statement": "Treat the connector as the reviewed mated wire-to-wire assembly configuration, not as a bare housing, and include its native current rating in weakest-link evaluation.", "protects": ["R_CURRENT", "R_CONNECTOR"]},
     {"id": "DI_COMPOSE_CELLS", "statement": "Represent repeated cylindrical cells by series/parallel composition rather than duplicating cell records.", "protects": ["R_ENERGY"]}
   ],
@@ -34,8 +34,8 @@
     {"id": "battery_pack", "kind": "other", "parameters": ["P_PACK_SERIES", "P_PACK_PARALLEL", "P_BMS_DISCHARGE_OVERTEMP"], "metadata": {"org.emes.role": "battery_pack_assembly"}},
     {"id": "main_fuse", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_MIDI70V", "part": "LITTELFUSE_4998040_M_M6", "digest": "sha256:8dea4164629aaee0d4bd4a658bb61c82568b51c62c572097547ffeee4ccbc169"}}},
     {"id": "main_contactor", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_LITTELFUSE_DCNHF60", "part": "LITTELFUSE_DCNHF60NG12_F", "digest": "sha256:08f546940ce1d38d8dcb043ae14a4759f2455beb993ced86911a6b36899351be"}}},
-    {"id": "main_conductor", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_SOUTHWIRE_SEOOW_550431", "part": "SOUTHWIRE_SEOOW_550431_10AWG_2C", "digest": "sha256:f1257a45239956f820f2c9325df5f3cbbb865e491911797eae4237961adadc2f"}}},
-    {"id": "main_connector", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_ANDERSON_SB50", "part": "ANDERSON_SB50_992G4_5900_WTW", "digest": "sha256:112950122b6877d179f2e5bf0b7a89a816821212b2c9ea2652734a88ea0847cc"}}},
+    {"id": "main_conductor", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_SOUTHWIRE_SOOW_569973", "part": "SOUTHWIRE_SOOW_569973_6AWG_2C", "digest": "sha256:e0c14c9ff64201b5c6170c2958bcd1ee185fd54b13df7e7c9471959d8c2770a3"}}},
+    {"id": "main_connector", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_ANDERSON_SB50", "part": "ANDERSON_SB50_992G4_5900_WTW", "digest": "sha256:08a664dc278e27bf3bc456d8129e5c85858744a230e906a1615927ed02221f52"}}},
     {"id": "dc_converter", "kind": "purchased_part", "metadata": {"org.emes.catalog_ref": {"catalog": "CAT_SYNQOR_NQ60", "part": "SYNQOR_NQ60W60HGC40NRF_G", "digest": "sha256:85d7c67b99a5201b7564ffd842957ad11984e24deb5043ba449aecbc2b1d0bbe"}}},
     {"id": "dc_bus_load", "kind": "other", "metadata": {"org.emes.role": "electrical_load"}}
   ],
@@ -140,8 +140,8 @@
       {"id": "CAT_SYNQOR_NQ60", "path": "catalogs/synqor-nq60w60hgc40.catalog.json", "digest": "sha256:7251fb11baab05158b654341a69fce7baa6f713eed4e13dabe8888ee1525753b"},
       {"id": "CAT_LITTELFUSE_MIDI70V", "path": "catalogs/littelfuse-midi70v-40a.catalog.json", "digest": "sha256:a0163dbfe1b5f06227225481d565fb722c4f8c586bea89de8d5dca0ae09966a0"},
       {"id": "CAT_LITTELFUSE_DCNHF60", "path": "catalogs/littelfuse-dcnhf60ng12-f.catalog.json", "digest": "sha256:2f02d040db4aa6685e6d2a87d66ca41090a55cf2ae55c062863eb870e7c6d2a4"},
-      {"id": "CAT_SOUTHWIRE_SEOOW_550431", "path": "catalogs/southwire-seoow-550431.catalog.json", "digest": "sha256:a18f9de53ef5977aa924882c677eb9e1302a6f0a597eec6d48f991812d2087ce"},
-      {"id": "CAT_ANDERSON_SB50", "path": "catalogs/anderson-sb50-992g4-5900.catalog.json", "digest": "sha256:b8fc97d2f1b39c1e676bc6e89e36e88552ace2312bb6093a378a8dff9b08ace8"}
+      {"id": "CAT_SOUTHWIRE_SOOW_569973", "path": "catalogs/southwire-soow-569973.catalog.json", "digest": "sha256:207134a7d62be98994cbf0d32152c83627b2e5ea8a6e55189b5de5f3597828b0"},
+      {"id": "CAT_ANDERSON_SB50", "path": "catalogs/anderson-sb50-992g4-5900.catalog.json", "digest": "sha256:3a8fa9ea2354f82b098caaf8d185ff7f2d6fb3cec6f43edd97c7b7348d6dd9d3"}
     ],
     "org.emes.power": {
       "battery_packs": [

@@ -53,8 +53,10 @@ def q(value: float | str, unit: str, source: str) -> dict[str, Any]:
 def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
     snapshot = load_snapshot(snapshot_path)
     upstream = snapshot["upstream"]["datasheet_pdf"]
+    technical_reference = snapshot["upstream"]["technical_reference"]
     configuration = snapshot["configuration"]
-    source_id = "SRC_ANDERSON_SB50"
+    datasheet_source_id = "SRC_ANDERSON_SB50_DATASHEET"
+    technical_source_id = "SRC_ANDERSON_SB50_TECHREF"
 
     part = {
         "id": "ANDERSON_SB50_992G4_5900_WTW",
@@ -68,33 +70,52 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
         },
         "properties": {
             "rated_current": q(
-                number(snapshot, "rated_current_iec", "A"), "A", source_id
+                number(snapshot, "reference_current_6awg", "A"),
+                "A",
+                technical_source_id,
             ),
             "rated_voltage_dc": q(
-                number(snapshot, "rated_voltage_dc_iec", "V"), "V", source_id
+                number(snapshot, "rated_voltage_dc_iec", "V"),
+                "V",
+                datasheet_source_id,
+            ),
+            "contact_wire_size": q(
+                number(snapshot, "contact_wire_size", "AWG"),
+                "AWG",
+                datasheet_source_id,
+            ),
+            "reference_temperature_rise_at_rated_current": q(
+                number(snapshot, "reference_temperature_rise_6awg_at_50a", "degC"),
+                "degC",
+                technical_source_id,
+            ),
+            "reference_ambient_temperature": q(
+                number(snapshot, "reference_ambient_temperature", "degC"),
+                "degC",
+                technical_source_id,
             ),
             "wire_cross_section_tested": q(
                 number(snapshot, "wire_cross_section_tested", "mm^2"),
                 "mm^2",
-                source_id,
+                datasheet_source_id,
             ),
             "contact_series_tested": q(
-                text(snapshot, "contact_series_tested", "1"), "1", source_id
+                text(snapshot, "contact_series_tested", "1"), "1", datasheet_source_id
             ),
             "operating_temperature_min": q(
                 number(snapshot, "operating_temperature_min", "degC"),
                 "degC",
-                source_id,
+                datasheet_source_id,
             ),
             "operating_temperature_max": q(
                 number(snapshot, "operating_temperature_max", "degC"),
                 "degC",
-                source_id,
+                datasheet_source_id,
             ),
             "cycle_life_iec": q(
                 number(snapshot, "mating_cycles_iec", "1"),
                 "1",
-                source_id,
+                datasheet_source_id,
             ),
         },
         "interfaces": [
@@ -104,7 +125,7 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
     }
 
     source_record: dict[str, Any] = {
-        "id": source_id,
+        "id": datasheet_source_id,
         "authority": "manufacturer",
         "format": "datasheet",
         "uri": upstream["uri"],
@@ -120,10 +141,19 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
                 "kind": "datasheet",
                 "uri": upstream["uri"],
                 "digest": raw_digest,
-                "source": source_id,
+                "source": datasheet_source_id,
                 "license": "Anderson Power Products upstream terms; redistribution not asserted",
             }
         ]
+
+    technical_source_record: dict[str, Any] = {
+        "id": technical_source_id,
+        "authority": "manufacturer",
+        "format": "datasheet",
+        "uri": technical_reference["uri"],
+        "retrieved_at": snapshot["captured_at"],
+        "license": "Anderson Power Products upstream terms; redistribution not asserted",
+    }
 
     catalog = {
         "emes_catalog_version": "0.1",
@@ -133,10 +163,11 @@ def normalize(snapshot_path: Path, output_path: Path) -> dict[str, Any]:
             "description": (
                 "Reviewed manufacturer SB50 IEC configuration normalized for EMES as "
                 "a mated wire-to-wire assembly using 992G4 housings and 5900 contacts; "
-                "50 A and 250 V AC/DC ratings are retained with tested-configuration facts."
+                "50 A pack-side current is tied to the 6 AWG / 50 A / 23 degC-rise "
+                "technical reference; direct 5900 wire size is 6 AWG."
             ),
         },
-        "sources": [source_record],
+        "sources": [source_record, technical_source_record],
         "parts": [part],
     }
     output_path.parent.mkdir(parents=True, exist_ok=True)

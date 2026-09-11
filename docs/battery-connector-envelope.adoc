@@ -37,15 +37,21 @@ The source snapshot is `catalogs/sources/anderson-sb50-992g4-5900.source.json`, 
 
 The current environment could read the official manufacturer PDF through the research browser but could not retrieve stable raw PDF bytes for local hashing. Therefore `raw_bytes_not_pinned` is explicit and no source digest is fabricated.
 
-== Southwire SEOOW reference conductor
+== Southwire SOOW reference conductor
 
-The pack conductor is Southwire stock `550431` / CCI `22229`, a 10 AWG, two-conductor SEOOW flexible cord covered by manufacturer SPEC 70070. The reviewed manufacturer specification publishes 30 A allowable ampacity, 600 V rating, and a -50 to 105 degC temperature range for this exact construction.
+The pack conductor is Southwire stock `569973` / CCI `822221`, a 6 AWG, two-conductor SOOW flexible cord covered by manufacturer SPEC 70002. The reviewed manufacturer specification publishes 55 A allowable ampacity, 600 V rating, and a -40 to 90 degC temperature range for this exact construction.
 
-The 30 A value is retained as a source-conditioned fact for that cable construction; EMES does not derive a generic 10 AWG ampacity from gauge, copper area, or resistance. Southwire states that the published ampacity is based on NEC Table 400.5(A)(1) / CEC Table 12.
+The 55 A value is retained as a source-conditioned fact for that cable construction; EMES does not derive a generic 6 AWG ampacity from gauge, copper area, or resistance. Southwire states that the published ampacity is based on NEC Table 400.5(A)(1) / CEC Table 12.
 
-The official manufacturer PDF was acquired directly and hash-pinned as `sha256:55bf4912817e75d51b63f75b46ff64ddb47f456f72916a636463d492268ba359` (171224 bytes). EMES stores the URI and digest but does not redistribute the PDF.
+The official manufacturer CableTech PDF for stock `569973` was acquired directly and hash-pinned as `sha256:fce28312c04c96a7a678887a0d207b37205c8703494174c5cd4e261f9678367b` (134832 bytes). EMES stores the URI and digest but does not redistribute the PDF.
 
-The source snapshot is `catalogs/sources/southwire-seoow-550431.source.json`, normalized deterministically by `tools/providers/southwire_seoow.py` into `catalogs/southwire-seoow-550431.catalog.json`.
+The source snapshot is `catalogs/sources/southwire-soow-569973.source.json`, normalized deterministically by `tools/providers/southwire_soow.py` into `catalogs/southwire-soow-569973.catalog.json`.
+
+== Direct termination compatibility
+
+The selected Anderson `5900` high-force contact is a 6 AWG contact. Anderson separately lists `5915` for 12--10 AWG and a `5910` reducing bushing for smaller wire in the #6 contact barrel, with an explicit warning that electrical capability is derated with smaller wire. EMES therefore does not invent a reducer derating. A catalog-backed conductor directly connected to this connector must match the contact's source-backed direct wire size; otherwise the pack-side analysis rejects the design.
+
+The manufacturer technical reference also records a 23 degC connector temperature rise at 50 A with 6 AWG at the stated 25 degC ambient reference. This supports the existing conservative 50 A pack-side connector cap for the selected 6 AWG configuration without extending that cap to the former 10 AWG cable.
 
 == Native-domain composition
 
@@ -84,18 +90,19 @@ s_{path} = \min(s_{parent}, s_{conductor,1}, \ldots, s_{connector,1}, \ldots, s_
 For `examples/power-pack-molicel-p45b-connected/mechanism.json` at the existing 500 W load:
 
 * nominal-point pack-side current is approximately 14.62 A, while the maximum over the modeled 25--42 V pack range is approximately 21.05 A;
-* Southwire allowable ampacity is 30 A, giving a 1.425 load-scale factor against the maximum pack-side current;
+* Southwire allowable ampacity is 55 A, giving a 2.6125 load-scale factor against the maximum pack-side current;
 * the Southwire 600 V rating gives a 558 V margin above the 42 V maximum pack voltage;
 * SB50 rated current is 50 A, giving a 2.375 load-scale factor and a 208 V voltage margin;
 * the contactor scale is 2.85, and the upstream SynQor/fuse envelope is 1.9;
-* the conductor is therefore the weakest modeled pack-side element at 1.425, giving a 712.5 W composed output envelope.
+* the 6 AWG conductor directly matches the SB50 `5900` contact; the upstream SynQor/fuse envelope is therefore the weakest modeled path element at 1.9, giving a 950 W composed output envelope.
 
 == Counterexamples
 
 Focused CI verifies that the conductor and the existing switching/connection hardware actually participate in the decision:
 
-* replacing the conductor allowable ampacity with 15 A keeps the conductor as the limiting candidate at a 0.7125 load scale and 356.25 W output envelope;
+* replacing the conductor allowable ampacity with 15 A makes the conductor the limiting candidate at a 0.7125 load scale and 356.25 W output envelope;
 * replacing the conductor voltage rating with 30 V is rejected against the 42 V maximum pack voltage;
+* changing the directly terminated conductor to 10 AWG while retaining contact `5900` is rejected rather than assigned an invented reducer-bushing derating;
 * replacing the connector rating with 10 A moves the limiting candidate to `connector_rated_current:main_connector`, giving a 0.475 load scale and 237.5 W output envelope;
 * replacing the connector voltage rating with 30 V is rejected against the 42 V maximum pack voltage;
 * tampering with the parent known-envelope evidence linkage is rejected rather than accepted as a valid evidence chain.
@@ -104,6 +111,6 @@ Focused CI verifies that the conductor and the existing switching/connection har
 
 This slice consumes the manufacturer-published allowable ampacity but does not model installation-specific conductor temperature rise, bundling, enclosed-harness ambient, routing, terminal/crimp process capability, contact resistance, aging, contamination, enclosure heating, or cell-tab/busbar behavior.
 
-The Southwire 30 A value is not treated as universal approval for every 10 AWG installation, and the SB50 tested wire size is not treated as evidence for unrelated conductor constructions.
+The Southwire 55 A value is not treated as universal approval for every 6 AWG installation, and the SB50 6 AWG compatibility/reference point is not treated as evidence for smaller wire or reducer-bushing configurations.
 
 Physical fabrication, charging, and energization remain outside automatic approval.
